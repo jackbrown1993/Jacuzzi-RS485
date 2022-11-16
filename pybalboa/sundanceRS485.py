@@ -38,14 +38,26 @@ BTN_LIGHT_ON = 0x11
 BTN_LIGHT_COLOR = 0x12
 BTN_NA = 224
 
+
+# Button codes as byte arrays
+button_codes = {
+    "temp_up":bytes([0x7e, 0x06, 0x10, 0xbf, 0x17, 0x01, 0x7c, 0x7e]),
+    "temp_down":bytes([0x7e, 0x06, 0x10, 0xbf, 0x17, 0x02, 0x75, 0x7e])
+}
+
+#"temp_down":"7e0610bf1702757e"
+# Temp Down: x7E 06 10 BF 17 02 75 7E
+# Temp Up: x7E 06 10 BF 17 01 7C 7E 
+
+
+
 # Used to find our old channel, or an open channel
 DETECT_CHANNEL_STATE_START = 0
 DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND = 5 # Wait this many CTS cycles before deciding that a channel is available to use
 NO_CHANGE_REQUESTED = -1 # Used to return control to other devices
 CHECKS_BEFORE_RETRY = 2 # How many status messages we should receive before retrying our command
 
-# Set temps
-
+# Array to convert value returned to set temp in C (manually recorded and verified each temp)
 set_temp_convert = {
     171:40,
     180:39.5,
@@ -227,21 +239,24 @@ class SundanceRS485(BalboaSpaWifi):
         
         print("Sending message on channel: " + str(self.channel))
 
-        # Example: 7E 07 10 BF CC 65 85 A6 7E 
-        message_length = 6
-        data = bytearray(8)
-        data[0] = M_STARTEND
-        data[1] = message_length
-        data[2] = 0x10
+        # Example for temp up 7E 06 10 BF 17 01 7C 7E
+        # Working example for temp up =   7e 06 10 bf 17 01 7c 7e
+        # Working example for temp down = 7E 06 10 BF 17 02 75 7E 
+        
+        #data = bytearray(8)
+        #message_length = 6
+        #data[0] = M_STARTEND
+        #data[1] = message_length
         #data[2] = self.channel
-        data[3] = 0xBF
-        data[4] = CC_REQ
-        data[5] = val
-        data[6] = 0x67
-        data[7] = M_STARTEND
+        #data[3] = 0xBF
+        #data[4] = CC_REQ
+        #data[5] = val
+        #data[6] = 0x7C
+        #data[7] = M_STARTEND
 
-        self.log.debug(f"Queuing message: {data.hex()}")
-        self.queue.put(data)
+        self.log.debug(f"Queuing message: {val.hex()}")
+
+        self.queue.put(val)
 
     async def send_message(self, *bytes):
         """ Sends a message to the spa with variable length bytes. """
@@ -398,13 +413,15 @@ class SundanceRS485(BalboaSpaWifi):
 
         self.UnknownField9 = data[UNKOWN_FIELD_9]
 
-        # FIND OUT IF OUR LAST COMMAND WORKED...
+        # Check that targetTemp is setTemp
         sendCmd = False
         if(self.settemp  != self.targetTemp and self.targetTemp != NO_CHANGE_REQUESTED and self.checkCounter > CHECKS_BEFORE_RETRY):
             if self.targetTemp < self.settemp:
-                await self.send_CCmessage(226) #Temp Down Key
+                print("Set temp ({}C) is higher than target temp ({}C) - Sending temp down button".format(self.settemp, self.targetTemp))
+                await self.send_CCmessage(button_codes['temp_down']) # Temp Down Key
             else:
-                await self.send_CCmessage(225) #Temp Up Key
+                print("Set temp ({}C) is lower than target temp ({}C) - Sending temp up button".format(self.settemp, self.targetTemp))
+                await self.send_CCmessage(button_codes['temp_up']) # Temp Up Key
             self.checkCounter = 0
         elif self.settemp  == self.targetTemp:
             self.targetTemp = NO_CHANGE_REQUESTED
@@ -536,9 +553,6 @@ class SundanceRS485(BalboaSpaWifi):
             mid = data[3]
             mtype = data[4]
 
-            #print("a")
-
-
             if mtype == STATUS_UPDATE:
                 await self.parse_C4status_update(data)
             elif mtype == LIGHTS_UPDATE:
@@ -631,7 +645,10 @@ class SundanceRS485(BalboaSpaWifi):
         return True
 
 
-
+    def string_to_hex(string):
+        base16INT = int(str, 16)
+        hex_value = hex(base16INT)
+        return hex_value
 
     def get_day(self):
         return self.day

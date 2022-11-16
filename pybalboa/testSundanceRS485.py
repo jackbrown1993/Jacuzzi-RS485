@@ -49,6 +49,8 @@ async def newFormatTest():
     spa = sundanceRS485.SundanceRS485("10.100.10.216", 8899)
     await spa.connect()
 
+    spa.targetTemp = 30;
+
     asyncio.ensure_future(spa.listen())
     lastupd = 0
     for i in range(0, 9999999999):
