@@ -14,52 +14,78 @@ import sys
 
 async def ReadR(spa, lastupd):
         await asyncio.sleep(1)
-        return spa.lastupd
         if spa.lastupd != lastupd:
             lastupd = spa.lastupd
-            print("New data as of {0}".format(spa.lastupd))
-            print("Current Temp: {0}".format(spa.curtemp))
-            print("Current Temp2: {0}".format(spa.temp2))
+            #print("New data as of {0}".format(spa.lastupd))
+            #print("Current Temp2: {0}".format(spa.temp2))
+            #print("Current Temp: {0}".format(spa.curtemp))
             print("Set Temp: {0}".format(spa.get_settemp()))          
-            print("Heat State: {0} {1}".format(spa.get_heatstate(True),spa.heatState2))
-            print("Pump Status: {0}".format(str(spa.pump_status)))
-            print("Circulation Pump: {0}  Auto:  {1}  Man: {2}  Unkfield: {3}".format(spa.get_circ_pump(True), spa.autoCirc, spa.manualCirc, spa.unknownCirc))
+            #print("Heat State: {0} {1}".format(spa.get_heatstate(True),spa.heatState2))
+            #print("Pump Status: {0}".format(str(spa.pump_status)))
+            #print("Circulation Pump: {0}  Auto:  {1}  Man: {2}  Unkfield: {3}".format(spa.get_circ_pump(True), spa.autoCirc, spa.manualCirc, spa.unknownCirc))
 
-            print("Display Text: {}".format(spa.get_displayText()))
-            print("Heat Mode: {}".format(spa.get_heatMode()))
+            #print("Display Text: {}".format(spa.get_displayText()))
+            #print("Heat Mode: {}".format(spa.get_heatMode()))
             
-            print("UnknownField3: {}".format(spa.UnknownField3))
-            print("UnknownField9: {}".format(spa.UnknownField9))
+            #print("UnknownField3: {}".format(spa.UnknownField3))
+            #print("UnknownField9: {}".format(spa.UnknownField9))
  
-            print("Light Status: M{0} Br{1} R{2} G{3} B{4} T{4}".format(spa.lightMode,spa.lightBrightnes,spa.lightR,spa.lightG, spa.lightB, spa.lightCycleTime))
+            #print("Light Status: M{0} Br{1} R{2} G{3} B{4} T{4}".format(spa.lightMode,spa.lightBrightnes,spa.lightR,spa.lightG, spa.lightB, spa.lightCycleTime))
  
-            print("Spa Time: {0:04d} {1:02d} {2:02d} {3:02d}:{4:02d} {5}".format(
-                spa.year,
-                spa.month,
-                spa.day,
-                spa.time_hour,
-                spa.time_minute,
-                spa.get_timescale(True)
-            ))
+            #print("Spa Time: {0:04d} {1:02d} {2:02d} {3:02d}:{4:02d} {5}".format(
+                #spa.year,
+                #spa.month,
+                #spa.day,
+                #spa.time_hour,
+                #spa.time_minute,
+                #spa.get_timescale(True)
+            #))
 
             print()
         return lastupd
 
 async def newFormatTest():
     """ Test a miniature engine of talking to the spa."""
-    spa = sundanceRS485.SundanceRS485("192.168.50.53", 8899)
+    spa = sundanceRS485.SundanceRS485("10.100.10.216", 8899)
     await spa.connect()
 
     asyncio.ensure_future(spa.listen())
     lastupd = 0
     for i in range(0, 9999999999):
         lastupd = await ReadR(spa, lastupd)     
-        #if i == 10:
-        #    await spa.send_CCmessage(241)
+    #    if i == 10:
+    #        print("Temp down x 20");
+    #        await spa.send_CCmessage(0x02)
+    #        await spa.send_CCmessage(0x02)
+     #        await spa.send_CCmessage(0x02)
+    #        await spa.send_CCmessage(0x02)
+    #        await spa.send_CCmessage(0x02)
+    #        await spa.send_CCmessage(0x02)
+    #        await spa.send_CCmessage(0x02)
+    #        await spa.send_CCmessage(0x02)
+    #        await spa.send_CCmessage(0x02)
+    #        await spa.send_CCmessage(0x02)
+    #        await spa.send_CCmessage(0x02)
+    #        await spa.send_CCmessage(0x02)
+    #        await spa.send_CCmessage(0x02)
+    #        await spa.send_CCmessage(0x02)
+    #        await spa.send_CCmessage(0x02)
+    #        await spa.send_CCmessage(0x02)
+    #        await spa.send_CCmessage(0x02)
+    #        await spa.send_CCmessage(0x02)
+    #        await spa.send_CCmessage(0x02)
+    #        await spa.send_CCmessage(0x02)
         #if i == 20:
-        #    await spa.send_CCmessage(241)
+        #    print("Pump 1 trigger");
+        #    await spa.send_CCmessage(0x04)
         #if i == 30:
-        #    await spa.send_CCmessage(241)
+        #    print("Temp Down");
+        #   await spa.send_CCmessage(0x02)
+        #    await spa.send_CCmessage(0x02)
+        #    await spa.send_CCmessage(0x02)
+        #    await spa.send_CCmessage(0x02)
+        #    await spa.send_CCmessage(0x02)
+        #    await spa.send_CCmessage(0x02)
         #if i == 40:
         #    await spa.send_CCmessage(241)        
         #if i == 10:
