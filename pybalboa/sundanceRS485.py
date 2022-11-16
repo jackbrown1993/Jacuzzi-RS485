@@ -45,12 +45,6 @@ button_codes = {
     "temp_down":bytes([0x7e, 0x06, 0x10, 0xbf, 0x17, 0x02, 0x75, 0x7e])
 }
 
-#"temp_down":"7e0610bf1702757e"
-# Temp Down: x7E 06 10 BF 17 02 75 7E
-# Temp Up: x7E 06 10 BF 17 01 7C 7E 
-
-
-
 # Used to find our old channel, or an open channel
 DETECT_CHANNEL_STATE_START = 0
 DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND = 5 # Wait this many CTS cycles before deciding that a channel is available to use
@@ -238,10 +232,6 @@ class SundanceRS485(BalboaSpaWifi):
             return
         
         print("Sending message on channel: " + str(self.channel))
-
-        # Example for temp up 7E 06 10 BF 17 01 7C 7E
-        # Working example for temp up =   7e 06 10 bf 17 01 7c 7e
-        # Working example for temp down = 7E 06 10 BF 17 02 75 7E 
         
         #data = bytearray(8)
         #message_length = 6
