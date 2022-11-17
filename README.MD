@@ -30,3 +30,25 @@ To remotely control the Jacuzzi J335 without the expensive celluar module and su
 
 ### Optional ENV vars:
 
+## Docker:
+
+Build the image using 'docker build -t jacuzzi .'
+Run docker image using 'docker run -d -e MQTT_HOST= -e MQTT_PORT=1883 -e MQTT_USER= -e MQTT_PASSWORD= -e SERIAL_IP= -e SERIAL_PORT=8899 jacuzzi'
+
+### docker-compose Example:
+
+```
+version: '3.8'
+services:
+
+  jacuzzi:
+    image: jackbrown1993/
+    restart: unless-stopped
+    environment:
+      - MQTT_HOST=
+      - MQTT_PORT=1883
+      - MQTT_USER=
+      - MQTT_PASSWORD=
+      - SERIAL_IP=
+      - SERIAL_PORT=8899
+```

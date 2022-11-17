@@ -45,7 +45,7 @@ async def ReadR(spa, lastupd):
         await asyncio.sleep(1)
         if spa.lastupd != lastupd:
             lastupd = spa.lastupd
-            #print("New data as of {0}".format(spa.lastupd))
+            print("New data as of {0}".format(spa.lastupd))
             #print("Current Temp2: {0}".format(spa.temp2))
             #print("Current Temp: {0}".format(spa.curtemp))
 
@@ -78,7 +78,7 @@ async def ReadR(spa, lastupd):
 
 async def newFormatTest():
     """ Test a miniature engine of talking to the spa."""
-    spa = sundanceRS485.SundanceRS485("10.100.10.216", 8899)
+    spa = sundanceRS485.SundanceRS485(serial_ip, serial_port)
     await spa.connect()
 
     spa.targetTemp = 20
@@ -109,5 +109,3 @@ async def newFormatTest():
 if __name__ == "__main__":
     
     asyncio.run(newFormatTest())
-
-    
