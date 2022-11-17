@@ -1,7 +1,7 @@
 try:
     import balboa
 except ImportError:
-    import pybalboa as balboa
+    import app as balboa
     
 try:
     import sundanceRS485
@@ -10,7 +10,36 @@ except ImportError:
 
 import asyncio
 import sys
+import paho.mqtt.client as mqtt
+import os
 
+mqtt_host = os.environ.get("MQTT_HOST")
+mqtt_port = os.environ.get("MQTT_PORT")
+mqtt_user = os.environ.get("MQTT_USER")
+mqtt_password = os.environ.get("MQTT_PASSWORD")
+
+serial_ip = os.environ.get("SERIAL_IP")
+serial_port = os.environ.get("SERIAL_PORT")
+
+client = mqtt.Client("jacuzzi_app")
+client.username_pw_set(username=mqtt_user, password=mqtt_password)
+print("Connecting...")
+client.connect(mqtt_host, mqtt_port, 10)
+
+client.publish("homie/hot_tub/$homie", payload="3.0", qos=0, retain=False)
+client.publish("homie/hot_tub/$name", payload="Acorns J335", qos=0, retain=False)
+client.publish("homie/hot_tub/$state", payload="ready", qos=0, retain=False)
+client.publish("homie/hot_tub/$nodes", payload="J335", qos=0, retain=False)
+
+client.publish("homie/hot_tub/J335/set_temperature/$name", payload="Set Temperature", qos=0, retain=False)
+client.publish("homie/hot_tub/J335/set_temperature/$unit", payload="°C", qos=0, retain=False)
+client.publish("homie/hot_tub/J335/set_temperature/$datatype", payload="integer", qos=0, retain=False)
+client.publish("homie/hot_tub/J335/set_temperature/$settable", payload="true", qos=0, retain=False)
+
+client.publish("homie/hot_tub/J335/temperature/$name", payload="Temperature", qos=0, retain=False)
+client.publish("homie/hot_tub/J335/temperature/$unit", payload="°C", qos=0, retain=False)
+client.publish("homie/hot_tub/J335/temperature/$datatype", payload="integer", qos=0, retain=False)
+client.publish("homie/hot_tub/J335/temperature/$settable", payload="false", qos=0, retain=False)
 
 async def ReadR(spa, lastupd):
         await asyncio.sleep(1)
@@ -19,7 +48,10 @@ async def ReadR(spa, lastupd):
             #print("New data as of {0}".format(spa.lastupd))
             #print("Current Temp2: {0}".format(spa.temp2))
             #print("Current Temp: {0}".format(spa.curtemp))
-            print("Set Temp: {0}".format(spa.get_settemp()))          
+
+            print("Set Temp: {0}".format(spa.get_settemp()))
+            client.publish("homie/hot_tub/J335/set_temperature", payload=spa.get_settemp(), qos=0, retain=False)
+
             #print("Heat State: {0} {1}".format(spa.get_heatstate(True),spa.heatState2))
             #print("Pump Status: {0}".format(str(spa.pump_status)))
             #print("Circulation Pump: {0}  Auto:  {1}  Man: {2}  Unkfield: {3}".format(spa.get_circ_pump(True), spa.autoCirc, spa.manualCirc, spa.unknownCirc))
@@ -49,55 +81,12 @@ async def newFormatTest():
     spa = sundanceRS485.SundanceRS485("10.100.10.216", 8899)
     await spa.connect()
 
+    spa.targetTemp = 20
+
     asyncio.ensure_future(spa.listen())
     lastupd = 0
     for i in range(0, 9999999999):
-        lastupd = await ReadR(spa, lastupd)     
-    #    if i == 10:
-    #        print("Temp down x 20");
-    #        await spa.send_CCmessage(0x02)
-    #        await spa.send_CCmessage(0x02)
-     #        await spa.send_CCmessage(0x02)
-    #        await spa.send_CCmessage(0x02)
-    #        await spa.send_CCmessage(0x02)
-    #        await spa.send_CCmessage(0x02)
-    #        await spa.send_CCmessage(0x02)
-    #        await spa.send_CCmessage(0x02)
-    #        await spa.send_CCmessage(0x02)
-    #        await spa.send_CCmessage(0x02)
-    #        await spa.send_CCmessage(0x02)
-    #        await spa.send_CCmessage(0x02)
-    #        await spa.send_CCmessage(0x02)
-    #        await spa.send_CCmessage(0x02)
-    #        await spa.send_CCmessage(0x02)
-    #        await spa.send_CCmessage(0x02)
-    #        await spa.send_CCmessage(0x02)
-    #        await spa.send_CCmessage(0x02)
-    #        await spa.send_CCmessage(0x02)
-    #        await spa.send_CCmessage(0x02)
-        #if i == 20:
-        #    print("Pump 1 trigger");
-        #    await spa.send_CCmessage(0x04)
-        #if i == 30:
-        #    print("Temp Down");
-        #   await spa.send_CCmessage(0x02)
-        #    await spa.send_CCmessage(0x02)
-        #    await spa.send_CCmessage(0x02)
-        #    await spa.send_CCmessage(0x02)
-        #    await spa.send_CCmessage(0x02)
-        #    await spa.send_CCmessage(0x02)
-        #if i == 40:
-        #    await spa.send_CCmessage(241)        
-        #if i == 10:
-        #    await spa.send_CCmessage(242)    
-        #if i == 20:
-        #    await spa.send_CCmessage(242)    
-        #if i == 30:
-        #    await spa.send_CCmessage(242)    
-        #if i == 40:
-        #    await spa.send_CCmessage(242)  
-        #if i == 50:
-        #    await spa.send_CCmessage(242)  
+        lastupd = await ReadR(spa, lastupd)
     return
 
     print('Pump Array: {0}'.format(str(spa.pump_array)))
@@ -115,25 +104,7 @@ async def newFormatTest():
     print("Blower Status: {0}".format(spa.get_blower(True)))
     print("Mister Status: {0}".format(spa.get_mister(True)))  
     print("Filter Mode: {0}".format(spa.get_filtermode(True)))               
-    lastupd = 0
-   
-   
-   
-    for i in range(0, 10):
-         lastupd = await ReadR(spa, lastupd)
-    await spa.change_pump(1, spa.PUMP_LOW)
-    for i in range(0, 10):
-         lastupd = await ReadR(spa, lastupd)
-    await spa.change_pump(1, spa.PUMP_OFF)
-    for i in range(0, 10):
-         lastupd = await ReadR(spa, lastupd)
-    await spa.send_temp_change(103)
-    for i in range(0, 10):
-         lastupd = await ReadR(spa, lastupd)
-    await spa.send_temp_change(97)
-    for i in range(0, 9999999999):
-         lastupd = await ReadR(spa, lastupd)     
-        
+    lastupd = 0     
 
 if __name__ == "__main__":
     
