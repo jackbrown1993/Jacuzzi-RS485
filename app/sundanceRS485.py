@@ -12,7 +12,7 @@ try:
 except:
     from .balboa import *
 
-#Common to all known Balboa Products
+# Values that are common to all known Balboa produdcts
 CLIENT_CLEAR_TO_SEND = 0x00
 CHANNEL_ASSIGNMENT_REQ = 0x01
 CHANNEL_ASSIGNMENT_RESPONCE = 0x02
@@ -22,31 +22,88 @@ EXISTING_CLIENT_RESPONCE = 0x05
 CLEAR_TO_SEND = 0x06
 NOTHING_TO_SEND =  0x07
 
-#So far seem Sundance/Jaccuzi Specific
-STATUS_UPDATE = 0xC4
-LIGHTS_UPDATE = 0xCA
-CC_REQ = 0xCC
+# Values that are unique for Jacuzzi J335
+STATUS_UPDATE = 0x16
+LIGHTS_UPDATE = 0x23
+CC_REQ = 0x17
 
-CC_REQ_ALT_17 = 0x17
-STATUS_UPDATE_ALT_16 = 0x16
-LIGHTS_UPDATE_ALT_23 = 0x23
-
-#Button CC equivs
-BTN_CLEAR_RAY = 239
-BTN_P1 = 228
-BTN_P2 = 229
-BTN_TEMP_DOWN = 226
-BTN_TEMP_UP = 225
-BTN_MENU =254
-BTN_LIGHT_ON = 241
-BTN_LIGHT_COLOR = 242
+# Button CC equivs
+BTN_CLEAR_RAY = 0x0F
+BTN_P1 = 0x04
+BTN_P2 = 0x05
+BTN_TEMP_DOWN = 0x02
+BTN_TEMP_UP = 0x01
+BTN_MENU = 0x1E
+BTN_LIGHT_ON = 0x11
+BTN_LIGHT_COLOR = 0x12
 BTN_NA = 224
 
-#Used to find our old channel, or an open channel
+
+# Button codes as byte arrays
+button_codes = {
+    "temp_up":bytes([0x7e, 0x06, 0x10, 0xbf, 0x17, 0x01, 0x7c, 0x7e]),
+    "temp_down":bytes([0x7e, 0x06, 0x10, 0xbf, 0x17, 0x02, 0x75, 0x7e]),
+    "jet_1":bytes([0x7e, 0x06, 0x10, 0xbf, 0x17, 0x04, 0x67, 0x7e]),
+    "jet_2":bytes([0x7e, 0x06, 0x10, 0xbf, 0x17, 0x05, 0x60, 0x7e]),
+    "menu":bytes([0x7e, 0x06, 0x10, 0xbf, 0x17, 0x1e, 0x21, 0x7e]),
+    "clear_ray":bytes([0x7e, 0x06, 0x10, 0xbf, 0x17, 0x0f, 0x56, 0x7e]),
+    "light":bytes([0x7e, 0x06, 0x10, 0xbf, 0x17, 0x11, 0x0c, 0x7e]),
+    "light_colour":bytes([0x7e, 0x06, 0x10, 0xbf, 0x17, 0x12, 0x05, 0x7e])
+}
+
+# Used to find our old channel, or an open channel
 DETECT_CHANNEL_STATE_START = 0
-DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND = 5 #Wait this man CTS cycles before deciding that a channel is available to use
-NO_CHANGE_REQUESTED = -1 #Used to return control to other devices
-CHECKS_BEFORE_RETRY = 2 #How many status messages we should receive before retrying our command
+DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND = 5 # Wait this many CTS cycles before deciding that a channel is available to use
+NO_CHANGE_REQUESTED = -1 # Used to return control to other devices
+CHECKS_BEFORE_RETRY = 2 # How many status messages we should receive before retrying our command
+
+# Array to convert value returned to set temp in C (manually recorded and verified each temp)
+set_temp_convert = {
+    171:40,
+    180:39.5,
+    181:39,
+    182:38.5,
+    183:38,
+    176:37.5,
+    177:37,
+    178:36.5,
+    179:36,
+    188:35.5,
+    189:35,
+    190:34.5,
+    191:34,
+    184:33.5,
+    185:33,
+    186:32.5,
+    187:32,
+    196:31.5,
+    197:31,
+    198:30.5,
+    199:30,
+    192:29.5,
+    193:29,
+    194:28.5,
+    195:28,
+    204:27.5,
+    205:27,
+    206:26.5,
+    207:26,
+    200:25.5,
+    201:25,
+    202:24.5,
+    203:24,
+    212:23.5,
+    213:23,
+    214:22.5,
+    215:22,
+    208:21.5,
+    209:21,
+    210:20.5,
+    211:20,
+    220:19.5,
+    221:19,
+    222:18.5
+    }
 
 class SundanceRS485(BalboaSpaWifi):
     def __init__(self, hostname, port=8899):
@@ -54,29 +111,27 @@ class SundanceRS485(BalboaSpaWifi):
         
         print("Test For @jackbrown1993")
         
-
-        
-        #debug
+        # DEBUG
         logging.basicConfig()
         self.log = logging.getLogger(__name__)
         self.log.setLevel(logging.DEBUG)
         
-        #Hard code some values that the base class needs and we dont know how to auto detect yet
+        # Hard coded some values that the base class needs and we dont know how to auto detect yet
         self.config_loaded = True
         self.pump_array = [1, 1, 1, 0, 0, 0]
         self.nr_of_pumps = 3
         self.circ_pump = 1
-        self.tempscale = self.TSCALE_F #Can probably be determined...
+        self.tempscale = self.TSCALE_C # Can probably be determined...
         self.timescale = self.TIMESCALE_24H 
         self.temprange = 1
         
-        self.filter_mode = 1 #Can probably be determined...
-        self.heatmode = 0 #Can probably be determined...
-        self.filter1_hour = 0 #Can probably be determined...
-        self.filter1_duration_hours = 8 #Can probably be determined...
-        self.filter2_enabled = 0  #Can probably be determined...
+        self.filter_mode = 1 # Can probably be determined...
+        self.heatmode = 0 # Can probably be determined...
+        self.filter1_hour = 0 # Can probably be determined...
+        self.filter1_duration_hours = 8 # Can probably be determined...
+        self.filter2_enabled = 0  # Can probably be determined...
      
-        #Setup some Model Specific Values
+        # Setup some model specific values
         self.day = -1
         self.month = -1
         self.year = -1
@@ -89,7 +144,7 @@ class SundanceRS485(BalboaSpaWifi):
         self.heatMode = -1
         self.UnknownField3 = -1
         self.UnknownField9 = -1
-        self.panelLock = -1 #Assuming this can be determiend eventaully
+        self.panelLock = -1 # Assuming this can be determined eventaully
         
         self.lightBrightnes = -1
         self.lightMode = -1
@@ -98,12 +153,12 @@ class SundanceRS485(BalboaSpaWifi):
         self.lightB = -1
         self.lightCycleTime = -1
      
-        #setup some sepcific items that we need that the base class doenst
-        self.queue = queue.Queue() #Messages must e sent on CTS for our channel, not any time
-        self.channel = None     #The channel we are assigned to
-        self.discoveredChannels = [] #all the channels the tub is prodcign CTS's for
-        self.activeChannels = [] #Channels we know are in use by other RS485 devices
-        self.detectChannelState = DETECT_CHANNEL_STATE_START #STate machine used to find an open channel, or to get us a new one
+        # Setup some specific items that we need that the base class doesn't
+        self.queue = queue.Queue() # Messages must be sent on CTS for our channel, not any time
+        self.channel = None     # The channel we are assigned to
+        self.discoveredChannels = [] # All the channels the tub is producing CTS's for
+        self.activeChannels = [] # Channels we know are in use by other RS485 devices
+        self.detectChannelState = DETECT_CHANNEL_STATE_START # State machine used to find an open channel, or to get us a new one
         self.target_pump_status  = [NO_CHANGE_REQUESTED, NO_CHANGE_REQUESTED, NO_CHANGE_REQUESTED, NO_CHANGE_REQUESTED, NO_CHANGE_REQUESTED, NO_CHANGE_REQUESTED] #Not all messages seem to get accepted, so we have to check if our change compelted and retry if needed
         self.targetTemp = NO_CHANGE_REQUESTED
         self.checkCounter = 0
@@ -144,7 +199,7 @@ class SundanceRS485(BalboaSpaWifi):
 
     async def change_light(self, light, newstate):
         """ Change light #light to newstate. """
-        # sanity check
+        # Sanity check
         if (
             light > 1
             or not self.light_array[light]
@@ -153,13 +208,13 @@ class SundanceRS485(BalboaSpaWifi):
             return
 
         if light == 0:
-            await self.send_CCmessage(241) #Lights Brightness Button
+            await self.send_CCmessage(241) # Lights Brightness Button
         else: 
-            await self.send_CCmessage(242) #Lights Color Button
+            await self.send_CCmessage(242) # Lights Color Button
 
     async def change_pump(self, pump, newstate):
         """ Change pump #pump to newstate. """
-        # sanity check
+        # Sanity check
         print("{} {}".format(self.pump_status[pump] , newstate))
         if (
             pump > MAX_PUMPS
@@ -172,31 +227,32 @@ class SundanceRS485(BalboaSpaWifi):
         
     async def send_CCmessage(self, val):
         """ Sends a message to the spa with variable length bytes. """    
-        # if not connected, we can't send a message
+        # If not connected, we can't send a message
         if not self.connected:
             self.log.info("Tried to send CC message while not connected")
             return
 
-        # if we dont have a channel number yet, we cant form a message
+        # If we don't have a channel number yet, we can't form a message
         if self.channel is None:
             self.log.info("Tried to send CC message without having been assigned a channel")
             return
-            
-        # Exampl: 7E 07 10 BF CC 65 85 A6 7E 
-        message_length = 7
-        data = bytearray(9)
-        data[0] = M_STARTEND
-        data[1] = message_length
-        data[2] = self.channel
-        data[3] = 0xBF
-        data[4] = CC_REQ
-        data[5] = val
-        data[6] = 0
-        data[7] = self.balboa_calc_cs(data[1:message_length], message_length - 1)
-        data[8] = M_STARTEND
+        
+        print("Sending message on channel: " + str(self.channel))
+        
+        #data = bytearray(8)
+        #message_length = 6
+        #data[0] = M_STARTEND
+        #data[1] = message_length
+        #data[2] = self.channel
+        #data[3] = 0xBF
+        #data[4] = CC_REQ
+        #data[5] = val
+        #data[6] = 0x7C
+        #data[7] = M_STARTEND
 
-        self.log.debug(f"queueing message: {data.hex()}")
-        self.queue.put(data)
+        self.log.debug(f"Queuing message: {val.hex()}")
+
+        self.queue.put(val)
 
     async def send_message(self, *bytes):
         """ Sends a message to the spa with variable length bytes. """
@@ -219,7 +275,7 @@ class SundanceRS485(BalboaSpaWifi):
         #print ("".join(map("{:02X} ".format, bytes(data))))
 
         
-        #"Decrypt" the message
+        # "Decrypt" the message
         data = self.xormsg(data[5:len(data)-2])
 
         #print ("x{}".format(data))
@@ -244,51 +300,47 @@ class SundanceRS485(BalboaSpaWifi):
             have_new_data = True
             self.prior_status = bytearray(len(data))
  
-        HOUR_FIELD = 0 #XOR 6 to get 24hour time
-        HOUR_XOR = 6 #Need to xor the hour field with 6 to get actual hour
+        HOUR_FIELD = 0 # XOR 6 to get 24 hour time
+        HOUR_XOR = 6 # Need to XOR the hour field with 6 to get the actual hour
         
         self.time_hour = data[HOUR_FIELD]^HOUR_XOR
 
         
-        MINUTE_FIELD = 11 #Ok as is
+        MINUTE_FIELD = 11 # OK as is
         
         self.time_minute = data[MINUTE_FIELD] 
  
- 
-        PUMP_FIELD_1 = 1 #Most bit data
-        PUMP_2_BIT_SHIFT = 2 #b100 When pump running
-        PUMP_CIRC_BIT_SHIFT = 6 #b1000000 when pump running
-        MANUAL_CIRC = 7 #b11000000 Includeding Pump Running
-        AUTO_CIRC = 6 #b1100000 Includeding Pump Running
+        PUMP_FIELD_1 = 1 # Most bit data
+        PUMP_2_BIT_SHIFT = 2 # b100 When pump running
+        PUMP_CIRC_BIT_SHIFT = 6 # b1000000 when pump running
+        MANUAL_CIRC = 7 # b11000000 Includeding Pump running
+        AUTO_CIRC = 6 # b1100000 Includeding Pump running
         
         self.pump_status[1] = (data[PUMP_FIELD_1] >> PUMP_2_BIT_SHIFT) & 1
         
         self.circ_pump_status = (data[PUMP_FIELD_1]>> PUMP_CIRC_BIT_SHIFT) & 1
-        self.pump_status[2] = self.circ_pump_status #Circ Pump is Controlable
+        self.pump_status[2] = self.circ_pump_status # Circ Pump is controllable
         self.autoCirc = (data[PUMP_FIELD_1] >> AUTO_CIRC) & 1  
         self.manualCirc = (data[PUMP_FIELD_1] >> MANUAL_CIRC) & 1   
-        
-        
    
-        TBD_FIELD_4 = 4 #5 When Everything Off. 69 when clear ray / circ on?
-        TBD_4_CIRC_SHIFT = 6 #Field 4 goes up by 64 when circ is running it seems
+        TBD_FIELD_4 = 4 # 5 when everything off. 69 when clear ray / circulation pump on?
+        TBD_4_CIRC_SHIFT = 6 # Field 4 goes up by 64 when circulation pump is running, it seems
 
         self.unknownCirc = (data[TBD_FIELD_4] >> TBD_4_CIRC_SHIFT) & 1    
 
    
-        SET_TEMP_FIELD = 8 #Devide by 2 if in C, otherwise F
-        settemp = float(data[SET_TEMP_FIELD])
-        self.settemp = settemp / (2 if self.tempscale == self.TSCALE_C else 1)
+        SET_TEMP_FIELD = 4 # Multiply by 2 if in F, otherwise C
+        settemp = int(data[SET_TEMP_FIELD])
+        self.settemp = set_temp_convert[settemp]
         
-        
-        TEMP_FEILD_2 = 14 #Appears to be 2nd temp sensor C  or F directly. Changes when pump is on!
+        TEMP_FEILD_2 = 14 # Appears to be 2nd temp sensor C  or F directly. Changes when pump is on!
         temp = float(data[TEMP_FEILD_2])
-        if(self.circ_pump_status == 1): #Unclear why this is ncessary
+        if(self.circ_pump_status == 1): # Unclear why this is necessary
             temp = temp + 32   
-        self.temp2 = temp #Hide the data here for now
+        self.temp2 = temp # Hide the data here for now
         
-        TEMP_FIELD_1 = 5 #Devide by 2 if in C, otherwise F
-        TEMP_FIELD_1_xor = 2 #need to Xor this field by 2 to get actual temperature for some reason
+        TEMP_FIELD_1 = 5 # Divide by 2 if in C, otherwise F
+        TEMP_FIELD_1_xor = 2 # Need to XOR this field by 2 to get actual temperature for some reason
         temp = data[TEMP_FIELD_1]^TEMP_FIELD_1_xor
         self.curtemp = (
             temp / (2 if self.tempscale == self.TSCALE_C else 1)
@@ -296,14 +348,14 @@ class SundanceRS485(BalboaSpaWifi):
             else None
         )
                       
-        HEATER_FIELD_1 = 10 #= 64 when Heat on
-        HEATER_SHIFT_1 = 6 #b1000000 when Heat on
+        HEATER_FIELD_1 = 10 # = 64 when Heat on
+        HEATER_SHIFT_1 = 6 # b1000000 when Heat on
                
         self.heatstate = (data[HEATER_FIELD_1] >> HEATER_SHIFT_1) & 1
                 
                 
-        HEATER_FIELD_2 = 11 #= 2 when Heat on
-        HEATER_SHIFT_1 = 1 #b10 when Heat on
+        HEATER_FIELD_2 = 11 # = 2 when Heat on
+        HEATER_SHIFT_1 = 1 # b10 when Heat on
         
         self.heatState2  =  (data[HEATER_FIELD_2] >> HEATER_SHIFT_1) & 1  
         
@@ -333,37 +385,39 @@ class SundanceRS485(BalboaSpaWifi):
             [36,"DAY"],
         ]
         
-        #TODO Convert to text
+        # TODO Convert to text
         self.heatMode = data[HEAT_MODE_FIELD]
        
-        DATE_FIELD_1 = 2 #Dont know how to use this yet...
+        DATE_FIELD_1 = 2 # Don't know how to use this yet...
         DATE_FIELD_2 = 7
-        DAY_SHIFT =  3 #Shift date field 2 by this amount to get day of month
-        MONTH_AND = 7  #Shift date field 2 by this to get Month of year
+        DAY_SHIFT =  3 # Shift date field 2 by this amount to get day of month
+        MONTH_AND = 7  # Shift date field 2 by this to get month of year
         #YEAR Dont have a guess yet
         
         self.day = (data[DATE_FIELD_2] >> DAY_SHIFT) 
         self.month = (data[DATE_FIELD_2] & MONTH_AND) 
-        #TBD self.year = 
+        # TBD self.year = 
 
-        #TODO DOUBLE CHECK THIS!
+        # TODO DOUBLE CHECK THIS!
         self.pump_status[0] = (data[DATE_FIELD_1] >> 4) & 1
 
-        UNKOWN_FIELD_3 = 3 #Always 145? MIght might be days untill water refresh, UV, or filter change
+        UNKOWN_FIELD_3 = 3 # Always 145? Might might be days untill water refresh, UV, or filter change
         
         self.UnknownField3 = data[UNKOWN_FIELD_3]
         
-        UNKOWN_FIELD_9 = 9 #Always 107? might be days untill water refresh, UV, or filter change        
+        UNKOWN_FIELD_9 = 9 # Always 107? Might be days untill water refresh, UV, or filter change        
 
         self.UnknownField9 = data[UNKOWN_FIELD_9]
 
-        #FIND OUT IF OUR LAST COMMAND WORKED...
+        # Check that targetTemp is setTemp
         sendCmd = False
         if(self.settemp  != self.targetTemp and self.targetTemp != NO_CHANGE_REQUESTED and self.checkCounter > CHECKS_BEFORE_RETRY):
             if self.targetTemp < self.settemp:
-                await self.send_CCmessage(226) #Temp Down Key
+                print("Set temp ({}C) is higher than target temp ({}C) - Sending temp down button".format(self.settemp, self.targetTemp))
+                await self.send_CCmessage(button_codes['temp_down']) # Temp Down Key
             else:
-                await self.send_CCmessage(225) #Temp Up Key
+                print("Set temp ({}C) is lower than target temp ({}C) - Sending temp up button".format(self.settemp, self.targetTemp))
+                await self.send_CCmessage(button_codes['temp_up']) # Temp Up Key
             self.checkCounter = 0
         elif self.settemp  == self.targetTemp:
             self.targetTemp = NO_CHANGE_REQUESTED
@@ -375,11 +429,11 @@ class SundanceRS485(BalboaSpaWifi):
             if self.pump_status[i] != self.target_pump_status[i] and self.target_pump_status[i] != NO_CHANGE_REQUESTED:
                 if self.checkCounter > CHECKS_BEFORE_RETRY:
                     if i == 0:
-                        await self.send_CCmessage(228) #Pump 1 Button
+                        await self.send_CCmessage(228) # Pump 1 Button
                     elif i == 1: 
-                        await self.send_CCmessage(229) #Pump 2 Button
+                        await self.send_CCmessage(229) # Pump 2 Button
                     else:
-                        await self.send_CCmessage(239) #Clear Ray / Circulating Pump
+                        await self.send_CCmessage(239) # Clear Ray / Circulating Pump
                     self.checkCounter = NO_CHANGE_REQUESTED
             elif self.pump_status[i] == self.target_pump_status[i]:
                 self.target_pump_status[i] = -1
@@ -394,7 +448,7 @@ class SundanceRS485(BalboaSpaWifi):
         self.log.info("C4{}".format(data))
              
         self.lastupd = time.time()
-        # populate prior_status
+        # Populate prior_status
         for i in range(0, len(data)):
             self.prior_status[i] = data[i]
         await self.int_new_data_cb()
@@ -404,19 +458,19 @@ class SundanceRS485(BalboaSpaWifi):
         01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29
         7E 22 FF AF CA 8A 36 CA CB C4 C5 C6 FB C0 C1 C2 3C DC DD DE DF D8 D9 DA DB D4 D5 D6 D7 D0 D1 D2 D3 EC E5 7E 
         """
-        #"Decrypt" the message
+        # "Decrypt" the message
         data = self.xormsg(data[5:len(data)-2])
         
         """Parse a status update from the spa.
         01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29
         TODO Example after decryption
         """      
-        #TODO: The rest...
+        # TODO: The rest...
         
-        LIGHT_MODE_FIELD = 0 #TBD
+        LIGHT_MODE_FIELD = 0 # TBD
         DISPLAY_MAP = [
-            [128,"Fast Blend"], #with 2 second constant
-            [127,"Slow Blend"], #wiht 4 secodn constant
+            [128,"Fast Blend"], # With 2 second constant
+            [127,"Slow Blend"], # With 4 second constant
             [255,"Frozen Blend"],
             [2,"BLue"],
             [7,"Violet"],
@@ -466,7 +520,7 @@ class SundanceRS485(BalboaSpaWifi):
         self.NTS[2] = self.channel
         self.NTS[3] = 0xBF
         self.NTS[4] = CC_REQ
-        self.NTS[5] = 0 #Dummy
+        self.NTS[5] = 0 #cDummy
         self.NTS[6] = 0
         self.NTS[7] = self.balboa_calc_cs(self.NTS[1:message_length], message_length - 1)
         self.NTS[8] = M_STARTEND
@@ -482,7 +536,7 @@ class SundanceRS485(BalboaSpaWifi):
         
         while True:
             if not self.connected:
-                # sleep and hope the checker fixes us
+                # Sleep and hope the checker fixes us
                 await asyncio.sleep(5)
                 continue
 
@@ -495,16 +549,9 @@ class SundanceRS485(BalboaSpaWifi):
             mid = data[3]
             mtype = data[4]
 
-            #print("a")
-
-
             if mtype == STATUS_UPDATE:
                 await self.parse_C4status_update(data)
             elif mtype == LIGHTS_UPDATE:
-                await self.parse_CA_light_status_update(data)
-            elif mtype == STATUS_UPDATE_ALT_16:
-                await self.parse_C4status_update(data)
-            elif mtype == LIGHTS_UPDATE_ALT_23:
                 await self.parse_CA_light_status_update(data)
             elif mtype == CLIENT_CLEAR_TO_SEND:
                 if self.channel is None and self.detectChannelState == DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND:
@@ -516,14 +563,14 @@ class SundanceRS485(BalboaSpaWifi):
                     data[3] = 0xBF
                     data[4] = CHANNEL_ASSIGNMENT_REQ #type
                     data[5] = 0x02
-                    data[6] = 0xF1 #random Magic
+                    data[6] = 0xF1 # Random Magic
                     data[7] = 0x73
                     data[8] = self.balboa_calc_cs(data[1:message_length], message_length - 1)
                     data[9] = M_STARTEND
                     self.writer.write(data)
                     await self.writer.drain()                        
             elif mtype == CHANNEL_ASSIGNMENT_RESPONCE:
-                #TODO check for magic numbers to be repeated back
+                # TODO Check for magic numbers to be repeated back
                 await self.setMyChan(data[5])
                 message_length = 5
                 data = bytearray(7)
@@ -531,7 +578,7 @@ class SundanceRS485(BalboaSpaWifi):
                 data[1] = message_length
                 data[2] = self.channel
                 data[3] = 0xBF
-                data[4] = CHANNEL_ASSIGNMENT_ACK #type
+                data[4] = CHANNEL_ASSIGNMENT_ACK # type
                 data[5] = self.balboa_calc_cs(data[1:message_length], message_length - 1)
                 data[6] = M_STARTEND
                 self.writer.write(data) 
@@ -544,10 +591,10 @@ class SundanceRS485(BalboaSpaWifi):
                 data[1] = message_length
                 data[2] = self.channel
                 data[3] = 0xBF
-                data[4] = EXISTING_CLIENT_RESPONCE #type
-                data[5] = 0x04 #Dont know!
-                data[6] = 0x08 #Dont know!
-                data[7] = 0x00 #Dont know!
+                data[4] = EXISTING_CLIENT_RESPONCE # type
+                data[5] = 0x04 # Don't know!
+                data[6] = 0x08 # Don't know!
+                data[7] = 0x00 # Don't know!
                 data[8] = self.balboa_calc_cs(data[1:message_length], message_length - 1)
                 data[9] = M_STARTEND
                 self.writer.write(data)
@@ -566,7 +613,7 @@ class SundanceRS485(BalboaSpaWifi):
                         await self.writer.drain()
                         #print("sent")
             else:
-                if (mtype == CC_REQ) or  (mtype == CC_REQ_ALT_17):
+                if (mtype == CC_REQ):
                     if not channel in  self.activeChannels:
                         self.activeChannels.append(data[2])
                         print("Active Channels:" + str(self.activeChannels))
@@ -580,7 +627,7 @@ class SundanceRS485(BalboaSpaWifi):
                                 if not chan in self.activeChannels:
                                     await self.setMyChan( chan)
                                     break
-                    if (mtype == CC_REQ_ALT_17):
+                    if (mtype == CC_REQ):
                         if (data[5]) != 0:
                             self.log.warn("Got Button Press x".format(channel, mid, mtype) + "".join(map("{:02X} ".format, bytes(data))))
                 elif (mtype > NOTHING_TO_SEND) :
@@ -592,10 +639,13 @@ class SundanceRS485(BalboaSpaWifi):
     async def listen_until_configured(self, maxiter=20):
         """ Listen to the spa babble until we are configured."""
         return True
-      
-   
-   
-   
+
+
+    def string_to_hex(string):
+        base16INT = int(str, 16)
+        hex_value = hex(base16INT)
+        return hex_value
+
     def get_day(self):
         return self.day
         
@@ -649,9 +699,3 @@ class SundanceRS485(BalboaSpaWifi):
         
     def get_lightB(self):  
         return self.lightB 
-        
-        
-   
-   
-   
-   
