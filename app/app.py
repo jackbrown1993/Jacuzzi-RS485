@@ -10,7 +10,7 @@ mqtt_user = os.environ.get("MQTT_USER")
 mqtt_password = os.environ.get("MQTT_PASSWORD")
 
 serial_ip = os.environ.get("SERIAL_IP")
-serial_port = os.environ.get("SERIAL_PORT")
+serial_port = int(os.environ.get("SERIAL_PORT"))
 
 client = mqtt.Client("jacuzzi_app")
 client.username_pw_set(username=mqtt_user, password=mqtt_password)
