@@ -57,6 +57,43 @@ DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND = 5 # Wait this many CTS cycles before de
 NO_CHANGE_REQUESTED = -1 # Used to return control to other devices
 CHECKS_BEFORE_RETRY = 2 # How many status messages we should receive before retrying our command
 
+# Array to convert value returned to temp in C (manually recorded and verified each temp)
+temp_convert = {
+    48:24,
+    47:24.5,
+    51:25,
+    50:25.5,
+    53:26,
+    52:26.5,
+    55:27,
+    54:27.5,
+    57:28,
+    56:28.5,
+    59:29,
+    58:29.5,
+    61:30,
+    60:30.5,
+    63:31,
+    62:31.5,
+    65:32,
+    64:32.5,
+    67:33,
+    66:33.5,
+    69:34,
+    68:34.5,
+    71:35,
+    70:35.5,
+    73:36,
+    72:36.5,
+    75:37,
+    74:37.5,
+    77:38,
+    76:38.5,
+    79:39,
+    78:39.5,
+    81:40
+}
+
 # Array to convert value returned to set temp in C (manually recorded and verified each temp)
 set_temp_convert = {
     171:40,
@@ -103,7 +140,7 @@ set_temp_convert = {
     220:19.5,
     221:19,
     222:18.5
-    }
+}
 
 class SundanceRS485(BalboaSpaWifi):
     def __init__(self, hostname, port=8899):
@@ -332,6 +369,9 @@ class SundanceRS485(BalboaSpaWifi):
         SET_TEMP_FIELD = 4 # Multiply by 2 if in F, otherwise C
         settemp = int(data[SET_TEMP_FIELD])
         self.settemp = set_temp_convert[settemp]
+
+        self.tempsensor1=data[3]
+        self.tempsensor2=data[9]
         
         TEMP_FEILD_2 = 14 # Appears to be 2nd temp sensor C  or F directly. Changes when pump is on!
         temp = float(data[TEMP_FEILD_2])
@@ -339,14 +379,9 @@ class SundanceRS485(BalboaSpaWifi):
             temp = temp + 32   
         self.temp2 = temp # Hide the data here for now
         
-        TEMP_FIELD_1 = 5 # Divide by 2 if in C, otherwise F
-        TEMP_FIELD_1_xor = 2 # Need to XOR this field by 2 to get actual temperature for some reason
-        temp = data[TEMP_FIELD_1]^TEMP_FIELD_1_xor
-        self.curtemp = (
-            temp / (2 if self.tempscale == self.TSCALE_C else 1)
-            if temp != 255
-            else None
-        )
+        TEMP_FIELD_1 = 3 # Divide by 2 if in C, otherwise F
+        self.tempField = data[3]
+        self.curtemp = temp_convert[data[3]]
                       
         HEATER_FIELD_1 = 10 # = 64 when Heat on
         HEATER_SHIFT_1 = 6 # b1000000 when Heat on
