@@ -8,14 +8,6 @@ jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
     steps:
-      - name: login to GitHub Container Registry
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: jackbrown1993
-          password: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/checkout@v2
       - name: create image from repository
         run: docker build -t ghcr.io/jackbrown1993/jacuzzi-rs485 .
-      - name: push image to GitHub Container Registry
-        run: docker push ghcr.io/jackbrown1993/jacuzzi-rs485:latest
