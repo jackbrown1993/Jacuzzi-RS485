@@ -14,7 +14,6 @@ serial_port = int(os.environ.get("SERIAL_PORT"))
 
 client = mqtt.Client("jacuzzi_app")
 client.username_pw_set(username=mqtt_user, password=mqtt_password)
-print("Connecting...")
 client.connect(mqtt_host, mqtt_port, 10)
 
 client.publish("homie/hot_tub/$homie", payload="3.0", qos=0, retain=False)
@@ -69,6 +68,11 @@ async def ReadR(spa, lastupd):
             payload=spa.get_settemp(),
             qos=0,
             retain=False,
+        )
+
+        print("Temperature: {}".format(spa.curtemp))
+        client.publish(
+            "homie/hot_tub/J335/temperature", payload=spa.curtemp, qos=0, retain=False
         )
 
         # print("Heat State: {0} {1}".format(spa.get_heatstate(True),spa.heatState2))
