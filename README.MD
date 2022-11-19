@@ -11,7 +11,7 @@ Inspired from:
 
 ## Purpose:
 
-To remotely control the Jacuzzi J335 without the expensive celluar module and subscription. An Elfin serial to WiFi adaptor is used instead connected to the RS485 port on the main board.
+To remotely control the Jacuzzi J335 without the expensive SmartTub module and celluar subscription. An RS485 Serial to WiFi adaptor is used instead connected to the RS485 port on the main board. The adaptor I used was around £25 on Amazon.co.uk (https://www.amazon.co.uk/gp/product/B097C8PT6F).
 
 
 ## Configuration:
@@ -26,17 +26,17 @@ To remotely control the Jacuzzi J335 without the expensive celluar module and su
 
 `MQTT_PASSWORD` - Password of MQTT server.
 
-
 `SERIAL_IP` - IP address of your Elfin serial to WiFi device.
 
 `SERIAL_PORT` - Port that the NETP service of your serial to WiFi device is running on.
+
+### Optional ENV vars:
+
 
 ## MQTT
 
 An MQTT Bridge is provided to allow easy integration with other systems. You will need a separate MQTT server running (Mosquitto is a relatively easy and robust one). The MQTT topics follow the Homie convention, making them self-describing.
 
-
-### Optional ENV vars:
 
 ## Docker:
 
@@ -65,4 +65,4 @@ services:
 When pull requests are opened a Github action is used to ensure code quality:
 - Black to ensure code is formatted,
 - Pylint to disallow unused imports, and
-- Mypy for type checking.
+- Mypy for type checking. (Currently disabled)

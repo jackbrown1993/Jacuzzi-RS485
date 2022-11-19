@@ -144,7 +144,7 @@ set_temp_convert = {
 }
 
 
-class SundanceRS485(BalboaSpaWifi):
+class JacuzziRS485(BalboaSpaWifi):
     def __init__(self, hostname, port=8899):
         super().__init__(hostname, port)
 

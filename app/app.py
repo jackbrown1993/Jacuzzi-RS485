@@ -1,4 +1,4 @@
-import sundanceRS485
+import jacuzziRS485
 
 import asyncio
 import paho.mqtt.client as mqtt
@@ -15,7 +15,7 @@ serial_port = int(os.environ.get("SERIAL_PORT"))
 
 # The callback for when the client connects to the broker
 def on_connect(mqtt_client, userdata, flags, rc):
-    print("MQTT connected with result code {0}".format(str(rc)))
+    # print("MQTT connected with result code {0}".format(str(rc)))
 
     # Subscribe to topics
     mqtt_client.subscribe("homie/hot_tub/J335/set_temperature/set")
@@ -36,12 +36,10 @@ def on_message(mqtt_client, userdata, msg):
 
 mqtt_client = mqtt.Client("jacuzzi_app")
 mqtt_client.username_pw_set(username=mqtt_user, password=mqtt_password)
-mqtt_client.on_connect = (
-    on_connect  # Define callback function for successful connection
-)
-mqtt_client.on_message = on_message  # Define callback function for receipt of a message
-mqtt_client.loop_start()
+mqtt_client.on_connect = on_connect
+mqtt_client.on_message = on_message
 mqtt_client.connect(mqtt_host, mqtt_port)
+mqtt_client.loop_start()
 
 mqtt_client.publish("homie/hot_tub/$homie", payload="3.0", qos=0, retain=False)
 mqtt_client.publish("homie/hot_tub/$name", payload="Acorns J335", qos=0, retain=False)
@@ -109,7 +107,7 @@ async def ReadR(spa, lastupd):
 
 async def newFormatTest():
     """Test a miniature engine of talking to the spa."""
-    spa = sundanceRS485.SundanceRS485(serial_ip, serial_port)
+    spa = jacuzziRS485.JacuzziRS485(serial_ip, serial_port)
     await spa.connect()
 
     asyncio.ensure_future(spa.listen())
