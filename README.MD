@@ -42,8 +42,9 @@ Run docker image using 'docker run -d -e MQTT_HOST= -e MQTT_PORT=1883 -e MQTT_US
 version: '3.8'
 services:
 
-  jacuzzi:
-    image: docker pull ghcr.io/jackbrown1993/jacuzzi-rs485:latest
+  jacuzzi-rs485:
+    image: ghcr.io/jackbrown1993/jacuzzi-rs485:latest
+    container_name: jacuzzi
     restart: unless-stopped
     environment:
       - MQTT_HOST=
