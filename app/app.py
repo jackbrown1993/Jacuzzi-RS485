@@ -1,4 +1,4 @@
-import sundanceRS485
+import jacuzziRS485
 
 import asyncio
 import paho.mqtt.client as mqtt
@@ -109,7 +109,7 @@ async def ReadR(spa, lastupd):
 
 async def newFormatTest():
     """Test a miniature engine of talking to the spa."""
-    spa = sundanceRS485.SundanceRS485(serial_ip, serial_port)
+    spa = jacuzziRS485.JacuzziRS485(serial_ip, serial_port)
     await spa.connect()
 
     asyncio.ensure_future(spa.listen())
