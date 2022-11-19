@@ -79,7 +79,7 @@ should be.  I hate it.
  * by pycrc v0.9, https://pycrc.org	
  * using the configuration:	
  *    Width         = 8	
- *    Poly          = 0x07	
+ *    Poly          = 0x07
  *    Xor_In        = 0x02	
  *    ReflectIn     = False	
  *    Xor_Out       = 0x02	

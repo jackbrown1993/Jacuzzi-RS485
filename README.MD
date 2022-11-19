@@ -31,6 +31,10 @@ To remotely control the Jacuzzi J335 without the expensive celluar module and su
 
 `SERIAL_PORT` - Port that the NETP service of your serial to WiFi device is running on.
 
+## MQTT
+
+An MQTT Bridge is provided to allow easy integration with other systems. You will need a separate MQTT server running (Mosquitto is a relatively easy and robust one). The MQTT topics follow the Homie convention, making them self-describing.
+
 
 ### Optional ENV vars:
 
