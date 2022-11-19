@@ -13,9 +13,26 @@ mqtt_password = os.environ.get("MQTT_PASSWORD")
 serial_ip = os.environ.get("SERIAL_IP")
 serial_port = int(os.environ.get("SERIAL_PORT"))
 
+# The callback for when the client connects to the broker
+def on_connect(client, userdata, flags, rc):
+    print("Connected with result code {0}".format(str(rc)))
+
+    # Subscribe to topics
+    client.subscribe("homie/hot_tub/J335/set_temperature/set")
+
+
+# The callback for when a PUBLISH message is received from the server.
+def on_message(client, userdata, msg):
+    # Print a received msg
+    print("Message received-> " + msg.topic + " " + str(msg.payload))
+
+
 client = mqtt.Client("jacuzzi_app")
+client.on_connect = on_connect  # Define callback function for successful connection
+client.on_message = on_message  # Define callback function for receipt of a message
 client.username_pw_set(username=mqtt_user, password=mqtt_password)
 client.connect(mqtt_host, mqtt_port, 10)
+client.loop_forever
 
 client.publish("homie/hot_tub/$homie", payload="3.0", qos=0, retain=False)
 client.publish("homie/hot_tub/$name", payload="Acorns J335", qos=0, retain=False)
