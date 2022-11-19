@@ -14,7 +14,7 @@ import paho.mqtt.client as mqtt
 import os
 
 mqtt_host = os.environ.get("MQTT_HOST")
-mqtt_port = os.environ.get("MQTT_PORT")
+mqtt_port = int(os.environ.get("MQTT_PORT"))
 mqtt_user = os.environ.get("MQTT_USER")
 mqtt_password = os.environ.get("MQTT_PASSWORD")
 
