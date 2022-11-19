@@ -26,6 +26,13 @@ def on_message(mqtt_client, userdata, msg):
     # Print a received msg
     print("Message received-> " + msg.topic + " " + str(msg.payload))
 
+    if msg.topic == "homie/hot_tub/J335/set_temperature/set":
+        spa.send_temp_change(int(msg.payload))
+    elif msg.topic == "":
+        print("")
+    else:
+        "No logic for subscribed topic " + msg.topic
+
 
 mqtt_client = mqtt.Client("jacuzzi_app")
 mqtt_client.username_pw_set(username=mqtt_user, password=mqtt_password)
@@ -107,26 +114,9 @@ async def newFormatTest():
 
     asyncio.ensure_future(spa.listen())
     lastupd = 0
-    for i in range(0, 9999999999):
-        lastupd = await ReadR(spa, lastupd)
-    return
 
-    print("Pump Array: {0}".format(str(spa.pump_array)))
-    print("Light Array: {0}".format(str(spa.light_array)))
-    print("Aux Array: {0}".format(str(spa.aux_array)))
-    print("Circulation Pump: {0}".format(spa.circ_pump))
-    print("Blower: {0}".format(spa.blower))
-    print("Mister: {0}".format(spa.mister))
-    print("Min Temps: {0}".format(spa.tmin))
-    print("Max Temps: {0}".format(spa.tmax))
-    print("Nr of pumps: {0}".format(spa.nr_of_pumps))
-    print("Tempscale: {0}".format(spa.get_tempscale(text=True)))
-    print("Heat Mode: {0}".format(spa.get_heatmode(True)))
-    print("Temp Range: {0}".format(spa.get_temprange(True)))
-    print("Blower Status: {0}".format(spa.get_blower(True)))
-    print("Mister Status: {0}".format(spa.get_mister(True)))
-    print("Filter Mode: {0}".format(spa.get_filtermode(True)))
-    lastupd = 0
+    while True:
+        lastupd = await ReadR(spa, lastupd)
 
 
 if __name__ == "__main__":
