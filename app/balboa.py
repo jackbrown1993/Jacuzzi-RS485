@@ -719,7 +719,7 @@ class BalboaSpaWifi:
     async def read_one_message(self):
         """Listen to the spa babble once."""
         if not self.connected:
-            print("notconnected")
+            print("Not Connected!")
             return None
 
         try:

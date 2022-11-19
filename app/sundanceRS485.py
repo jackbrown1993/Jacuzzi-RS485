@@ -148,8 +148,6 @@ class SundanceRS485(BalboaSpaWifi):
     def __init__(self, hostname, port=8899):
         super().__init__(hostname, port)
 
-        print("Test For @jackbrown1993")
-
         # DEBUG
         logging.basicConfig()
         self.log = logging.getLogger(__name__)
