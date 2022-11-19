@@ -54,3 +54,9 @@ services:
       - SERIAL_IP=
       - SERIAL_PORT=8899
 ```
+## Code Quality Checks
+
+When pull requests are opened a Github action is used to ensure code quality:
+- Black to ensure code is formatted,
+- Pylint to disallow unused imports, and
+- Mypy for type checking.
