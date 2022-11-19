@@ -3,8 +3,9 @@
 This repo is still under development.
 
 Inspired from:
-- https://github.com/HyperActiveJ/sundance780-jacuzzi-balboa-rs485-tcp
-- https://github.com/garbled1/pybalboa
+- [https://github.com/HyperActiveJ/sundance780-jacuzzi-balboa-rs485-tcp](https://github.com/garbled1/pybalboa)
+- [https://github.com/garbled1/pybalboa](https://github.com/garbled1/pybalboa)
+- [https://github.com/peterg79/bwalink](https://github.com/jshank/bwalink)
 
 
 ## Purpose:
