@@ -9,31 +9,15 @@ on:
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@v2
+      - name: login to GitHub Container Registry
+        uses: docker/login-action@v1
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
+          username: jackbrown1993
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          push: true
-          tags: ghcr.io/jacuzzi-rs485:latest
+      - uses: actions/checkout@v2
+      - name: create image from repository
+        run: docker build -t ghcr.io/jackbrown1993/jacuzzi-rs485 .
+      - name: push image to GitHub Container Registry
+        run: docker push ghcr.io/jackbrown1993/jacuzzi-rs485:latest
