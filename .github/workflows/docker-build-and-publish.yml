@@ -31,7 +31,6 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         context: .
-        file: ./Dockerfile
         target: final
         push: true
         tags: ghcr.io/jackbrown1993/jacuzzi-rs485:latest
