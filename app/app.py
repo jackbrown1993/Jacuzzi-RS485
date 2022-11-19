@@ -1,20 +1,11 @@
-try:
-    import balboa
-except ImportError:
-    import app as balboa
-
-try:
-    import sundanceRS485
-except ImportError:
-    import sundanceRS485 as SundanceRS485
+import sundanceRS485
 
 import asyncio
-import sys
 import paho.mqtt.client as mqtt
 import os
 
 mqtt_host = os.environ.get("MQTT_HOST")
-mqtt_port = os.environ.get("MQTT_PORT")
+mqtt_port = int(os.environ.get("MQTT_PORT"))
 mqtt_user = os.environ.get("MQTT_USER")
 mqtt_password = os.environ.get("MQTT_PASSWORD")
 

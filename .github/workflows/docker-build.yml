@@ -1,0 +1,13 @@
+name: docker-build
+
+on:
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: create image from repository
+        run: docker build -t ghcr.io/jackbrown1993/jacuzzi-rs485 .

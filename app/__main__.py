@@ -1,8 +1,6 @@
-import pybalboa as balboa
 import sundanceRS485
 
 import asyncio
-import sys
 
 
 async def ReadR(spa, lastupd):

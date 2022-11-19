@@ -3,8 +3,6 @@ name: docker-build-and-publish
 on:
   push:
     branches: [ master ]
-  pull_request:
-    branches: [ master ]
 
 jobs:
   build-and-push-image:
