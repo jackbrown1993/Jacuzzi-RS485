@@ -3,6 +3,7 @@ import sundanceRS485
 import asyncio
 import paho.mqtt.client as mqtt
 import os
+from datetime import datetime
 
 mqtt_host = os.environ.get("MQTT_HOST")
 mqtt_port = int(os.environ.get("MQTT_PORT"))
@@ -58,11 +59,13 @@ async def ReadR(spa, lastupd):
     await asyncio.sleep(1)
     if spa.lastupd != lastupd:
         lastupd = spa.lastupd
-        print("New data as of {0}".format(spa.lastupd))
-        # print("Current Temp2: {0}".format(spa.temp2))
-        # print("Current Temp: {0}".format(spa.curtemp))
+        print(
+            "New data as of "
+            + datetime.utcfromtimestamp(spa.lastupd).strftime("%d-%m-%Y %H:%M:%S")
+        )
 
         print("Set Temp: {0}".format(spa.get_settemp()))
+        print("Current Temp: {0}".format(spa.curtemp))
         client.publish(
             "homie/hot_tub/J335/set_temperature",
             payload=spa.get_settemp(),
@@ -70,31 +73,9 @@ async def ReadR(spa, lastupd):
             retain=False,
         )
 
-        print("Temperature: {}".format(spa.curtemp))
         client.publish(
             "homie/hot_tub/J335/temperature", payload=spa.curtemp, qos=0, retain=False
         )
-
-        # print("Heat State: {0} {1}".format(spa.get_heatstate(True),spa.heatState2))
-        # print("Pump Status: {0}".format(str(spa.pump_status)))
-        # print("Circulation Pump: {0}  Auto:  {1}  Man: {2}  Unkfield: {3}".format(spa.get_circ_pump(True), spa.autoCirc, spa.manualCirc, spa.unknownCirc))
-
-        # print("Display Text: {}".format(spa.get_displayText()))
-        # print("Heat Mode: {}".format(spa.get_heatMode()))
-
-        # print("UnknownField3: {}".format(spa.UnknownField3))
-        # print("UnknownField9: {}".format(spa.UnknownField9))
-
-        # print("Light Status: M{0} Br{1} R{2} G{3} B{4} T{4}".format(spa.lightMode,spa.lightBrightnes,spa.lightR,spa.lightG, spa.lightB, spa.lightCycleTime))
-
-        # print("Spa Time: {0:04d} {1:02d} {2:02d} {3:02d}:{4:02d} {5}".format(
-        # spa.year,
-        # spa.month,
-        # spa.day,
-        # spa.time_hour,
-        # spa.time_minute,
-        # spa.get_timescale(True)
-        # ))
 
         print()
     return lastupd
@@ -104,8 +85,6 @@ async def newFormatTest():
     """Test a miniature engine of talking to the spa."""
     spa = sundanceRS485.SundanceRS485(serial_ip, serial_port)
     await spa.connect()
-
-    spa.targetTemp = 20
 
     asyncio.ensure_future(spa.listen())
     lastupd = 0
