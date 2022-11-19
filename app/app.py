@@ -1,7 +1,4 @@
-try:
-    import sundanceRS485
-except ImportError:
-    import sundanceRS485 as SundanceRS485
+import sundanceRS485
 
 import asyncio
 import paho.mqtt.client as mqtt
