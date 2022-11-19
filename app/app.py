@@ -1,15 +1,9 @@
 try:
-    import balboa
-except ImportError:
-    import app as balboa
-
-try:
     import sundanceRS485
 except ImportError:
     import sundanceRS485 as SundanceRS485
 
 import asyncio
-import sys
 import paho.mqtt.client as mqtt
 import os
 

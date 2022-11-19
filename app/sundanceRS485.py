@@ -1,11 +1,8 @@
 import asyncio
-import errno
 import logging
 import time
-import warnings
 import queue
 import socket
-from socket import error as SocketError
 
 try:
     from balboa import *
