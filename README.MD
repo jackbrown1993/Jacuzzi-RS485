@@ -37,6 +37,7 @@ To remotely control the Jacuzzi J335 without the expensive SmartTub module and c
 
 An MQTT Bridge is provided to allow easy integration with other systems. You will need a separate MQTT server running (Mosquitto is a relatively easy and robust one). The MQTT topics follow the Homie convention, making them self-describing.
 
+Publishing a float value to ```homie/hot_tub/J335/set_temperature/set``` will change the set temp value of Jacuzzi.
 
 ## Docker:
 
