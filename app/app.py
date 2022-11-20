@@ -13,73 +13,25 @@ mqtt_password = os.environ.get("MQTT_PASSWORD")
 serial_ip = os.environ.get("SERIAL_IP")
 serial_port = int(os.environ.get("SERIAL_PORT"))
 
-# The callback for when the client connects to the broker
-def on_connect(mqtt_client, userdata, flags, rc):
-    # print("MQTT connected with result code {0}".format(str(rc)))
 
-    # Subscribe to topics
-    mqtt_client.subscribe("homie/hot_tub/J335/set_temperature/set")
+def on_connect(mqttc, obj, flags, rc):
+    print("Connected to MQTT.")
 
 
-# The callback for when a PUBLISH message is received from the server.
-def on_message(mqtt_client, userdata, msg):
-    # Print a received msg
-    print("Message received-> " + msg.topic + " " + str(msg.payload))
-
+def on_message(mqttc, obj, msg):
+    print(
+        "MQTT message received on topic: "
+        + msg.topic
+        + " with value: "
+        + msg.payload.decode()
+    )
     if msg.topic == "homie/hot_tub/J335/set_temperature/set":
-        spa.send_temp_change(int(msg.payload))
-    elif msg.topic == "":
-        print("")
+        spa.targetTemp = int(msg.payload.decode())
     else:
-        "No logic for subscribed topic " + msg.topic
+        print("No logic for this topic, discarding.")
 
 
-mqtt_client = mqtt.Client("jacuzzi_app")
-mqtt_client.username_pw_set(username=mqtt_user, password=mqtt_password)
-mqtt_client.on_connect = on_connect
-mqtt_client.on_message = on_message
-mqtt_client.connect(mqtt_host, mqtt_port)
-mqtt_client.loop_start()
-
-mqtt_client.publish("homie/hot_tub/$homie", payload="3.0", qos=0, retain=False)
-mqtt_client.publish("homie/hot_tub/$name", payload="Acorns J335", qos=0, retain=False)
-mqtt_client.publish("homie/hot_tub/$state", payload="ready", qos=0, retain=False)
-mqtt_client.publish("homie/hot_tub/$nodes", payload="J335", qos=0, retain=False)
-
-mqtt_client.publish(
-    "homie/hot_tub/J335/set_temperature/$name",
-    payload="Set Temperature",
-    qos=0,
-    retain=False,
-)
-mqtt_client.publish(
-    "homie/hot_tub/J335/set_temperature/$unit", payload="°C", qos=0, retain=False
-)
-mqtt_client.publish(
-    "homie/hot_tub/J335/set_temperature/$datatype",
-    payload="integer",
-    qos=0,
-    retain=False,
-)
-mqtt_client.publish(
-    "homie/hot_tub/J335/set_temperature/$settable", payload="true", qos=0, retain=False
-)
-
-mqtt_client.publish(
-    "homie/hot_tub/J335/temperature/$name", payload="Temperature", qos=0, retain=False
-)
-mqtt_client.publish(
-    "homie/hot_tub/J335/temperature/$unit", payload="°C", qos=0, retain=False
-)
-mqtt_client.publish(
-    "homie/hot_tub/J335/temperature/$datatype", payload="integer", qos=0, retain=False
-)
-mqtt_client.publish(
-    "homie/hot_tub/J335/temperature/$settable", payload="false", qos=0, retain=False
-)
-
-
-async def ReadR(spa, lastupd):
+async def read_spa_data(spa, lastupd):
     await asyncio.sleep(1)
     if spa.lastupd != lastupd:
         lastupd = spa.lastupd
@@ -90,23 +42,77 @@ async def ReadR(spa, lastupd):
 
         print("Set Temp: {0}".format(spa.get_settemp()))
         print("Current Temp: {0}".format(spa.curtemp))
-        mqtt_client.publish(
-            "homie/hot_tub/J335/set_temperature",
-            payload=spa.get_settemp(),
-            qos=0,
-            retain=False,
-        )
-
-        mqtt_client.publish(
-            "homie/hot_tub/J335/temperature", payload=spa.curtemp, qos=0, retain=False
-        )
 
         print()
     return lastupd
 
 
-async def newFormatTest():
+async def start_mqtt():
+    mqtt_client = mqtt.Client("jacuzzi_rs485")
+    mqtt_client.username_pw_set(username=mqtt_user, password=mqtt_password)
+    mqtt_client.on_connect = on_connect
+    mqtt_client.on_message = on_message
+    mqtt_client.connect(mqtt_host, mqtt_port)
+    mqtt_client.loop_start()
+
+    mqtt_client.publish("homie/hot_tub/$homie", payload="3.0", qos=0, retain=False)
+    mqtt_client.publish(
+        "homie/hot_tub/$name", payload="Acorns J335", qos=0, retain=False
+    )
+    mqtt_client.publish("homie/hot_tub/$state", payload="ready", qos=0, retain=False)
+    mqtt_client.publish("homie/hot_tub/$nodes", payload="J335", qos=0, retain=False)
+    mqtt_client.publish(
+        "homie/hot_tub/J335/set_temperature/$name",
+        payload="Set Temperature",
+        qos=0,
+        retain=False,
+    )
+    mqtt_client.publish(
+        "homie/hot_tub/J335/set_temperature/$unit", payload="°C", qos=0, retain=False
+    )
+    mqtt_client.publish(
+        "homie/hot_tub/J335/set_temperature/$datatype",
+        payload="integer",
+        qos=0,
+        retain=False,
+    )
+    mqtt_client.publish(
+        "homie/hot_tub/J335/set_temperature/$settable",
+        payload="true",
+        qos=0,
+        retain=False,
+    )
+
+    mqtt_client.publish(
+        "homie/hot_tub/J335/temperature/$name",
+        payload="Temperature",
+        qos=0,
+        retain=False,
+    )
+    mqtt_client.publish(
+        "homie/hot_tub/J335/temperature/$unit", payload="°C", qos=0, retain=False
+    )
+    mqtt_client.publish(
+        "homie/hot_tub/J335/temperature/$datatype",
+        payload="integer",
+        qos=0,
+        retain=False,
+    )
+    mqtt_client.publish(
+        "homie/hot_tub/J335/temperature/$settable", payload="false", qos=0, retain=False
+    )
+
+    # Subscribe to MQTT
+    mqtt_client.subscribe("homie/hot_tub/J335/set_temperature/set")
+
+
+async def start_app():
     """Test a miniature engine of talking to the spa."""
+    global spa
+    # Connect to MQTT
+    await start_mqtt()
+
+    # Connect to Spa (Serial Device)
     spa = jacuzziRS485.JacuzziRS485(serial_ip, serial_port)
     await spa.connect()
 
@@ -114,9 +120,10 @@ async def newFormatTest():
     lastupd = 0
 
     while True:
-        lastupd = await ReadR(spa, lastupd)
+        # Check if set temp has changed
+        lastupd = await read_spa_data(spa, lastupd)
 
 
 if __name__ == "__main__":
 
-    asyncio.run(newFormatTest())
+    asyncio.run(start_app())
