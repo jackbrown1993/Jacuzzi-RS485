@@ -26,7 +26,7 @@ def on_message(mqttc, obj, msg):
         + msg.payload.decode()
     )
     if msg.topic == "homie/hot_tub/J335/set_temperature/set":
-        spa.targetTemp = int(msg.payload.decode())
+        spa.targetTemp = float(msg.payload.decode())
     else:
         print("No logic for this topic, discarding.")
 
