@@ -43,11 +43,23 @@ async def read_spa_data(spa, lastupd):
         print("Set Temp: {0}".format(spa.get_settemp()))
         print("Current Temp: {0}".format(spa.curtemp))
 
+        mqtt_client.publish(
+            "homie/hot_tub/J335/set_temperature",
+            payload=spa.get_settemp(),
+            qos=0,
+            retain=False,
+        )
+
+        mqtt_client.publish(
+            "homie/hot_tub/J335/temperature", payload=spa.curtemp, qos=0, retain=False
+        )
+
         print()
     return lastupd
 
 
 async def start_mqtt():
+    global mqtt_client
     mqtt_client = mqtt.Client("jacuzzi_rs485")
     mqtt_client.username_pw_set(username=mqtt_user, password=mqtt_password)
     mqtt_client.on_connect = on_connect
