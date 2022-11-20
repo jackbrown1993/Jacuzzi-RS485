@@ -120,10 +120,8 @@ async def start_app():
     lastupd = 0
 
     while True:
-        # Check if set temp has changed
         lastupd = await read_spa_data(spa, lastupd)
 
 
 if __name__ == "__main__":
-
     asyncio.run(start_app())
