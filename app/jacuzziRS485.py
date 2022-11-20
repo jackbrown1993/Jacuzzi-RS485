@@ -149,9 +149,9 @@ class JacuzziRS485(BalboaSpaWifi):
         super().__init__(hostname, port)
 
         # DEBUG
-        logging.basicConfig()
-        self.log = logging.getLogger(__name__)
-        self.log.setLevel(logging.DEBUG)
+        # logging.basicConfig()
+        # self.log = logging.getLogger(__name__)
+        # self.log.setLevel(logging.DEBUG)
 
         # Hard coded some values that the base class needs and we dont know how to auto detect yet
         self.config_loaded = True
