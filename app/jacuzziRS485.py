@@ -149,7 +149,7 @@ class JacuzziRS485(BalboaSpaWifi):
         super().__init__(hostname, port)
 
         # DEBUG
-        # logging.basicConfig()
+        logging.basicConfig()
         # self.log = logging.getLogger(__name__)
         # self.log.setLevel(logging.DEBUG)
 
