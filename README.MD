@@ -41,7 +41,7 @@ Publishing a float value to ```homie/hot_tub/J335/set_temperature/set``` will ch
 
 ## Docker:
 
-Run docker image using 'docker run -d -e MQTT_HOST= -e MQTT_PORT=1883 -e MQTT_USER= -e MQTT_PASSWORD= -e SERIAL_IP= -e SERIAL_PORT=8899 ghcr.io/jackbrown1993/jacuzzi-rs485:latest'
+Run docker image using ```docker run -d -e MQTT_HOST= -e MQTT_PORT=1883 -e MQTT_USER= -e MQTT_PASSWORD= -e SERIAL_IP= -e SERIAL_PORT=8899 ghcr.io/jackbrown1993/jacuzzi-rs485:latest```
 
 ### docker-compose Example:
 
