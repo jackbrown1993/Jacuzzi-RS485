@@ -94,9 +94,8 @@ temp_convert = {
     78: 39.5,
     81: 40,
     80: 40.5,
-    79: 41,
-    83: 41.5,
-    82: 42,
+    83: 41,
+    82: 41.5,
 }
 
 # Array to convert value returned to set temp in C (manually recorded and verified each temp)
@@ -395,6 +394,7 @@ class JacuzziRS485(BalboaSpaWifi):
         TEMP_FIELD_1 = 3  # Divide by 2 if in C, otherwise F
         self.tempField = data[3]
         self.curtemp = temp_convert[data[3]]
+        print(str(self.tempField))
 
         HEATER_FIELD_1 = 10  # = 64 when Heat on
         HEATER_SHIFT_1 = 6  # b1000000 when Heat on
