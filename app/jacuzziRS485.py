@@ -93,6 +93,10 @@ temp_convert = {
     79: 39,
     78: 39.5,
     81: 40,
+    80: 40.5,
+    79: 41,
+    83: 41.5,
+    82: 42,
 }
 
 # Array to convert value returned to set temp in C (manually recorded and verified each temp)
