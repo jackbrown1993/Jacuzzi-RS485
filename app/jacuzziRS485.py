@@ -471,7 +471,7 @@ class JacuzziRS485(BalboaSpaWifi):
                     )
                 )
                 await self.send_CCmessage(button_codes["temp_down"])  # Temp Down Key
-                await asyncio.sleep(2) # Sleep 2 seconds in attempt to stop issue where hot tub becomes non-responsive
+                await asyncio.sleep(2)  # Sleep 2 seconds in attempt to stop issue where hot tub becomes non-responsive
             else:
                 print(
                     "Set temp ({}C) is lower than target temp ({}C) - Sending temp up button".format(
@@ -479,7 +479,7 @@ class JacuzziRS485(BalboaSpaWifi):
                     )
                 )
                 await self.send_CCmessage(button_codes["temp_up"])  # Temp Up Key
-                await asyncio.sleep(2) # Sleep 2 seconds in attempt to stop issue where hot tub becomes non-responsive
+                await asyncio.sleep(2)  # Sleep 2 seconds in attempt to stop issue where hot tub becomes non-responsive
             self.checkCounter = 0
         elif self.settemp == self.targetTemp:
             self.targetTemp = NO_CHANGE_REQUESTED
