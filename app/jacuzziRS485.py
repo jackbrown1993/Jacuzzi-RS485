@@ -394,10 +394,10 @@ class JacuzziRS485(BalboaSpaWifi):
         TEMP_FIELD_1 = 3  # Divide by 2 if in C, otherwise F
         self.tempField = data[3]
         if (data[3]) in temp_convert:
-            self.curtemp = temp_convert[data[3]];
+            self.curtemp = temp_convert[data[3]]
         else:
-            print("Temperature is outside of range that we have mappings for.");
-            self.curtemp = 0;
+            print("Temperature is outside of range that we have mappings for (< 21C or > 41.5C")
+            self.curtemp = 0
 
         HEATER_FIELD_1 = 10  # = 64 when Heat on
         HEATER_SHIFT_1 = 6  # b1000000 when Heat on
@@ -483,7 +483,9 @@ class JacuzziRS485(BalboaSpaWifi):
                     )
                 )
                 await self.send_CCmessage(button_codes["temp_up"])  # Temp Up Key
-                await asyncio.sleep(2)  # Sleep 2 seconds in attempt to stop issue where hot tub becomes non-responsive
+                await asyncio.sleep(
+                    2
+                )  # Sleep 2 seconds in attempt to stop issue where hot tub becomes non-responsive
             self.checkCounter = 0
         elif self.settemp == self.targetTemp:
             self.targetTemp = NO_CHANGE_REQUESTED
