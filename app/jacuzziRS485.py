@@ -393,7 +393,11 @@ class JacuzziRS485(BalboaSpaWifi):
 
         TEMP_FIELD_1 = 3  # Divide by 2 if in C, otherwise F
         self.tempField = data[3]
-        self.curtemp = temp_convert[data[3]]
+        if (data[3]) in temp_convert:
+            self.curtemp = temp_convert[data[3]];
+        else:
+            print("Temperature is outside of range that we have mappings for.");
+            self.curtemp = 0;
 
         HEATER_FIELD_1 = 10  # = 64 when Heat on
         HEATER_SHIFT_1 = 6  # b1000000 when Heat on
