@@ -396,7 +396,8 @@ class JacuzziRS485(BalboaSpaWifi):
         if (data[3]) in temp_convert:
             self.curtemp = temp_convert[data[3]]
         else:
-            print("Temperature is outside of range that we have mappings for (< 21C or > 41.5C")
+            print("Temperature is outside of range that we have mappings for (<21C or >41.5C")
+            print("Data from Jacuzzi was: " + data[3]);
             self.curtemp = 0
 
         HEATER_FIELD_1 = 10  # = 64 when Heat on
