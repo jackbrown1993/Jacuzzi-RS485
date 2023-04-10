@@ -60,6 +60,7 @@ CHECKS_BEFORE_RETRY = (
 
 # Array to convert value returned to temp in C (manually recorded and verified each temp)
 temp_convert = {
+    45: 22,
     48: 24,
     47: 24.5,
     51: 25,
