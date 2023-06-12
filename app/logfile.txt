@@ -1,0 +1,104 @@
+2023-06-12 20:33:29,275:INFO:Colors: 256 Pair: 254 Has Color: True Can Change: True
+2023-06-12 20:33:29,277:INFO:Connecting...
+2023-06-12 20:34:12,057:INFO:----Dumping log buffer to stdout----
+2023-06-12 20:34:12,059:INFO:----Log dump complete----
+2023-06-12 20:34:12,680:INFO:Colors: 256 Pair: 254 Has Color: True Can Change: True
+2023-06-12 20:34:12,683:INFO:Connecting...
+2023-06-12 20:34:14,771:INFO:----Dumping log buffer to stdout----
+2023-06-12 20:34:14,772:INFO:----Log dump complete----
+2023-06-12 20:34:48,625:INFO:Colors: 256 Pair: 254 Has Color: True Can Change: True
+2023-06-12 20:34:48,627:INFO:Connecting...
+2023-06-12 20:34:48,643:INFO:Sending: 7e070abf190100957e
+2023-06-12 20:34:49,644:INFO:Requesting module ID.
+2023-06-12 20:34:49,645:INFO:Sending: 7e050abf04777e
+2023-06-12 20:34:50,785:ERROR:Message had bad CRC, discarding
+2023-06-12 20:34:53,711:INFO:New msg: 7e25ffaf161421a20617420032fa280000008300004e011c00008000000000000001000000407e
+2023-06-12 20:34:55,229:INFO:New msg: 7e070abf1b1503497e
+2023-06-12 20:35:00,546:INFO:New msg: 7e21ffaf2300000000000000ff003c000000ff0000000000000000000000000000ba7e
+2023-06-12 20:35:00,549:INFO:Light status: L: 0 R: 0 G: 0 B: 0
+2023-06-12 20:36:04,375:INFO:Sending: 7e060abf2024ee7e
+2023-06-12 20:36:23,810:INFO:Requesting module ID.
+2023-06-12 20:36:23,811:INFO:Sending: 7e050abf04777e
+2023-06-12 20:37:53,923:INFO:Requesting module ID.
+2023-06-12 20:37:53,923:INFO:Sending: 7e050abf04777e
+2023-06-12 20:38:33,231:INFO:----Dumping log buffer to stdout----
+2023-06-12 20:38:33,232:INFO:----Log dump complete----
+2023-06-12 20:38:34,054:INFO:Colors: 256 Pair: 254 Has Color: True Can Change: True
+2023-06-12 20:38:34,056:INFO:Connecting...
+2023-06-12 20:38:34,066:INFO:Sending: 7e070abf190100957e
+2023-06-12 20:38:35,067:INFO:Requesting module ID.
+2023-06-12 20:38:35,067:INFO:Sending: 7e050abf04777e
+2023-06-12 20:38:37,914:INFO:Sending: 7e060abf2024ee7e
+2023-06-12 20:38:42,446:ERROR:Message had bad CRC, discarding
+2023-06-12 20:38:46,453:ERROR:Message had bad CRC, discarding
+2023-06-12 20:38:48,457:ERROR:Message had bad CRC, discarding
+2023-06-12 20:38:49,874:INFO:----Dumping log buffer to stdout----
+2023-06-12 20:38:49,877:INFO:----Log dump complete----
+2023-06-12 20:38:50,522:INFO:Colors: 256 Pair: 254 Has Color: True Can Change: True
+2023-06-12 20:38:50,524:INFO:Connecting...
+2023-06-12 20:38:50,535:INFO:Sendinssg: 7e070abf190100957e
+2023-06-12 20:38:51,537:INFO:Requesting module ID.
+2023-06-12 20:38:51,537:INFO:Sendinssg: 7e050abf04777e
+2023-06-12 20:39:00,646:ERROR:Message had bad CRC, discarding
+2023-06-12 20:39:02,861:INFO:New msg: 7e21ffaf2300000000000000ff003c000000ff0000000000000000000000000000ba7e
+2023-06-12 20:39:02,862:INFO:Light status: L: 0 R: 0 G: 0 B: 0
+2023-06-12 20:39:03,797:INFO:New msg: 7e25ffaf161425a20617420032fa280000008300004e011c00008000000000000001000000f37e
+2023-06-12 20:39:05,143:INFO:New msg: 7e070abf1b1503497e
+2023-06-12 20:39:16,039:INFO:----Dumping log buffer to stdout----
+2023-06-12 20:39:16,039:INFO:----Log dump complete----
+2023-06-12 20:39:16,600:INFO:Colors: 256 Pair: 254 Has Color: True Can Change: True
+2023-06-12 20:39:16,603:INFO:Connecting...
+2023-06-12 20:39:45,886:ERROR:Message had bad CRC, discarding
+2023-06-12 20:39:47,890:ERROR:Message had bad CRC, discarding
+2023-06-12 20:39:50,116:INFO:New msg: 7e25ffaf161426a20617420032fa280000008300004e011c00008000000000000001000000447e
+2023-06-12 20:39:53,874:INFO:New msg: 7e21ffaf2300000000000000ff003c000000ff0000000000000000000000000000ba7e
+2023-06-12 20:39:53,875:INFO:Light status: L: 0 R: 0 G: 0 B: 0
+2023-06-12 20:41:12,330:INFO:----Dumping log buffer to stdout----
+2023-06-12 20:41:12,330:INFO:----Log dump complete----
+2023-06-12 20:41:12,903:INFO:Colors: 256 Pair: 254 Has Color: True Can Change: True
+2023-06-12 20:41:12,905:INFO:Connecting...
+2023-06-12 20:41:13,913:INFO:Requesting module ID.
+2023-06-12 20:41:13,914:INFO:Attempted to send a message without a channel set.
+2023-06-12 20:41:21,343:ERROR:Message had bad CRC, discarding
+2023-06-12 20:41:24,478:INFO:New msg: 7e25ffaf161427a20617420032fa280000008300004e011c00008000000000000001000000297e
+2023-06-12 20:41:25,211:INFO:New msg: 7e21ffaf2300000000000000ff003c000000ff0000000000000000000000000000ba7e
+2023-06-12 20:41:25,211:INFO:Light status: L: 0 R: 0 G: 0 B: 0
+2023-06-12 20:41:40,613:INFO:New msg: 7e25ffaf161428a20617420032fa280000008300004e011c000080000000000000010000004c7e
+2023-06-12 20:43:11,064:INFO:Requesting module ID.
+2023-06-12 20:43:11,065:INFO:Attempted to send a message without a channel set.
+2023-06-12 20:44:41,263:INFO:Requesting module ID.
+2023-06-12 20:44:41,266:INFO:Attempted to send a message without a channel set.
+2023-06-12 20:46:11,364:INFO:Requesting module ID.
+2023-06-12 20:46:11,366:INFO:Attempted to send a message without a channel set.
+2023-06-12 20:47:41,475:INFO:Requesting module ID.
+2023-06-12 20:47:41,475:INFO:Attempted to send a message without a channel set.
+2023-06-12 20:49:06,046:INFO:New msg: 7e25ffaf161429a20617420032fa280000008300004e011c00008000000000000001000000217e
+2023-06-12 20:50:36,669:INFO:Requesting module ID.
+2023-06-12 20:50:36,669:INFO:Attempted to send a message without a channel set.
+2023-06-12 20:52:06,788:INFO:Requesting module ID.
+2023-06-12 20:52:06,788:INFO:Attempted to send a message without a channel set.
+2023-06-12 20:53:36,922:INFO:Requesting module ID.
+2023-06-12 20:53:36,923:INFO:Attempted to send a message without a channel set.
+2023-06-12 20:54:44,646:INFO:----Dumping log buffer to stdout----
+2023-06-12 20:54:44,647:INFO:----Log dump complete----
+2023-06-12 20:54:45,665:INFO:Colors: 256 Pair: 254 Has Color: True Can Change: True
+2023-06-12 20:54:45,666:INFO:----Dumping log buffer to stdout----
+2023-06-12 20:54:45,667:INFO:----Log dump complete----
+2023-06-12 20:54:52,782:INFO:Colors: 256 Pair: 254 Has Color: True Can Change: True
+2023-06-12 20:54:52,783:INFO:----Dumping log buffer to stdout----
+2023-06-12 20:54:52,783:INFO:----Log dump complete----
+2023-06-12 20:55:06,289:INFO:Colors: 256 Pair: 254 Has Color: True Can Change: True
+2023-06-12 20:55:06,290:INFO:----Dumping log buffer to stdout----
+2023-06-12 20:55:06,290:INFO:----Log dump complete----
+2023-06-12 20:58:29,964:INFO:Colors: 256 Pair: 254 Has Color: True Can Change: True
+2023-06-12 20:58:29,966:INFO:----Dumping log buffer to stdout----
+2023-06-12 20:58:29,966:INFO:----Log dump complete----
+2023-06-12 20:59:17,182:INFO:Colors: 256 Pair: 254 Has Color: True Can Change: True
+2023-06-12 20:59:17,183:INFO:----Dumping log buffer to stdout----
+2023-06-12 20:59:17,184:INFO:----Log dump complete----
+2023-06-12 21:08:46,125:INFO:Colors: 256 Pair: 254 Has Color: True Can Change: True
+2023-06-12 21:08:46,127:INFO:----Dumping log buffer to stdout----
+2023-06-12 21:08:46,127:INFO:----Log dump complete----
+2023-06-12 21:23:07,309:INFO:Colors: 256 Pair: 254 Has Color: True Can Change: True
+2023-06-12 21:23:07,311:INFO:----Dumping log buffer to stdout----
+2023-06-12 21:23:07,311:INFO:----Log dump complete----
