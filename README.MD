@@ -8,6 +8,8 @@ Inspired from:
 - [https://github.com/garbled1/pybalboa](https://github.com/garbled1/pybalboa)
 - [https://github.com/peterg79/bwalink](https://github.com/jshank/bwalink)
 
+Credit to [https://github.com/dhmsjs/pyjacuzzi](https://github.com/dhmsjs/pyjacuzzi) especially for code commenting.
+
 
 ## Purpose:
 

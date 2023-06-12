@@ -1,9 +1,46 @@
+""" This module extends balboa.py to work instead with Jacuzzi
+spas. 
+
+It uses pybalboa-0.13 from https://github.com/garbled1/pybalboa.
+
+I chose to extend pybalboa so that I could leverage the already-proven
+WiFi and protocol parsing behavior in pybalboa. This dependency turns
+out to be pretty light; it would not take major effort to decouple
+jacuzzi.py from pybalboa. Still, I am deeply indebted to 
+
+garbled1 (https://github.com/garbled1/pybalboa)
+natekspencer (https://github.com/natekspencer)
+ccutrer (https://github.com/ccutrer/balboa_worldwide_app/wiki)
+
+along with several others here unnamed, who have helped reverse engineer
+balboa hot tub control systems and their many rebranded derivatives.
+
+Note that as of Jan 2023 pybalboa has undergone significant revisions
+beyond version 0.13. I doubt jacuzzi.py will work with anything later than
+v0.13 without careful attention -- which given the light dependency, is
+probably not worth the effort.
+"""
+
 import asyncio
 import logging
 import time
 import queue
 import socket
 
+# if the parent balboa module is not installed, use a local copy
+# instead.
+#
+# We use the "from...*" construct here so that all objects in balboa 
+# (without a leading underscore anyway) become available as local
+# objects; i.e. they can only be referenced without the "balboa."
+# module prefix. 
+#
+# This is not generally a good idea because it increases the chances
+# of duplicate names clashing unintentionally.  Requiring you to use the
+# "balboa." prefix would prevent this.
+#
+# Here we use it intentionally to cleanly reference or override balboa
+# module objects when they need to be different for Jacuzzi systems.
 try:
     from balboa import *
 except:
@@ -58,98 +95,8 @@ CHECKS_BEFORE_RETRY = (
     2  # How many status messages we should receive before retrying our command
 )
 
-# Array to convert value returned to temp in C (manually recorded and verified each temp)
-temp_convert = {
-    45: 22,
-    48: 24,
-    47: 24.5,
-    51: 25,
-    50: 25.5,
-    53: 26,
-    52: 26.5,
-    55: 27,
-    54: 27.5,
-    57: 28,
-    56: 28.5,
-    59: 29,
-    58: 29.5,
-    61: 30,
-    60: 30.5,
-    63: 31,
-    62: 31.5,
-    65: 32,
-    64: 32.5,
-    67: 33,
-    66: 33.5,
-    69: 34,
-    68: 34.5,
-    71: 35,
-    70: 35.5,
-    73: 36,
-    72: 36.5,
-    75: 37,
-    74: 37.5,
-    77: 38,
-    76: 38.5,
-    79: 39,
-    78: 39.5,
-    81: 40,
-    80: 40.5,
-    83: 41,
-    82: 41.5,
-}
-
-# Array to convert value returned to set temp in C (manually recorded and verified each temp)
-set_temp_convert = {
-    171: 40,
-    180: 39.5,
-    181: 39,
-    182: 38.5,
-    183: 38,
-    176: 37.5,
-    177: 37,
-    178: 36.5,
-    179: 36,
-    188: 35.5,
-    189: 35,
-    190: 34.5,
-    191: 34,
-    184: 33.5,
-    185: 33,
-    186: 32.5,
-    187: 32,
-    196: 31.5,
-    197: 31,
-    198: 30.5,
-    199: 30,
-    192: 29.5,
-    193: 29,
-    194: 28.5,
-    195: 28,
-    204: 27.5,
-    205: 27,
-    206: 26.5,
-    207: 26,
-    200: 25.5,
-    201: 25,
-    202: 24.5,
-    203: 24,
-    212: 23.5,
-    213: 23,
-    214: 22.5,
-    215: 22,
-    208: 21.5,
-    209: 21,
-    210: 20.5,
-    211: 20,
-    220: 19.5,
-    221: 19,
-    222: 18.5,
-}
-
-
 class JacuzziRS485(BalboaSpaWifi):
-    def __init__(self, hostname, port=8899):
+    def __init__(self, hostname, port=BALBOA_DEFAULT_PORT):
         super().__init__(hostname, port)
 
         # DEBUG
@@ -163,7 +110,7 @@ class JacuzziRS485(BalboaSpaWifi):
         self.nr_of_pumps = 3
         self.circ_pump = 1
         self.tempscale = self.TSCALE_C  # Can probably be determined...
-        self.timescale = self.TIMESCALE_24H
+        self.timescale = self.TIMESCALE_12H
         self.temprange = 1
 
         self.filter_mode = 1  # Can probably be determined...
@@ -725,8 +672,16 @@ class JacuzziRS485(BalboaSpaWifi):
                         + "".join(map("{:02X} ".format, bytes(data)))
                     )
 
+	
     async def spa_configured(self):
-        return True
+        # TODO: make this override actually work for Jacuzzi spas
+        # Jacuzzi spa must be manually configured so make this always true
+        # for now. The parent method will never work for Jacuzzi spas since
+        # panel request types are different between Balboa and Jacuzzi
+        # systems. Also I have not been able to get the J-235 to respond
+        # with a config data message packet. Doesn't seem like Jacuzzi supports
+        # this method of configuration.
+        return True 
 
     async def listen_until_configured(self, maxiter=20):
         """Listen to the spa babble until we are configured."""
