@@ -25,7 +25,7 @@ import random
 def setup_ui_display(spa_ui):
     """ Defines all the Windows for the Jacuzzi Spa UI. """
     # Create a SubWindow instance for menu messages
-    menuwin = SubWindow(spa_ui.display, 14, 30, 2, 2, "Menu")
+    menuwin = SubWindow(spa_ui.display, 15, 30, 2, 2, "Menu")
 
     # Add some static menu items to the menu Window.
     #
@@ -54,7 +54,7 @@ def setup_ui_display(spa_ui):
     # relative to the menu Window.
     row = menuwin.get_top_edge_row()
     col = menuwin.get_right_edge_col() + 2
-    stswin = SubWindow(spa_ui.display, 14, 30, row, col, "Status")
+    stswin = SubWindow(spa_ui.display, 15, 30, row, col, "Status")
 
     # The status Window is read-only so make it unselectable
     stswin.set_selectable(False)
@@ -150,7 +150,7 @@ def setup_ui_display(spa_ui):
     def _get_uvon_text():
         # A local routine to get current UV lamp status
         return "UV: {0}".format("On" if spa.isUVOn else "Off")
-
+    
     # Add current spa UV value to the status window.
     uvonfield = Textfield(row, col)
     uvonfield.set_update_cb(_get_uvon_text)
@@ -329,7 +329,7 @@ def setup_ui_display(spa_ui):
     # Position it relative to the menu and status Windows.
     row = menuwin.get_top_edge_row()
     col = stswin.get_right_edge_col() + 2
-    ctlwin = SubWindow(spa_ui.display, 14, 30, row, col, "Controls")
+    ctlwin = SubWindow(spa_ui.display, 15, 30, row, col, "Controls")
 
     # Add the temperature setpoint to the controls Window.
     row = ctlwin.get_first_row()
