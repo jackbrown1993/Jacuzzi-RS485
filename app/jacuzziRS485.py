@@ -135,12 +135,12 @@ class JacuzziRS485(BalboaSpaWifi):
         
         # Initialize low range min and max temperatures as [°F, °C]
         # (but not used in Jacuzzi spas)
-        self.tmin[0] = [40, self.to_celsius(40)]
-        self.tmax[0] = [104, self.to_celsius(104)]
+        self.tmin[0] = [40, 18.5]
+        self.tmax[0] = [104, 40]
 
         # Initialize high range min and max temperatures as [°F, °C]
-        self.tmin[1] = [40, self.to_celsius(40)]
-        self.tmax[1] = [104, self.to_celsius(104)]
+        self.tmin[1] = [40, 18.5]
+        self.tmax[1] = [104, 40]
 
         self.filter_mode = self.FILTER_1
         self.heatmode = 0
@@ -499,16 +499,12 @@ class JacuzziRS485(BalboaSpaWifi):
         data[-2] = self.balboa_calc_cs(data[1:message_length], message_length - 1)
         data[-1] = M_STARTEND
 
-        self.log.info(f"Sending: {data.hex()}")
-        try:
-            self.writer.write(data)
-            await self.writer.drain()
-        except Exception as e:
-            self.log.error(f"Error sending message: {e}")
+        self.log.info(f"Queueing Message: {data.hex()}")
+        self.queue.put(data)
 
     def set_channel(self, chan):
         self.channel = chan
-        self.log.info("Got assigned channel = {}".format(self.channel))
+        self.log.info("Channel Assigned: {}".format(self.channel))
         return
  
     def parse_status_update(self, data):
@@ -925,7 +921,7 @@ class JacuzziRS485(BalboaSpaWifi):
             self.connection_state = ConnectionStates.Connected
 
         self.log.debug('Received message: {}'.format(msg.hex())
-            if msg is not None else 'Read failed'
+            if msg is not None else 'Read failed in read_one_message()'
         )
         return msg
 
@@ -1051,6 +1047,7 @@ class JacuzziRS485(BalboaSpaWifi):
                     self.writer.drain()
                 else:
                     msg = self.queue.get()
+                    self.log.info("Sending message: {0}".format(msg.hex()))
                     self.writer.write(msg)
                     self.writer.drain()
         else:
