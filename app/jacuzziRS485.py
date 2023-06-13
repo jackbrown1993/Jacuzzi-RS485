@@ -1,24 +1,21 @@
 """ This module extends balboa.py to work instead with Jacuzzi
 spas. 
 
-It uses pybalboa-0.13 from https://github.com/garbled1/pybalboa.
+It uses an old version of pybalboa (https://github.com/garbled1/pybalboa)
 
 I chose to extend pybalboa so that I could leverage the already-proven
 WiFi and protocol parsing behavior in pybalboa. This dependency turns
 out to be pretty light; it would not take major effort to decouple
-jacuzzi.py from pybalboa. Still, I am deeply indebted to 
+jacuzziRS485.py from pybalboa. Still, I am deeply indebted to 
 
 garbled1 (https://github.com/garbled1/pybalboa)
 natekspencer (https://github.com/natekspencer)
 ccutrer (https://github.com/ccutrer/balboa_worldwide_app/wiki)
+hyperactivej (https://github.com/HyperActiveJ)
+dhmsjs (https://github.com/dhmsjs)
 
 along with several others here unnamed, who have helped reverse engineer
 balboa hot tub control systems and their many rebranded derivatives.
-
-Note that as of Jan 2023 pybalboa has undergone significant revisions
-beyond version 0.13. I doubt jacuzzi.py will work with anything later than
-v0.13 without careful attention -- which given the light dependency, is
-probably not worth the effort.
 """
 import asyncio
 import errno
@@ -29,8 +26,7 @@ import queue
 
 #logging.basicConfig(level=logging.INFO)
 
-# if the parent balboa module is not installed, use a local copy
-# instead.
+# Use the local copy of pybalboa as we know this version works.
 #
 # We use the "from...*" construct here so that all objects in balboa 
 # (without a leading underscore anyway) become available as local
@@ -43,13 +39,9 @@ import queue
 #
 # Here we use it intentionally to cleanly reference or override balboa
 # module objects when they need to be different for Jacuzzi systems.
-try:
-    from balboa import *
-except:
-    from .balboa import *
+from .balboa import *
 
 from enum import Enum
-
 
 class ConnectionStates(Enum):
     """ enum types for Wifi connection states. """
