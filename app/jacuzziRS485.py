@@ -26,7 +26,7 @@ import logging
 import time
 import warnings
 
-logging.basicConfig(level=logging.INFO)
+#logging.basicConfig(level=logging.INFO)
 
 # if the parent balboa module is not installed, use a local copy
 # instead.
@@ -1032,6 +1032,8 @@ class JacuzziRS485(BalboaSpaWifi):
         mtype = self.find_balboa_mtype(data)
         channel = data[2]
 
+        self.log.info("Processing msg type 0x{:02X} in process_message()".format(data[4]))
+
         if mtype is None:
             self.log.debug("Unknown msg type 0x{:02X} in process_message()".format(data[4]))
         elif not self.has_changed(data):
@@ -1069,7 +1071,7 @@ class JacuzziRS485(BalboaSpaWifi):
         elif mtype == CLEAR_TO_SEND:
             if not channel in self.discoveredChannels:
                 self.discoveredChannels.append(data[2])
-                print("Discovered Channels:" + str(self.discoveredChannels))
+                self.log.info("Discovered Channels: {0}".format(self.discoveredChannels))
             elif channel == self.channel:
                 if self.queue.empty():
                     self.writer.drain()
@@ -1081,7 +1083,7 @@ class JacuzziRS485(BalboaSpaWifi):
             if mtype == CC_REQ:
                 if not channel in self.activeChannels:
                     self.activeChannels.append(data[2])
-                    print("Active Channels:" + str(self.activeChannels))
+                    self.log.info("Active Channels: {0}".format(self.activeChannels))
                 elif (self.detectChannelState < DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND):
                     self.detectChannelState += 1
                     if (self.detectChannelState == DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND):
@@ -1092,7 +1094,7 @@ class JacuzziRS485(BalboaSpaWifi):
                                 break
                     if mtype == CC_REQ:
                         if (data[5]) != 0:
-                            self.log.warn(
+                            self.log.info(
                                 "Got Button Press x".format(channel, mid, mtype)
                                 + "".join(map("{:02X} ".format, bytes(data)))
                             )
