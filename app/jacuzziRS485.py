@@ -25,6 +25,7 @@ import errno
 import logging
 import time
 import warnings
+import queue
 
 #logging.basicConfig(level=logging.INFO)
 
@@ -197,6 +198,11 @@ class JacuzziRS485(BalboaSpaWifi):
         # per second (I think).
         # self.lightCycleTime = 1 # In seconds. 
 
+        # Messages must be sent on CTS for our channel, not any time
+        self.queue = (
+            queue.Queue()
+        )  
+
         # The Prolink Wifi module always has channel address 0x0A
         # TODO: Set to 0x0A if ProLink is being used
         self.channel = None
@@ -221,37 +227,6 @@ class JacuzziRS485(BalboaSpaWifi):
         # one tells you what the water temperature in the pipes is.
         self.statusByte21 = 0
   
-    def has_changed(self, data):
-        """ Returns True if this message packet is different from
-        the previous message of the same message type value.
-
-        data is a byte array that must contain the entire new 
-        message packet including start and end flag bytes.
-        """
-        # Since it is possible for different data sets to have the
-        # exact same checksum value, using checksum comparison to
-        # detect a change in data can result in false negatives --
-        # i.e. a change in the message that we miss because the
-        # checksums still match.  However the probability of that is
-        # low and the cost of missing a change is also low, so for
-        # now this seems good enough.  
-        #
-        # If you want to guarantee no false negatives, then the brute
-        # force method used in balboa.py (saving a copy of the entire
-        # message packet and comparing that byte by byte to the new
-        # one) will give you what you want.
-        changed = True
-        mtval = data[4]
-        mchk = data[-2]
-        if mtval in self.prev_chksums and mchk == self.prev_chksums[mtval]:
-            changed = False
-            self.log.debug("No chg in msg of type 0x{:02X}".format(mtval))
-        else:
-            # self.log.info("Got new msg of type 0x{:02X}".format(mtval))
-            self.log.debug('New msg: {}'.format(data.hex()))
-        self.prev_chksums[mtval] = mchk
-        return changed
-
     async def send_mod_ident_req(self):
         """ Overrides parent method just to add debug logging. """
         self.log.debug("Requesting module ID (msg type value 0x04)")
@@ -506,14 +481,14 @@ class JacuzziRS485(BalboaSpaWifi):
 
     async def send_message(self, *bytes):
         """ Overrides parent method only to change log messaging. """
-        # if not connected, we can't send a message
+        # If not connected, we can't send a message
         if not self.connected:
-            self.log.info("Attempted to send a message when not connected.")
+            self.log.error("Attempted to send a message when not connected.")
             return
         
         # If we don't have a channel number yet, we can't form a message
         if self.channel is None:
-            self.log.info("Attempted to send a message without a channel set.")
+            self.log.error("Attempted to send a message without a channel set.")
             return
 
         message_length = len(bytes) + 2
@@ -531,9 +506,10 @@ class JacuzziRS485(BalboaSpaWifi):
         except Exception as e:
             self.log.error(f"Error sending message: {e}")
 
-    def set_channel(self, data):
-        self.channel = data[5]
+    def set_channel(self, chan):
+        self.channel = chan
         self.log.info("Got assigned channel = {}".format(self.channel))
+        return
  
     def parse_status_update(self, data):
         """ Override balboa's parsing of a status update from the spa
@@ -1032,12 +1008,10 @@ class JacuzziRS485(BalboaSpaWifi):
         mtype = self.find_balboa_mtype(data)
         channel = data[2]
 
-        self.log.info("Processing msg type 0x{:02X} in process_message()".format(data[4]))
+        self.log.debug("Processing msg type 0x{:02X} in process_message()".format(data[4]))
 
         if mtype is None:
             self.log.debug("Unknown msg type 0x{:02X} in process_message()".format(data[4]))
-        elif not self.has_changed(data):
-            mtype = None
         elif mtype == BMTR_MOD_IDENT_RESP:
             self.parse_module_identification(data)
         # Modified for Prolink; was BMTR_STATUS_UPDATE
@@ -1067,7 +1041,7 @@ class JacuzziRS485(BalboaSpaWifi):
             if self.channel is None and self.detectChannelState == DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND:
                 self.log.info("Attempting to send channel assignment request")
         elif mtype == CHANNEL_ASSIGNMENT_RESPONSE:
-            self.set_channel(self, data)
+            self.set_channel(chan)
         elif mtype == CLEAR_TO_SEND:
             if not channel in self.discoveredChannels:
                 self.discoveredChannels.append(data[2])
@@ -1098,9 +1072,9 @@ class JacuzziRS485(BalboaSpaWifi):
                                 "Got Button Press x".format(channel, mid, mtype)
                                 + "".join(map("{:02X} ".format, bytes(data)))
                             )
-                else:
-                    self.log.error("Unhandled msg type 0x{0:02X} ({0}) in process_message()".format(data[4]))
-                    return mtype
+            else:
+                self.log.error("Unhandled msg type 0x{0:02X} ({0}) in process_message()".format(data[4]))
+                return mtype
 
     async def listen_for_mtype(self, msg_type, msg_limit = 5):
         """ Listens until a specific message type is received
@@ -1199,7 +1173,7 @@ class JacuzziRS485(BalboaSpaWifi):
     # TODO: remove any accessors that are not relevant to Jacuzzi spas
 
     def get_connection_state_text(self):
-        return self.connection_state.name
+        return "{0} (Channel: {1})".format(self.connection_state.name, self.channel)
 
     def get_spatime_text(self):
         return "Spa Time: {0:02d}:{1:02d} {2}".format(
