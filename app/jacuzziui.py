@@ -88,6 +88,14 @@ def setup_ui_display(spa_ui):
     cnctfield.update()
     row += cnctfield.get_required_rows()
 
+    # Add the lastupd to the status
+    # Window.
+    lastupdatefield = Textfield(row, col, Align.CENTER)
+    lastupdatefield.set_update_cb(spa.get_last_update_text)
+    stswin.add_field(lastupdatefield)
+    lastupdatefield.update()
+    row += lastupdatefield.get_required_rows()
+
     # Add the current water temperature to the status
     # Window.
     row += 1
