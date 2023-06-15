@@ -1,5 +1,7 @@
 # Jacuzzi App
 
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
+
 This repo is still under development.
 
 Inspired from / credit to:
