@@ -7,4 +7,4 @@ RUN pip install -r requirements.txt
 
 ADD app/*.py ./
 ENTRYPOINT ["python3"]
-CMD ["-u","app.py"]
+CMD ["-u","docker_mqtt_app.py"]
