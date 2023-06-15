@@ -1178,7 +1178,7 @@ class JacuzziRS485(BalboaSpaWifi):
     def get_lightB(self):  
         return self.lightB 
         
-    def get_lightG(self):  
+    def get_lightG(self):
         return self.lightG
     
     def get_last_update_text(self):
