@@ -3,7 +3,7 @@
 This repo is still under development.
 
 Inspired from / credit to:
-- https://github.com/ccutrer/balboa_worldwide_app
+- [https://github.com/ccutrer/balboa_worldwide_app](https://github.com/ccutrer/balboa_worldwide_app)
 - [https://github.com/HyperActiveJ/sundance780-jacuzzi-balboa-rs485-tcp](https://github.com/garbled1/pybalboa)
 - [https://github.com/garbled1/pybalboa](https://github.com/garbled1/pybalboa)
 - [https://github.com/peterg79/bwalink](https://github.com/jshank/bwalink)
@@ -19,7 +19,7 @@ The aim is to allow control from either MQTT or from Home Assistant.
 
 ## Configuration:
 
-### If using a Jacuzzi ProLink
+### If using a Jacuzzi ProLink (not yet supported)
 
 `MQTT_HOST` - DNS or IP of your MQTT server.
 
@@ -28,10 +28,6 @@ The aim is to allow control from either MQTT or from Home Assistant.
 `MQTT_USER` - Username of MQTT server.
 
 `MQTT_PASSWORD` - Password of MQTT server.
-
-`SERIAL_IP` - IP address of your Elfin serial to WiFi device (only required if pro_link = false).
-
-`SERIAL_PORT` - Port that the NETP service of your serial to WiFi device is running on (only required if pro_link = false).
 
 ### If using a RS485 Serial to WiFi Adaptor
 
