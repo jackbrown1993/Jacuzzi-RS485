@@ -16,6 +16,9 @@ To remotely control the Jacuzzi J335 without the expensive SmartTub / ProLink mo
 
 The aim is to allow control from either MQTT or from Home Assistant.
 
+## Home Assistant Integration
+
+We support a basic Home Assistant integration which is still under development, give it a try and let us know what you think.
 
 ## Configuration:
 
