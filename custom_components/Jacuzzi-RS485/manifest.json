@@ -1,7 +1,8 @@
 {
     "domain":"Jacuzzi-RS485",
     "name":"Jacuzzi-RS485",
-    "integration_type":"device-RS485",
+    "integration_type":"device",
+    "iot_class":"local_push",
     "requirements": [],
     "codeowners":["@jackbrown1993"],
     "issue_tracker": "https://github.com/jackbrown1993/Jacuzzi-RS485/issues",
