@@ -4,6 +4,10 @@ import asyncio
 import paho.mqtt.client as mqtt
 import os
 from datetime import datetime
+import logging
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s:%(levelname)s:%(message)s")
+log = logging.getLogger("__name__")
 
 mqtt_host = os.environ.get("MQTT_HOST")
 mqtt_port = int(os.environ.get("MQTT_PORT"))
@@ -15,33 +19,31 @@ serial_port = int(os.environ.get("SERIAL_PORT"))
 
 
 def on_connect(mqttc, obj, flags, rc):
-    print("Connected to MQTT.")
-
+    log.info("Connected to MQTT.")
 
 def on_message(mqttc, obj, msg):
-    print(
+    log.info(
         "MQTT message received on topic: "
         + msg.topic
         + " with value: "
         + msg.payload.decode()
     )
     if msg.topic == "homie/hot_tub/J335/set_temperature/set":
-        spa.targetTemp = float(msg.payload.decode())
+        # Figure this out
+        new_temp = int(msg.payload.decode())
+        asyncio.run(spa.send_temp_change(new_temp))
+        log.info("as")
     else:
-        print("No logic for this topic, discarding.")
+        log.debug("Unhandled MQTT message on topic {}.".format(msg.topic))
 
 
 async def read_spa_data(spa, lastupd):
     await asyncio.sleep(1)
     if spa.lastupd != lastupd:
         lastupd = spa.lastupd
-        print(
-            "New data as of "
-            + datetime.utcfromtimestamp(spa.lastupd).strftime("%d-%m-%Y %H:%M:%S")
+        log.info(
+            "Set Temp is {} and Water Temp is {}".format(spa.get_settemp(), spa.curtemp)
         )
-
-        print("Set Temp: {0}".format(spa.get_settemp()))
-        print("Current Temp: {0}".format(spa.curtemp))
 
         mqtt_client.publish(
             "homie/hot_tub/J335/set_temperature",
@@ -54,7 +56,6 @@ async def read_spa_data(spa, lastupd):
             "homie/hot_tub/J335/temperature", payload=spa.curtemp, qos=0, retain=False
         )
 
-        print()
     return lastupd
 
 
@@ -126,9 +127,10 @@ async def start_app():
 
     # Connect to Spa (Serial Device)
     spa = jacuzziRS485.JacuzziRS485(serial_ip, serial_port)
-    await spa.connect()
 
+    asyncio.ensure_future(spa.check_connection_status())
     asyncio.ensure_future(spa.listen())
+
     lastupd = 0
 
     while True:
