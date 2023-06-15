@@ -23,6 +23,7 @@ import logging
 import time
 import warnings
 import queue
+from datetime import datetime
 
 #logging.basicConfig(level=logging.INFO)
 
@@ -515,32 +516,6 @@ class JacuzziRS485(BalboaSpaWifi):
         message data has changed.
         """
 
-        self.log.info("Parsing status update.")
-
-        # Check if the spa had anything new to say.
-        # This will cause our internal states to update once per minute due
-        # to the hour/minute counter.  This is ok.
-        have_new_data = False
-
-        # Check we have a prior status message stored
-        # If so, we check each byte at a time to see if any of the data is difference
-        # If no, mark this as new data and setup a dummy bytearray in the prior status column
-        if self.prior_status is not None:
-            for i in range(0, 31):
-                if data[i] != self.prior_status[i]:
-                    have_new_data = True
-                    break
-        else:
-            have_new_data = True
-            self.prior_status = bytearray(31)
-
-        # If no new data, return.
-        if not have_new_data:
-            self.log.info("Status update recieved with no new data.")
-            return
-        else:
-            self.log.info("Status update recieved with new data.")
-
         # Modified for Jacuzzi; was data[8] and data[9] for Balboa 
         self.time_hour = data[5]
         self.time_minute = data[6]
@@ -584,8 +559,6 @@ class JacuzziRS485(BalboaSpaWifi):
 
         # Modified for Jacuzzi; was data[25] for Balboa 
         settemp = float(data[14])
-
-        self.log.info("Raw settemp: {}".format(data[14]))
 
         self.curtemp = curtemp / (2 if self.tempscale ==
                                self.TSCALE_C else 1) if curtemp != 255 else None
@@ -779,20 +752,6 @@ class JacuzziRS485(BalboaSpaWifi):
         # time.time() increments once per second
         self.lastupd = time.time()
 
-        # populate prior_status
-        for i in range(0, 31):
-            self.prior_status[i] = data[i]
-
-        # balboa.py uses the class attribute self.new_data_cb to
-        # support a user-provided asynchronous wait for new
-        # data to be available before continuing. However balboa.py
-        # initializes self.new_data_cb to None and never changes it
-        # thereafter. Thus by default there will be no waiting for
-        # new data before continuing. So for now anyway, we can
-        # safely comment out this await.
-        #
-        # await self.int_new_data_cb()
-
     def parse_system_information(self, data):
         """ Overrides parent method to handle the dofferemces in Jaccuzi 
         system information message packets vs those in Balboa systems.
@@ -931,7 +890,7 @@ class JacuzziRS485(BalboaSpaWifi):
         self.lightR = data[8]
         self.lightG = data[9]
         self.lightB = data[10]
-        self.log.info('Light status: L: {0} R: {1} G: {2} B: {3}'.format(
+        self.log.debug('Light status: L: {0} R: {1} G: {2} B: {3}'.format(
                       self.lightBrightness, 
                       self.lightR, 
                       self.lightG, 
@@ -955,97 +914,13 @@ class JacuzziRS485(BalboaSpaWifi):
 
         return msg
 
-    def process_message(self, data):
-        """ Identify, parse and decode a known message
-            
-        data is a byte array that should contain the entire message
-        including start and end flag bytes.
-
-        Returns the enumerated message type of the message,
-        or None if nothing changed. Also returns None and logs an
-        error message if data is None.
-        """        
-        
-        channel = data[2]
-        mid = data[3]
-        mtype = data[4]
-
-        self.log.debug("Processing msg type 0x{:02X} in process_message()".format(data[4]))
-
-        if mtype is None:
-            self.log.debug("Unknown msg type 0x{:02X} in process_message()".format(data[4]))
-        elif mtype == BMTR_MOD_IDENT_RESP:
-            self.parse_module_identification(data)
-        # Modified for Jacuzzi; was BMTR_STATUS_UPDATE
-        elif mtype == JACUZZI_STATUS_UPDATE:
-            self.parse_status_update(data)
-        elif mtype == BMTR_DEVICE_CONFIG_RESP:
-            self.parse_device_configuration(data)
-        elif mtype == BMTR_SYS_INFO_RESP:
-            self.parse_system_information(data)
-        elif mtype == BMTR_SETUP_PARAMS_RESP:
-            self.parse_setup_parameters(data)
-        # Modified for Jacuzzi; was BMTR_FILTER_INFO_RESP
-        elif mtype == PLNK_FILTER_INFO_RESP:
-            self.parse_filter_cycle_info(data)
-        # Modified for Jacuzzi; added the following Jacuzzi-specific msg types
-        elif mtype == PLNK_SECONDARY_FILTER_RESP:
-            self.parse_secondary_filter(data)
-        elif mtype == PLNK_PRIMARY_FILTER_RESP:
-            self.parse_primary_filtration(data)
-        elif mtype == PLNK_PUMP_STATE_RESP:
-            self.parse_pump_state(data)
-        elif mtype == PLNK_SETUP_PARAMS_RESP:
-            self.parse_setup_parameters(data)
-        elif mtype == JACUZZI_LIGHTS_UPDATE:
-            self.parse_light_status_update(data)
-        elif mtype == CLIENT_CLEAR_TO_SEND:
-            if self.channel is None and self.detectChannelState == DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND:
-                self.log.info("Attempting to send channel assignment request")
-        elif mtype == CHANNEL_ASSIGNMENT_RESPONSE:
-            self.set_channel(chan)
-        elif mtype == CLEAR_TO_SEND:
-            if not channel in self.discoveredChannels:
-                self.discoveredChannels.append(data[2])
-                self.log.info("Discovered Channels: {0}".format(self.discoveredChannels))
-            elif channel == self.channel:
-                if self.queue.empty():
-                    self.writer.drain()
-                else:
-                    msg = self.queue.get()
-                    self.log.info("Sending message: {0}".format(msg.hex()))
-                    self.writer.write(msg)
-                    self.writer.drain()
-        else:
-            if mtype == CC_REQ:
-                if not channel in self.activeChannels:
-                    self.activeChannels.append(data[2])
-                    self.log.info("Active Channels: {0}".format(self.activeChannels))
-                elif (self.detectChannelState < DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND):
-                    self.detectChannelState += 1
-                    if (self.detectChannelState == DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND):
-                        self.discoveredChannels.sort()
-                        for chan in self.discoveredChannels:
-                            if not chan in self.activeChannels:
-                                self.set_channel(chan)
-                                break
-                    if mtype == CC_REQ:
-                        if (data[5]) != 0:
-                            self.log.info(
-                                "Got Button Press x".format(channel, mid, mtype)
-                                + "".join(map("{:02X} ".format, bytes(data)))
-                            )
-            else:
-                self.log.error("Unhandled msg type 0x{0:02X} ({0}) in process_message()".format(data[4]))
-                return mtype
-
     async def check_connection_status(self):
         """ Overrides the parent method to connect and reconnect as needed
         for Jacuzzi spas. This should run as a coroutine or task concurrently
         with other asynchronous coroutines.
         """
 
-        timeout = 300 # Seconds
+        timeout = 120 # Seconds
         while True:
             # self.connect() will set self.connected to True when
             # asyncio.open_connection() succeeds.
@@ -1067,7 +942,7 @@ class JacuzziRS485(BalboaSpaWifi):
                 # second or so. So if we haven't received one recently,
                 # send the spa a message to see if it will respond.
 
-                if time.time() > self.lastupd + timeout:
+                if self.channel is not None and time.time() > self.lastupd + timeout:
                     self.connection_state = ConnectionStates.Disconnected
                     self.log.info("Requesting module ID.")
                     await self.send_mod_ident_req()
@@ -1104,8 +979,105 @@ class JacuzziRS485(BalboaSpaWifi):
                 await asyncio.sleep(1)
                 continue
 
-            self.process_message(data)
-            await asyncio.sleep(0.1)
+            channel = data[2]
+            mid = data[3]
+            mtype = data[4]
+
+            self.log.debug("Processing msg type 0x{:02X} in process_message()".format(data[4]))
+
+            if mtype is JACUZZI_STATUS_UPDATE:
+                self.parse_status_update(data)
+            elif mtype == JACUZZI_LIGHTS_UPDATE:
+                self.parse_light_status_update(data)
+            elif mtype == CLIENT_CLEAR_TO_SEND:
+                if (
+                    self.channel is None 
+                    and self.detectChannelState
+                    == DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND
+                    ):
+                    message_length = 8
+                    data = bytearray(10)
+                    data[0] = M_STARTEND
+                    data[1] = message_length
+                    data[2] = 0xFE
+                    data[3] = 0xBF
+                    data[4] = CHANNEL_ASSIGNMENT_REQ  # type
+                    data[5] = 0x02
+                    data[6] = 0xF1  # Random Magic
+                    data[7] = 0x73
+                    data[8] = self.balboa_calc_cs(
+                        data[1:message_length], message_length - 1
+                    )
+                    data[9] = M_STARTEND
+                    self.writer.write(data)
+                    await self.writer.drain()
+            elif mtype == CHANNEL_ASSIGNMENT_RESPONSE:
+                await self.set_channel(data[5])
+                message_length = 5
+                data = bytearray(7)
+                data[0] = M_STARTEND
+                data[1] = message_length
+                data[2] = self.channel
+                data[3] = 0xBF
+                data[4] = CHANNEL_ASSIGNMENT_ACK  # type
+                data[5] = self.balboa_calc_cs(
+                    data[1:message_length], message_length - 1
+                )
+                data[6] = M_STARTEND
+                self.writer.write(data)
+                await self.writer.drain()
+            elif mtype == EXISTING_CLIENT_REQ:
+                message_length = 8
+                data = bytearray(9)
+                data[0] = M_STARTEND
+                data[1] = message_length
+                data[2] = self.channel
+                data[3] = 0xBF
+                data[4] = EXISTING_CLIENT_RESPONSE  # type
+                data[5] = 0x04  # Don't know!
+                data[6] = 0x08  # Don't know!
+                data[7] = 0x00  # Don't know!
+                data[8] = self.balboa_calc_cs(
+                    data[1:message_length], message_length - 1
+                )
+                data[9] = M_STARTEND
+                self.writer.write(data)
+                await self.writer.drain()
+            elif mtype == CLEAR_TO_SEND:
+                if not channel in self.discoveredChannels:
+                    self.discoveredChannels.append(data[2])
+                    self.log.info("Discovered Channels: {0}".format(self.discoveredChannels))
+                elif channel == self.channel:
+                    if self.queue.empty():
+                        await self.writer.drain()
+                    else:
+                        msg = self.queue.get()
+                        self.log.info("Sending message: {0}".format(msg.hex()))
+                        self.writer.write(msg)
+                        await self.writer.drain()
+            else:
+                if mtype == CC_REQ:
+                    if not channel in self.activeChannels:
+                        self.activeChannels.append(data[2])
+                        self.log.info("Active Channels: {0}".format(self.activeChannels))
+                    elif (self.detectChannelState < DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND):
+                        self.detectChannelState += 1
+                        if (self.detectChannelState == DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND):
+                            self.discoveredChannels.sort()
+                            for chan in self.discoveredChannels:
+                                if not chan in self.activeChannels:
+                                    await self.set_channel(chan)
+                                    break
+                        if mtype == CC_REQ:
+                            if (data[5]) != 0:
+                                self.log.info(
+                                    "Got Button Press x".format(channel, mid, mtype)
+                                    + "".join(map("{:02X} ".format, bytes(data)))
+                                )
+                else:
+                    self.log.error("Unhandled msg type 0x{0:02X} ({0}) in process_message()".format(data[4]))
+                    return mtype
+                await asyncio.sleep(0.1)
 
     async def spa_configured(self):
         # TODO: make this override actually work for Jacuzzi spas
@@ -1209,3 +1181,13 @@ class JacuzziRS485(BalboaSpaWifi):
         
     def get_lightG(self):  
         return self.lightG
+    
+    def get_last_update_text(self):
+        if self.lastupd == 0:
+            return "Last Update: N/A"
+        else:
+            current_time = datetime.now()
+            input_datetime = datetime.fromtimestamp(self.lastupd)
+            time_difference = current_time - input_datetime
+            second_since_update = int(time_difference.total_seconds())
+            return "Last Update: {0}s ago".format(second_since_update)
