@@ -3,16 +3,6 @@
 
 # Jacuzzi App
 
-This repo is still under development.
-
-Inspired from / credit to:
-- [https://github.com/ccutrer/balboa_worldwide_app](https://github.com/ccutrer/balboa_worldwide_app)
-- [https://github.com/HyperActiveJ/sundance780-jacuzzi-balboa-rs485-tcp](https://github.com/garbled1/pybalboa)
-- [https://github.com/garbled1/pybalboa](https://github.com/garbled1/pybalboa)
-- [https://github.com/peterg79/bwalink](https://github.com/jshank/bwalink)
-- [https://github.com/dhmsjs/pyjacuzzi](https://github.com/dhmsjs/pyjacuzzi) for making lots of progress on getting this to work with Jacuzzi and especially for code commenting.
-
-
 ## Purpose:
 
 To remotely control the Jacuzzi J335 without the expensive SmartTub / ProLink module and celluar subscription (although if you have it, that is also ok). An RS485 Serial to WiFi adaptor is used instead connected to the RS485 port on the main board. The adaptor I used was around £25 on Amazon.co.uk (https://www.amazon.co.uk/gp/product/B097C8PT6F).
@@ -93,7 +83,10 @@ services:
       - SERIAL_IP=
       - SERIAL_PORT=8899
 ```
-## Code Quality Checks
 
-When pull requests are opened a Github action is used to ensure code quality:
-- Black to ensure code is formatted
+## Inspired from / credit to:
+- [https://github.com/ccutrer/balboa_worldwide_app](https://github.com/ccutrer/balboa_worldwide_app)
+- [https://github.com/HyperActiveJ/sundance780-jacuzzi-balboa-rs485-tcp](https://github.com/garbled1/pybalboa)
+- [https://github.com/garbled1/pybalboa](https://github.com/garbled1/pybalboa)
+- [https://github.com/peterg79/bwalink](https://github.com/jshank/bwalink)
+- [https://github.com/dhmsjs/pyjacuzzi](https://github.com/dhmsjs/pyjacuzzi) for making lots of progress on getting this to work with Jacuzzi and especially for code commenting.
