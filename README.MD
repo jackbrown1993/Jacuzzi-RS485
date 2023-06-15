@@ -1,6 +1,7 @@
-# Jacuzzi App
-
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
+
+# Jacuzzi App
 
 This repo is still under development.
 
