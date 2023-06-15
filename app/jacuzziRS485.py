@@ -51,11 +51,6 @@ class ConnectionStates(Enum):
     Connected = 2
 
 
-# TODO: This is defined here only to eliminate a runtime error; 
-# we may be able to remove references to this; probably not needed
-# for jacuzzi spas.
-NO_CHANGE_REQUESTED = -1
-
 # Add unique enumerated constants for Jacuzzi-specific message types.
 #
 # These constants are NOT the message type values themselves. They are
@@ -74,13 +69,8 @@ NO_CHANGE_REQUESTED = -1
 
 JACUZZI_STATUS_UPDATE = 0x16
 JACUZZI_LIGHTS_UPDATE = 0x23
-PLNK_FILTER_INFO_RESP = NROF_BMT + 1
-PLNK_PANEL_REQ = NROF_BMT + 2
-PLNK_SECONDARY_FILTER_RESP = NROF_BMT + 3
-PLNK_PRIMARY_FILTER_RESP = NROF_BMT + 4
-PLNK_PUMP_STATE_RESP = NROF_BMT + 5
-PLNK_SETUP_PARAMS_RESP = NROF_BMT + 6
-PLNK_LIGHTS_UPDATE = NROF_BMT + 7
+CC_REQ = 0x17
+
 # Channel Related
 CLIENT_CLEAR_TO_SEND = 0x00
 CHANNEL_ASSIGNMENT_REQ = 0x01
@@ -90,7 +80,6 @@ EXISTING_CLIENT_REQ = 0x04
 EXISTING_CLIENT_RESPONSE = 0x05
 CLEAR_TO_SEND = 0x06
 NOTHING_TO_SEND = 0x07
-CC_REQ = 0x17
 
 # Used to find our old channel, or an open channel
 DETECT_CHANNEL_STATE_START = 0
@@ -496,12 +485,11 @@ class JacuzziRS485(BalboaSpaWifi):
         self.log.info(f"Queueing Message: {data.hex()}")
         self.queue.put(data)
 
-    def set_channel(self, chan):
+    async def set_channel(self, chan):
         self.channel = chan
         self.log.info("Channel Assigned: {}".format(self.channel))
-        return
  
-    def parse_status_update(self, data):
+    async def parse_status_update(self, data):
         """ Override balboa's parsing of a status update from the spa
         to handle Jacuzzi differences. 
 
@@ -515,6 +503,24 @@ class JacuzziRS485(BalboaSpaWifi):
         need the async prefix.  Similarly it does not check to see if the
         message data has changed.
         """
+
+        # This will cause our internal states to update once per minute due
+        # to the hour/minute counter.  This is ok.
+
+        have_new_data = False
+
+        if self.prior_status is not None and data.hex() != self.prior_status:
+            have_new_data = True
+            self.prior_status = data.hex()
+        elif self.prior_status is None:
+            print("First data")
+            self.prior_status = data.hex()
+        else:
+            print("No new data.")
+            return
+            
+
+        print("NEW DATA!")
 
         # Modified for Jacuzzi; was data[8] and data[9] for Balboa 
         self.time_hour = data[5]
@@ -872,7 +878,7 @@ class JacuzziRS485(BalboaSpaWifi):
         self.pumpStateByte17 = data[17]
         # self.log.debug('Pump3: {0} Pump2: {1} Pump1: {2}; Total = {3}'.format(pump3bits, pump2bits, pump1bits, pumpcount))
 
-    def parse_light_status_update(self, data): 
+    async def parse_light_status_update(self, data): 
         """Parse a Jacuzzi Light status update message packet. """
 
         # This message type is not defined in the Prolink app 
@@ -985,10 +991,10 @@ class JacuzziRS485(BalboaSpaWifi):
 
             self.log.debug("Processing msg type 0x{:02X} in process_message()".format(data[4]))
 
-            if mtype is JACUZZI_STATUS_UPDATE:
-                self.parse_status_update(data)
+            if mtype == JACUZZI_STATUS_UPDATE:
+                await self.parse_status_update(data)
             elif mtype == JACUZZI_LIGHTS_UPDATE:
-                self.parse_light_status_update(data)
+                await self.parse_light_status_update(data)
             elif mtype == CLIENT_CLEAR_TO_SEND:
                 if (
                     self.channel is None 
@@ -1068,16 +1074,14 @@ class JacuzziRS485(BalboaSpaWifi):
                                 if not chan in self.activeChannels:
                                     await self.set_channel(chan)
                                     break
-                        if mtype == CC_REQ:
-                            if (data[5]) != 0:
-                                self.log.info(
-                                    "Got Button Press x".format(channel, mid, mtype)
-                                    + "".join(map("{:02X} ".format, bytes(data)))
-                                )
+                    if mtype == CC_REQ:
+                        if (data[5]) != 0:
+                            self.log.info(
+                                "Got Button Press x".format(channel, mid, mtype)
+                                + "".join(map("{:02X} ".format, bytes(data)))
+                            )
                 else:
                     self.log.error("Unhandled msg type 0x{0:02X} ({0}) in process_message()".format(data[4]))
-                    return mtype
-                await asyncio.sleep(0.1)
 
     async def spa_configured(self):
         # TODO: make this override actually work for Jacuzzi spas
