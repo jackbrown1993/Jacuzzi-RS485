@@ -513,14 +513,9 @@ class JacuzziRS485(BalboaSpaWifi):
             have_new_data = True
             self.prior_status = data.hex()
         elif self.prior_status is None:
-            print("First data")
             self.prior_status = data.hex()
         else:
-            print("No new data.")
             return
-            
-
-        print("NEW DATA!")
 
         # Modified for Jacuzzi; was data[8] and data[9] for Balboa 
         self.time_hour = data[5]
