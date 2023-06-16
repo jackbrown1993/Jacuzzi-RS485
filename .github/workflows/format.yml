@@ -22,7 +22,6 @@ jobs:
           branch: ${{ github.ref }}
   pylint:
     runs-on: ubuntu-latest
-    name: Checks
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
