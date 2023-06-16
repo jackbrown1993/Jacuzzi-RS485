@@ -21,6 +21,7 @@ serial_port = int(os.environ.get("SERIAL_PORT"))
 def on_connect(mqttc, obj, flags, rc):
     log.info("Connected to MQTT.")
 
+
 def on_message(mqttc, obj, msg):
     log.info(
         "MQTT message received on topic: "

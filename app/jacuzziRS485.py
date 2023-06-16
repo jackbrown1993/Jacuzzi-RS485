@@ -25,14 +25,14 @@ import warnings
 import queue
 from datetime import datetime
 
-#logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
 
 # Use the local copy of pybalboa as we know this version works.
 #
-# We use the "from...*" construct here so that all objects in balboa 
+# We use the "from...*" construct here so that all objects in balboa
 # (without a leading underscore anyway) become available as local
 # objects; i.e. they can only be referenced without the "balboa."
-# module prefix. 
+# module prefix.
 #
 # This is not generally a good idea because it increases the chances
 # of duplicate names clashing unintentionally.  Requiring you to use the
@@ -44,8 +44,10 @@ from balboa import *
 
 from enum import Enum
 
+
 class ConnectionStates(Enum):
-    """ enum types for Wifi connection states. """
+    """enum types for Wifi connection states."""
+
     Disconnected = 0
     Connecting = 1
     Connected = 2
@@ -61,7 +63,7 @@ class ConnectionStates(Enum):
 #   The Balboa BMTR_STATUS_UPDATE msg type field is 0x13 instead of 0x16
 #   The Balboa BMTR_FILTER_INFO_RESP msg type field is 0x27 instead of 0x23
 #   The Balboa BMTS_PANEL_REQ msg type field is 0x22 instead of 0x19
-#   The Balboa BMTR_SYS_INFO_REQ msg type field is 0x24 instead of 
+#   The Balboa BMTR_SYS_INFO_REQ msg type field is 0x24 instead of
 #     0x1C (PLNK_SECONDARY_FILTER_RESP)
 #   There is no PRIMARY_FILTER_RESP msg type or similar in Balboa systems
 #   There is no PUMP_STATE_RESP msg type or similar in Balboa systems
@@ -83,20 +85,24 @@ NOTHING_TO_SEND = 0x07
 
 # Used to find our old channel, or an open channel
 DETECT_CHANNEL_STATE_START = 0
-DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND = 5  # Wait this many CTS cycles before deciding that a channel is available to use
+DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND = (
+    5  # Wait this many CTS cycles before deciding that a channel is available to use
+)
 NO_CHANGE_REQUESTED = -1  # Used to return control to other devices
-CHECKS_BEFORE_RETRY = 2  # How many status messages we should receive before retrying our command
+CHECKS_BEFORE_RETRY = (
+    2  # How many status messages we should receive before retrying our command
+)
 
 # Override pybalboa text strings for Jacuzzi-specific differences:
 
-text_tscale = ["Fahrenheit", "Celsius"]   # Just to fix the misspelling
+text_tscale = ["Fahrenheit", "Celsius"]  # Just to fix the misspelling
 
 
 class JacuzziRS485(BalboaSpaWifi):
-    """Extends BalboaSpaWifi to work with Jacuzzi spas instead. """
+    """Extends BalboaSpaWifi to work with Jacuzzi spas instead."""
 
     def __init__(self, hostname, port=BALBOA_DEFAULT_PORT):
-        super().__init__(hostname, port)      
+        super().__init__(hostname, port)
         self.connection_state = ConnectionStates.Disconnected
 
         # Balboa systems can receive ("auto detect") configuration info from
@@ -108,14 +114,14 @@ class JacuzziRS485(BalboaSpaWifi):
         # set up some default config values.
         #
         # TODO: implement some sort of configuration methods for Jacuzzi spas.
-            
-        self.pump_array = [0, 2, 1, 0, 0, 0]    # Jet pumps 1 and 2 only
+
+        self.pump_array = [0, 2, 1, 0, 0, 0]  # Jet pumps 1 and 2 only
         self.nr_of_pumps = 2
         self.circ_pump = 1
         self.tempscale = self.TSCALE_C
-        self.timescale = self.TIMESCALE_12H 
+        self.timescale = self.TIMESCALE_12H
         self.temprange = self.TEMPRANGE_HIGH
-        
+
         # Initialize low range min and max temperatures as [°F, °C]
         # (but not used in Jacuzzi spas)
         self.tmin[0] = [40, 18.5]
@@ -140,7 +146,7 @@ class JacuzziRS485(BalboaSpaWifi):
         self.pump2State = 0
         self.pump1State = 0
         self.pump0State = 0
-     
+
         # Setup some model specific values
         # TODO: remove any that are not relevant to Jacuzzi spas
         self.day = -1
@@ -155,13 +161,13 @@ class JacuzziRS485(BalboaSpaWifi):
         self.manualCirc = -1
         self.autoCirc = -1
         self.unknownCirc = -1
-        self.heatState2 = -1      
+        self.heatState2 = -1
         self.displayText = -1
         self.heatMode = -1
         self.UnknownField3 = -1
         self.UnknownField9 = -1
         self.panelLock = -1
-        
+
         self.lightBrightness = 0
         self.lightMode = 0
         self.lightR = 0
@@ -169,7 +175,7 @@ class JacuzziRS485(BalboaSpaWifi):
         self.lightB = 0
 
         self.statusByte17 = 0
-        self.filter1StartHour = 0 
+        self.filter1StartHour = 0
         self.filter1DurationHours = 0
         self.filter1Freq = 0
 
@@ -179,12 +185,10 @@ class JacuzziRS485(BalboaSpaWifi):
         # is only 1 change per second. Apparently in Balboa spas
         # there are two speeds: 1 change per second and 2 changes
         # per second (I think).
-        # self.lightCycleTime = 1 # In seconds. 
+        # self.lightCycleTime = 1 # In seconds.
 
         # Messages must be sent on CTS for our channel, not any time
-        self.queue = (
-            queue.Queue()
-        )  
+        self.queue = queue.Queue()
 
         # The Prolink Wifi module always has channel address 0x0A
         # TODO: Set to 0x0A if ProLink is being used
@@ -196,31 +200,37 @@ class JacuzziRS485(BalboaSpaWifi):
         # setup some specific items that we need that the base class
         # doesn't.
         # TODO: Not used now; probably can be removed
-        self.target_pump_status  = [NO_CHANGE_REQUESTED, NO_CHANGE_REQUESTED, NO_CHANGE_REQUESTED,
-                                    NO_CHANGE_REQUESTED, NO_CHANGE_REQUESTED, NO_CHANGE_REQUESTED]
+        self.target_pump_status = [
+            NO_CHANGE_REQUESTED,
+            NO_CHANGE_REQUESTED,
+            NO_CHANGE_REQUESTED,
+            NO_CHANGE_REQUESTED,
+            NO_CHANGE_REQUESTED,
+            NO_CHANGE_REQUESTED,
+        ]
         self.targetTemp = NO_CHANGE_REQUESTED
         self.checkCounter = 0
         self.prior_status = None
 
         self.prev_chksums = {}
-        self.config_loaded = True   # Done with configuration
+        self.config_loaded = True  # Done with configuration
 
         # 2nd temperature sensor. This is apparently in the plumbing
         # not in the tub itself as the primary sensor is. So this
         # one tells you what the water temperature in the pipes is.
         self.statusByte21 = 0
-  
+
     async def send_mod_ident_req(self):
-        """ Overrides parent method just to add debug logging. """
+        """Overrides parent method just to add debug logging."""
         self.log.debug("Requesting module ID (msg type value 0x04)")
         await super().send_mod_ident_req()
 
     async def send_filter1_cycle_req(self):
-        """ Sends a request for Primary Filter Cycle Info. """
+        """Sends a request for Primary Filter Cycle Info."""
         await self.send_panel_req(1, 0)
 
     async def send_filter2_cycle_req(self):
-        """ Sends a request for Secondary Filter Cycle Info. """
+        """Sends a request for Secondary Filter Cycle Info."""
         await self.send_panel_req(2, 0)
 
     async def send_panel_req(self, ba, bb):
@@ -234,12 +244,12 @@ class JacuzziRS485(BalboaSpaWifi):
         # Jacuzzi message packet does not have the extra byte field
         # (always 0x00?) between the ba and bb panel request values.
         #
-        # Example: 7E 07 0A BF 19 01 00 XX 7E 
+        # Example: 7E 07 0A BF 19 01 00 XX 7E
         # (XX = calculated checksum)
         data = bytearray(5)
         data[0] = self.channel
         data[1] = 0xBF
-        data[2] = 0x19      # Was 0x22 for Balboa
+        data[2] = 0x19  # Was 0x22 for Balboa
         data[3] = ba
         data[4] = bb
 
@@ -248,7 +258,7 @@ class JacuzziRS485(BalboaSpaWifi):
         await self.send_message(*data)
 
     async def set_time(self, new_time, timescale=None):
-        """ Overrides the parent method to set time on a Jacuzzi spa.
+        """Overrides the parent method to set time on a Jacuzzi spa.
         Jacuzzi spa controllers do not switch to 12 hour timescale,
         so this method override ignores the timescale field.
         """
@@ -259,7 +269,7 @@ class JacuzziRS485(BalboaSpaWifi):
         data = bytearray(8)
         data[0] = self.channel
         data[1] = 0xBF
-        data[2] = 0x18      # Was 0x21 for Balboa
+        data[2] = 0x18  # Was 0x21 for Balboa
 
         # Keep the date fields unchanged. The spa control system
         # will ignore this command if the upper 4 bits of the current
@@ -268,7 +278,7 @@ class JacuzziRS485(BalboaSpaWifi):
         data[4] = self.dayOfMonth
         data[5] = self.currentYear - 2000
 
-        # In balboa spas setting bit 7 of the hour value will switch the 
+        # In balboa spas setting bit 7 of the hour value will switch the
         # spa time to 12 hour format. Jacuzzi spa controllers ignore this
         # bit though, so Jacuzzi spas will only operate in 24 hour mode.
         data[6] = new_time.tm_hour
@@ -279,7 +289,7 @@ class JacuzziRS485(BalboaSpaWifi):
         await self.send_message(*data)
 
     async def set_date(self, new_date, timescale=None):
-        """ Sets the current date on a Jacuzzi spa. Since balboa
+        """Sets the current date on a Jacuzzi spa. Since balboa
         spas do not have an internal date, there is no equivalent
         method in balboa.py.
         """
@@ -290,7 +300,7 @@ class JacuzziRS485(BalboaSpaWifi):
         data = bytearray(8)
         data[0] = self.channel
         data[1] = 0xBF
-        data[2] = 0x18      # Was 0x21 for Balboa
+        data[2] = 0x18  # Was 0x21 for Balboa
 
         # Update the Set Time command date fields. The Jacuzzi spa
         # control system will ignore this command if the upper 4
@@ -311,9 +321,9 @@ class JacuzziRS485(BalboaSpaWifi):
         """Overrides the parent method to accommodate differences
         in the Prolink message type fields.
 
-        pump identifies the pump to change. 
+        pump identifies the pump to change.
         """
-        
+
         # Each message sent emulates a button press on the Jacuzzi
         # topside control panel. So if a pump has two speeds for
         # example, then each message will effect one step through
@@ -324,7 +334,7 @@ class JacuzziRS485(BalboaSpaWifi):
         # Jacuzzi type field has type field 0x17 for pumps 1 through 3
         # instead of 0x1A
         #
-        # Example: 7E 06 0A BF 17 04 XX 7E 
+        # Example: 7E 06 0A BF 17 04 XX 7E
         # (XX = calculated checksum)
 
         # sanity check
@@ -344,7 +354,7 @@ class JacuzziRS485(BalboaSpaWifi):
         data = bytearray(4)
         data[0] = self.channel
         data[1] = 0xBF
-        data[2] = mtype      # Was 0x11 for balboa
+        data[2] = mtype  # Was 0x11 for balboa
         data[3] = pumpcode
 
         # calculate how many times to push the button
@@ -366,14 +376,14 @@ class JacuzziRS485(BalboaSpaWifi):
         data = bytearray(11)
         data[0] = self.channel
         data[1] = 0xBF
-        data[2] = 0x21     # Was 0x11 for balboa
-        data[3] = 0x1F     # = 0x2F for brightness
+        data[2] = 0x21  # Was 0x11 for balboa
+        data[3] = 0x1F  # = 0x2F for brightness
         data[4] = newmode
         data[5] = 0x00
         data[6] = 0x00
         data[7] = 0x00
         data[8] = 0x00
-        data[9] = 0xFF     # Brightness field
+        data[9] = 0xFF  # Brightness field
         data[10] = 0x00
 
         # send_message() will append the start and end flags, the length
@@ -388,14 +398,14 @@ class JacuzziRS485(BalboaSpaWifi):
         data = bytearray(11)
         data[0] = self.channel
         data[1] = 0xBF
-        data[2] = 0x21     # 0x21 is BMTS_SET_TIME for balboa
-        data[3] = 0x2F     # = 0x1F for light mode control 
-        data[4] = 0x01     # Mode field
+        data[2] = 0x21  # 0x21 is BMTS_SET_TIME for balboa
+        data[3] = 0x2F  # = 0x1F for light mode control
+        data[4] = 0x01  # Mode field
         data[5] = 0x00
         data[6] = 0x00
         data[7] = 0x00
         data[8] = 0x00
-        data[9] = newlevel # Brightness value
+        data[9] = newlevel  # Brightness value
         data[10] = 0x00
 
         # send_message() will append the start and end flags, the length
@@ -418,8 +428,10 @@ class JacuzziRS485(BalboaSpaWifi):
         # not seem to cause a loss of communication.
         data = bytearray(6)
         data[0] = self.channel
-        data[1] = 0xBF     # "PF" byte (always either 0xAF or 0xBF)
-        data[2] = 0x1B     # BMTR_FILTER_INFO_RESP = 0x23, BMTS_FILTER_REQ = 0x22 for balboa
+        data[1] = 0xBF  # "PF" byte (always either 0xAF or 0xBF)
+        data[
+            2
+        ] = 0x1B  # BMTR_FILTER_INFO_RESP = 0x23, BMTS_FILTER_REQ = 0x22 for balboa
         data[3] = starthour
         data[4] = durationhrs
         data[5] = frequency
@@ -445,8 +457,10 @@ class JacuzziRS485(BalboaSpaWifi):
         # the current secondary filter mode value.
         data = bytearray(6)
         data[0] = self.channel
-        data[1] = 0xBF     # "PF" byte (always either 0xAF or 0xBF)
-        data[2] = 0x1C     # BMTR_FILTER_INFO_RESP = 0x23, BMTS_FILTER_REQ = 0x22 for balboa
+        data[1] = 0xBF  # "PF" byte (always either 0xAF or 0xBF)
+        data[
+            2
+        ] = 0x1C  # BMTR_FILTER_INFO_RESP = 0x23, BMTS_FILTER_REQ = 0x22 for balboa
         data[3] = mode
         data[4] = 0
         data[5] = 0
@@ -463,12 +477,12 @@ class JacuzziRS485(BalboaSpaWifi):
         await self.send_filter2_cycle_req()
 
     async def send_message(self, *bytes):
-        """ Overrides parent method only to change log messaging. """
+        """Overrides parent method only to change log messaging."""
         # If not connected, we can't send a message
         if not self.connected:
             self.log.error("Attempted to send a message when not connected.")
             return
-        
+
         # If we don't have a channel number yet, we can't form a message
         if self.channel is None:
             self.log.error("Attempted to send a message without a channel set.")
@@ -488,10 +502,10 @@ class JacuzziRS485(BalboaSpaWifi):
     async def set_channel(self, chan):
         self.channel = chan
         self.log.info("Channel Assigned: {}".format(self.channel))
- 
+
     async def parse_status_update(self, data):
-        """ Override balboa's parsing of a status update from the spa
-        to handle Jacuzzi differences. 
+        """Override balboa's parsing of a status update from the spa
+        to handle Jacuzzi differences.
 
         Many of the field values are similar between Balboa and Jacuzzi,
         but their position in the message packet is often different.
@@ -517,14 +531,14 @@ class JacuzziRS485(BalboaSpaWifi):
         else:
             return
 
-        # Modified for Jacuzzi; was data[8] and data[9] for Balboa 
+        # Modified for Jacuzzi; was data[8] and data[9] for Balboa
         self.time_hour = data[5]
         self.time_minute = data[6]
 
-        # Byte 7 Bits 7,6,5 = currentWeek (actually day of week; 1 = Monday) 
+        # Byte 7 Bits 7,6,5 = currentWeek (actually day of week; 1 = Monday)
         # Byte 7 Bits 4,3,2,1,0 = daysInMonth (actually day of month)
         self.dayOfWeek = (data[7] & 0xE0) >> 5
-        self.dayOfMonth = (data[7] & 0x1F)
+        self.dayOfMonth = data[7] & 0x1F
 
         # Byte 8 = currentMonth
         # Byte 9 = currentYear (since 2000)
@@ -533,11 +547,11 @@ class JacuzziRS485(BalboaSpaWifi):
 
         # Byte 10 Bits 7,6 = Filter2Mode (0b00 = off)
         # Byte 10 Bits 5,4 = HeatModeState (0b01 = on-low?)
-        # Byte 10 Bits 3,2,1,0 = SpaState 
+        # Byte 10 Bits 3,2,1,0 = SpaState
         # (values of 1,2,8,9 or 10 get forced to -1) (0b0010 = 2)
         self.filter2Mode = (data[10] & 0xC0) >> 6
         self.heatModeState = (data[10] & 0x30) >> 4
-        self.spaState = (data[10] & 0x0F)
+        self.spaState = data[10] & 0x0F
 
         # TODO: why are heatmode and heatstate the same bits?
         # flag 2 is heatmode
@@ -551,28 +565,30 @@ class JacuzziRS485(BalboaSpaWifi):
         # Byte 11 = errorCode (0x00 = no error)
         self.errorCode = data[11]
 
-        # Modified for Jacuzzi; was data[7] for Balboa 
+        # Modified for Jacuzzi; was data[7] for Balboa
         curtemp = float(data[12])
-        
 
         # Byte 13 = don't care? (0xFA)
         self.statusByte13 = data[13]
 
-        # Modified for Jacuzzi; was data[25] for Balboa 
+        # Modified for Jacuzzi; was data[25] for Balboa
         settemp = float(data[14])
 
-        self.curtemp = curtemp / (2 if self.tempscale ==
-                               self.TSCALE_C else 1) if curtemp != 255 else None
+        self.curtemp = (
+            curtemp / (2 if self.tempscale == self.TSCALE_C else 1)
+            if curtemp != 255
+            else None
+        )
         self.settemp = settemp / (2 if self.tempscale == self.TSCALE_C else 1)
 
         # Byte 15 Bits 7,6 = Pump3State
         # Byte 15 Bits 5,4 = Pump2State (bit posn off by 1??)
-        # Byte 15 Bits 3,2 = Pump1State 
+        # Byte 15 Bits 3,2 = Pump1State
         # Byte 15 Bits 1,0 read but not used
         self.pump3State = (data[15] & 0xC0) >> 6
         self.pump2State = (data[15] & 0x30) >> 4
         self.pump1State = (data[15] & 0x0C) >> 2
-        self.pump0State = (data[15] & 0x03)
+        self.pump0State = data[15] & 0x03
 
         # Modified for Jacuzzi; does not have a temprange feature
         # self.temprange = (data[15] & 0x04) >> 2
@@ -583,7 +599,7 @@ class JacuzziRS485(BalboaSpaWifi):
             # 1-4 are in one byte, 5/6 are in another
             if i < 4:
                 # Modified for Jacuzzi; Balboa was data[16]
-                self.pump_status[i] = (data[15] >> i*2) & 0x03
+                self.pump_status[i] = (data[15] >> i * 2) & 0x03
             # Modified for Jacuzzi -- does not have pumps 5 or 6
             # else:
             #   self.pump_status[i] = (data[17] >> ((i - 4)*2)) & 0x03
@@ -616,11 +632,11 @@ class JacuzziRS485(BalboaSpaWifi):
         #
         # All of these except isSecondaryOn will come on during
         # a filter cycle and also whenever pump 1 is turned on
-        # manually. 
+        # manually.
         self.isSecondaryOn = (data[16] & 0xC0) >> 6
         self.isPrimaryOn = (data[16] & 0x30) >> 4
         self.isBlowerOn = (data[16] & 0x0C) >> 2
-        self.isUVOn = (data[16] & 0x03)
+        self.isUVOn = data[16] & 0x03
 
         # flag 3 is filter mode
         # Modified for Prolink IsPrimaryOn (bit 5,4 of byte 16)
@@ -637,12 +653,12 @@ class JacuzziRS485(BalboaSpaWifi):
         # pump 1 is on.
         if self.blower:
             # Modified for Prolink; was data[18]. Same bits as isBlowerOn
-            self.blower_status = (data[16] & 0x0c) >> 2
+            self.blower_status = (data[16] & 0x0C) >> 2
 
         # Byte 17 = don't care?
         # In Prolink byte17 seems to indicate that pump 1 is running
         # -- i.e. whenever pump 1 is on, byte 17 is 0x01. At all other
-        # times it is 0x00. It is delayed by about 1 second with 
+        # times it is 0x00. It is delayed by about 1 second with
         # respect to changes in pump 1. It does transition oddly at the
         # end of a filter cycle though; turning off and back on
         # briefly. Perhaps this is a flow sensor signal?
@@ -673,19 +689,19 @@ class JacuzziRS485(BalboaSpaWifi):
             # Yes it appears data[19] does not hold light status.
             # Instead the light status is contained in message
             # type 0x23.
-            self.light_status[i] = ((data[19] >> i*2) & 0x03) >> 1
+            self.light_status[i] = ((data[19] >> i * 2) & 0x03) >> 1
 
         # Byte 20 Bits 5,4 = settingLock
         # Byte 20 Bits 3,2 = accessLock
         # Byte 20 Bits 1,0 = maintenanceLock (Bit posn error off by 1??)
         self.settingLock = (data[20] & 0x30) >> 4
         self.accessLock = (data[20] & 0x0C) >> 2
-        self.serviceLock = (data[20] & 0x03)
+        self.serviceLock = data[20] & 0x03
 
         # Prolink does not support mister? data[20] has lock bits
         # if self.mister:
         #    self.mister_status = data[20] & 0x01
-        # 
+        #
         # Yes it appears Jacuzzi does not have a mister feature on
         # any of its spas.
 
@@ -716,19 +732,19 @@ class JacuzziRS485(BalboaSpaWifi):
         # NOTE: MSB is actually LSB and LSB is MSB!
         self.waterTime = (data[26] * 256) + data[27]
 
-        if data[1] >= 30: # packet length including checksum byte
+        if data[1] >= 30:  # packet length including checksum byte
             # Byte 28 = OUTERFILTERLSB
             # Byte 29 = OUTERFILTERMSB
             # NOTE: MSB is actually LSB and LSB is MSB!
             self.outerFilterTime = (data[28] * 256) + data[29]
- 
-        if data[1] >= 32: # packet length including checksum byte
+
+        if data[1] >= 32:  # packet length including checksum byte
             # Byte 30 = INNERFILTERLSB
             # Byte 31 = INNERFILTERMSB
             # NOTE: MSB is actually LSB and LSB is MSB!
             self.innerFilterTime = (data[30] * 256) + data[31]
 
-        if data[1] >= 33: # packet length including checksum byte
+        if data[1] >= 33:  # packet length including checksum byte
             # Byte 32 Bits 7,6,5,4 = WiFiState
             #  0 = SpaWifiState.Unknown
             #  1 = SpaWifiState.SoftAPmodeUnavailable
@@ -740,7 +756,7 @@ class JacuzziRS485(BalboaSpaWifi):
             #  15 = SpaWifiState.NOTCOMMUNICATINGTOSPA
             self.spaWifiState = (data[32] & 0xF0) >> 4
 
-        if data[1] >= 37: # packet length including checksum byte
+        if data[1] >= 37:  # packet length including checksum byte
             # Byte 33 = don't care
             # Byte 34 = don't care
             # Byte 35 = don't care
@@ -754,24 +770,24 @@ class JacuzziRS485(BalboaSpaWifi):
         self.lastupd = time.time()
 
     def parse_system_information(self, data):
-        """ Overrides parent method to handle the dofferemces in Jaccuzi 
+        """Overrides parent method to handle the dofferemces in Jaccuzi
         system information message packets vs those in Balboa systems.
 
         Emulating the Prolink app behavior -- this just reads byte 7 of
-        the message packet and if the value there is less than 6, it 
+        the message packet and if the value there is less than 6, it
         sets isOldVersion = true, or false otherwise.
         """
 
         self.sysInfoByte5 = data[5]
         self.sysInfoByte6 = data[6]
-        if (data[7] < 6):
+        if data[7] < 6:
             self.isOldVersion = True
         else:
             self.isOldVersion = False
 
     def parse_secondary_filter(self, data):
-        """ Decodes the Jaccuzi-specifc Secondary Filter Cycle
-        message packet. 
+        """Decodes the Jaccuzi-specifc Secondary Filter Cycle
+        message packet.
         """
 
         # According to the Prolink app this message has 3 data bytes but
@@ -779,13 +795,13 @@ class JacuzziRS485(BalboaSpaWifi):
         # Cycle setting. Allowed values are 0, 1 or 2 indicating
         # "Holiday" "Light" or "Heavy" respectively.
         #
-        # The value of second and 3rd data bytes always seems to be 0x0A 
+        # The value of second and 3rd data bytes always seems to be 0x0A
         self.SecondaryFilterCycle = data[5]
         self.secFilterByte6 = data[6]
         self.secFilterByte7 = data[7]
 
-    def parse_primary_filtration(self, data): 
-        """Parse a Jacuzzi Primary Filtration message packet. """
+    def parse_primary_filtration(self, data):
+        """Parse a Jacuzzi Primary Filtration message packet."""
 
         # This just reads bytes 5 and 6 of the message packet and
         # saves them. Oddly though, I have not found any code in
@@ -798,9 +814,9 @@ class JacuzziRS485(BalboaSpaWifi):
         # come from reading the panel update status message instead.
         startHour = data[5]
         durationHours = data[6]
-        if (startHour >= 0):
-            self.filter1StartHour = startHour 
-        if (durationHours >= 0):
+        if startHour >= 0:
+            self.filter1StartHour = startHour
+        if durationHours >= 0:
             self.filter1DurationHours = durationHours
 
         # Manual says 1,2,3,4, or 8 are allowed values for frequency
@@ -808,8 +824,8 @@ class JacuzziRS485(BalboaSpaWifi):
         if (filter1Freq > 0 and filter1Freq <= 4) or filter1Freq == 8:
             self.filter1Freq = filter1Freq
 
-    def parse_setup_parameters(self, data): 
-        """Parse a Jacuzzi Setup Parameters message packet. """
+    def parse_setup_parameters(self, data):
+        """Parse a Jacuzzi Setup Parameters message packet."""
 
         # This message type is defined in the Prolink app but it does
         # not seem to be used in the app.  Might be a leftover from
@@ -833,8 +849,8 @@ class JacuzziRS485(BalboaSpaWifi):
         self.setupByte6 = data[6]
 
     def parse_pump_state(self, data):
-        """ Parses a Jacuzzi "Pump State" message. """
-  
+        """Parses a Jacuzzi "Pump State" message."""
+
         # This just reads the 6 upper bits of Byte 11 of the message
         # packet, counts the number of pumps present, and saves that
         # to the spa object's attributes. Oddly though, in the Prolink
@@ -849,7 +865,7 @@ class JacuzziRS485(BalboaSpaWifi):
         pump3bits = (data[11] & 0xC0) >> 6
         pump2bits = (data[11] & 0x30) >> 4
         pump1bits = (data[11] & 0x0C) >> 2
-        pump0bits = (data[11] & 0x03)
+        pump0bits = data[11] & 0x03
         pumpcount = 0
         if pump3bits != 0:
             pumpcount += 1
@@ -873,10 +889,10 @@ class JacuzziRS485(BalboaSpaWifi):
         self.pumpStateByte17 = data[17]
         # self.log.debug('Pump3: {0} Pump2: {1} Pump1: {2}; Total = {3}'.format(pump3bits, pump2bits, pump1bits, pumpcount))
 
-    async def parse_light_status_update(self, data): 
-        """Parse a Jacuzzi Light status update message packet. """
+    async def parse_light_status_update(self, data):
+        """Parse a Jacuzzi Light status update message packet."""
 
-        # This message type is not defined in the Prolink app 
+        # This message type is not defined in the Prolink app
         # or balboa.py but the Jacuzzi J-235 spa does broadcast this
         # at regular intervals, much like the PLNK_STATUS_UPDATE
         # message. It contains the current state of the LED lights.
@@ -891,37 +907,37 @@ class JacuzziRS485(BalboaSpaWifi):
         self.lightR = data[8]
         self.lightG = data[9]
         self.lightB = data[10]
-        self.log.debug('Light status: L: {0} R: {1} G: {2} B: {3}'.format(
-                      self.lightBrightness, 
-                      self.lightR, 
-                      self.lightG, 
-                      self.lightB))
+        self.log.debug(
+            "Light status: L: {0} R: {1} G: {2} B: {3}".format(
+                self.lightBrightness, self.lightR, self.lightG, self.lightB
+            )
+        )
 
     async def read_one_message(self):
-        """ Overrides parent method to update self.connection_state
+        """Overrides parent method to update self.connection_state
         and add debug logging.
         """
         msg = await super().read_one_message()
 
         # If we recieve a non-empty message and ConnectionStates != Connected
         # Then update to ConnectionStates == Connected
-        if (msg is not None and self.connection_state is not ConnectionStates.Connected):
+        if msg is not None and self.connection_state is not ConnectionStates.Connected:
             self.connection_state = ConnectionStates.Connected
 
-        if (msg is not None):
-            self.log.debug('Received message: {}'.format(msg.hex()))
+        if msg is not None:
+            self.log.debug("Received message: {}".format(msg.hex()))
         else:
-            self.log.debug('Read failed in read_one_message()')
+            self.log.debug("Read failed in read_one_message()")
 
         return msg
 
     async def check_connection_status(self):
-        """ Overrides the parent method to connect and reconnect as needed
+        """Overrides the parent method to connect and reconnect as needed
         for Jacuzzi spas. This should run as a coroutine or task concurrently
         with other asynchronous coroutines.
         """
 
-        timeout = 120 # Seconds
+        timeout = 120  # Seconds
         while True:
             # self.connect() will set self.connected to True when
             # asyncio.open_connection() succeeds.
@@ -959,7 +975,7 @@ class JacuzziRS485(BalboaSpaWifi):
             await asyncio.sleep(1)
 
     async def listen(self):
-        """ Overrides parent method to parse Jacuzzi-specific msg types
+        """Overrides parent method to parse Jacuzzi-specific msg types
 
         This is an infinite loop to read and process incoming messages.
         It checks periodically to see if we are connected to the spa,
@@ -984,7 +1000,9 @@ class JacuzziRS485(BalboaSpaWifi):
             mid = data[3]
             mtype = data[4]
 
-            self.log.debug("Processing msg type 0x{:02X} in process_message()".format(data[4]))
+            self.log.debug(
+                "Processing msg type 0x{:02X} in process_message()".format(data[4])
+            )
 
             if mtype == JACUZZI_STATUS_UPDATE:
                 await self.parse_status_update(data)
@@ -992,10 +1010,10 @@ class JacuzziRS485(BalboaSpaWifi):
                 await self.parse_light_status_update(data)
             elif mtype == CLIENT_CLEAR_TO_SEND:
                 if (
-                    self.channel is None 
+                    self.channel is None
                     and self.detectChannelState
                     == DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND
-                    ):
+                ):
                     message_length = 8
                     data = bytearray(10)
                     data[0] = M_STARTEND
@@ -1047,7 +1065,9 @@ class JacuzziRS485(BalboaSpaWifi):
             elif mtype == CLEAR_TO_SEND:
                 if not channel in self.discoveredChannels:
                     self.discoveredChannels.append(data[2])
-                    self.log.info("Discovered Channels: {0}".format(self.discoveredChannels))
+                    self.log.info(
+                        "Discovered Channels: {0}".format(self.discoveredChannels)
+                    )
                 elif channel == self.channel:
                     if self.queue.empty():
                         await self.writer.drain()
@@ -1060,10 +1080,17 @@ class JacuzziRS485(BalboaSpaWifi):
                 if mtype == CC_REQ:
                     if not channel in self.activeChannels:
                         self.activeChannels.append(data[2])
-                        self.log.info("Active Channels: {0}".format(self.activeChannels))
-                    elif (self.detectChannelState < DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND):
+                        self.log.info(
+                            "Active Channels: {0}".format(self.activeChannels)
+                        )
+                    elif (
+                        self.detectChannelState < DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND
+                    ):
                         self.detectChannelState += 1
-                        if (self.detectChannelState == DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND):
+                        if (
+                            self.detectChannelState
+                            == DETECT_CHANNEL_STATE_CHANNEL_NOT_FOUND
+                        ):
                             self.discoveredChannels.sort()
                             for chan in self.discoveredChannels:
                                 if not chan in self.activeChannels:
@@ -1076,7 +1103,11 @@ class JacuzziRS485(BalboaSpaWifi):
                                 + "".join(map("{:02X} ".format, bytes(data)))
                             )
                 else:
-                    self.log.error("Unhandled msg type 0x{0:02X} ({0}) in process_message()".format(data[4]))
+                    self.log.error(
+                        "Unhandled msg type 0x{0:02X} ({0}) in process_message()".format(
+                            data[4]
+                        )
+                    )
 
     async def spa_configured(self):
         # TODO: make this override actually work for Jacuzzi spas
@@ -1086,12 +1117,12 @@ class JacuzziRS485(BalboaSpaWifi):
         # systems. Also I have not been able to get the J-235 to respond
         # with a config data message packet. Doesn't seem like Jacuzzi supports
         # this method of configuration.
-        return True 
+        return True
 
     async def listen_until_configured(self, maxiter=20):
         # TODO: remove this config override if not relevant to Jacuzzi spas
         return True
-   
+
     # Additional accessors not provided by the parent class
     # TODO: remove any accessors that are not relevant to Jacuzzi spas
 
@@ -1100,87 +1131,83 @@ class JacuzziRS485(BalboaSpaWifi):
 
     def get_spatime_text(self):
         return "Spa Time: {0:02d}:{1:02d} {2}".format(
-            self.time_hour,
-            self.time_minute,
-            self.get_timescale(True)
+            self.time_hour, self.time_minute, self.get_timescale(True)
         )
 
     def get_day(self):
         return self.dayOfMonth
-        
-    def get_month(self):    
-        return self.currentMonth 
-        
-    def get_year(self):  
+
+    def get_month(self):
+        return self.currentMonth
+
+    def get_year(self):
         return self.currentYear
 
     def get_spadate_text(self):
         return "Spa Date: {0}/{1}/{2}".format(
-            self.get_month(), 
-            self.get_day(),
-            self.get_year()
+            self.get_month(), self.get_day(), self.get_year()
         )
-        
-    def get_curtemp_text(self):  
-        return ("Water Temp: {0}".format(self.get_curtemp()))
 
-    def get_2ndtemp_text(self):  
-        return ("2nd Temp: {0}".format(self.statusByte21)) 
+    def get_curtemp_text(self):
+        return "Water Temp: {0}".format(self.get_curtemp())
 
-    def get_settemp_text(self):  
-        return ("Setpoint Temp: {0}".format(self.get_settemp())) 
+    def get_2ndtemp_text(self):
+        return "2nd Temp: {0}".format(self.statusByte21)
+
+    def get_settemp_text(self):
+        return "Setpoint Temp: {0}".format(self.get_settemp())
 
     def change_settemp(self, newtemp):
         self.send_temp_change(newtemp)
 
-    def get_temp2(self):  
-        return self.temp2 
-        
-    def get_manualCirc(self):  
-        return self.manualCirc 
-        
-    def get_autoCirc(self):  
+    def get_temp2(self):
+        return self.temp2
+
+    def get_manualCirc(self):
+        return self.manualCirc
+
+    def get_autoCirc(self):
         return self.autoCirc
-        
-    def get_unknownCirc(self):  
+
+    def get_unknownCirc(self):
         return self.unknownCirc
-        
-    def get_heatstate_text(self):  
+
+    def get_heatstate_text(self):
         return "Heater: {0}".format(self.get_heatstate(True))
 
-    def get_heatState2(self):  
+    def get_heatState2(self):
         return self.heatState2
 
-    def get_displayText(self):  
-        return self.displayText 
-        
-    def get_heatMode(self):  
-        return self.heatMode 
-        
-    def get_UnknownField3(self):  
+    def get_displayText(self):
+        return self.displayText
+
+    def get_heatMode(self):
+        return self.heatMode
+
+    def get_UnknownField3(self):
         return self.UnknownField3
-        
-    def get_UnknownField9(self):  
-        return self.UnknownField9 
-        
-    def get_panelLock(self):  
-        return self.panelLock 
-        
-    def get_lightBrightness(self):  
+
+    def get_UnknownField9(self):
+        return self.UnknownField9
+
+    def get_panelLock(self):
+        return self.panelLock
+
+    def get_lightBrightness(self):
         return self.lightBrightness
-        
-    def get_lightMode(self):  
+
+    def get_lightMode(self):
         return self.lightMode
-        
-    def get_lightR(self):  
+
+    def get_lightR(self):
         return self.lightR
-    
-    def get_lightB(self):  
-        return self.lightB 
-        
+
+    def get_lightB(self):
+        return self.lightB
+
     def get_lightG(self):
         return self.lightG
-    
+
     def get_last_update_text(self):
         if self.lastupd == 0:
             return "Last Update: N/A"

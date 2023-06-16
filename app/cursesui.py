@@ -25,7 +25,8 @@ from enum import Enum
 
 
 class Align(Enum):
-    """ Alignment enum types for Textfields """
+    """Alignment enum types for Textfields"""
+
     NOTSET = 0
     LEFT = 1
     CENTER = 2
@@ -33,7 +34,7 @@ class Align(Enum):
 
 
 class Textfield:
-    """ Encapsulates a string of text at an absolute row and column 
+    """Encapsulates a string of text at an absolute row and column
     position in a Window object, with optional alignment. Supports
     multiline strings where the lines are separated by a newline
     character.
@@ -41,6 +42,7 @@ class Textfield:
     Textfields default to read-only.  You can make them editable
     by adding an EditDialog instance to them.
     """
+
     def __init__(self, row, col, align: Align = Align.NOTSET):
         self.win = None
         self.row = row if row >= 0 else 0
@@ -58,15 +60,15 @@ class Textfield:
         self.attrs = curses.A_NORMAL
 
     def set_alignment(self, align: Align):
-        """ Configure the alignment type for this Textfield """
+        """Configure the alignment type for this Textfield"""
         self.align = align
 
     def add_to(self, win):
-        """ Adds this Textfield to the given Window instance """
+        """Adds this Textfield to the given Window instance"""
         self.win = win
 
     def write(self, txt):
-        """ Removes any prior string from its parent Window by
+        """Removes any prior string from its parent Window by
         hiding it, then adds this new text string to its Window
         object. Supports multline strings.
         """
@@ -74,55 +76,51 @@ class Textfield:
 
         # Strip any trailing newline chars to remove
         # any pointless trailing empty lines.
-        self.lines = txt.rstrip('\n').split('\n')
+        self.lines = txt.rstrip("\n").split("\n")
         self.show()
 
     def get_text(self):
-        """ Returns the (possibly multiline) text string
+        """Returns the (possibly multiline) text string
         in this Textfield as a single string. Multiple lines
         will be separated by a newline character.
         """
-        return '\n'.join(self.lines)
+        return "\n".join(self.lines)
 
     def get_required_rows(self):
-        """ Returns the number of rows required to display
+        """Returns the number of rows required to display
         all lines in this Textfield.
         """
         return len(self.lines)
 
     def get_required_cols(self):
-        """ Returns the minumum number of columns required
+        """Returns the minumum number of columns required
         to display all lines in this Textfield
         """
-        return len(max(self.lines, key = len))
+        return len(max(self.lines, key=len))
 
     def _get_col_offset(self, text):
-        """ Implements right, left and center alignment """
+        """Implements right, left and center alignment"""
         if self.align == Align.RIGHT:
             return -len(text)
         elif self.align == Align.CENTER:
-            return -int(len(text)/2)
+            return -int(len(text) / 2)
         else:
             return 0
 
     def show(self):
-        """ Makes this Textfield visible by adding it to the 
-        window at the TextField's row and column position. 
+        """Makes this Textfield visible by adding it to the
+        window at the TextField's row and column position.
         Supports multiline text strings where the lines are
         separated by a newline character.
         """
         self.visible = True
 
         # Call addnstr() only when it makes sense to do so
-        if (self.win is not None and 
-            self.win.cwin is not None and 
-            len(self.lines) != 0):
-
+        if self.win is not None and self.win.cwin is not None and len(self.lines) != 0:
             # Get the row constraint for this Textfield
             maxlines = self.win.get_last_row() - self.row + 1
 
             for i in range(min(len(self.lines), maxlines)):
-
                 # Get the actual start row, column and max
                 # length for this line.
                 start_row = self.row + i
@@ -137,13 +135,11 @@ class Textfield:
                     self.win.cwin.attron(self.attrs)
 
                     # Write the text string into the curses window object
-                    self.win.cwin.addnstr(
-                        start_row, start_col,
-                        self.lines[i], maxchars)
+                    self.win.cwin.addnstr(start_row, start_col, self.lines[i], maxchars)
 
                     # Done writing so turn off the attributes
                     self.win.cwin.attroff(self.attrs)
-        
+
                 except Exception as e:
                     # Done writing so turn off the attributes
                     self.win.cwin.attroff(self.attrs)
@@ -152,15 +148,15 @@ class Textfield:
                         print("Log is None in show()")
                     else:
                         log.warning(
-                            ('In show(): At ({0},{1}) "{2}" '
-                            'is outside of its window'
-                            ).format(start_row, start_col,
-                                     self.lines[i])
+                            (
+                                'In show(): At ({0},{1}) "{2}" '
+                                "is outside of its window"
+                            ).format(start_row, start_col, self.lines[i])
                         )
                     break
 
     def hide(self):
-        """ Makes this TextField invisible by overwriting the
+        """Makes this TextField invisible by overwriting the
         text with a line of spaces the same length, at the same
         row and column position. Supports multiline text strings
         where the lines are separated by newline characters.
@@ -168,17 +164,13 @@ class Textfield:
         self.visible = False
 
         # Call addnstr() only when it makes sense to do so
-        if (self.win is not None and 
-            self.win.cwin is not None and 
-            len(self.lines) != 0):
-
+        if self.win is not None and self.win.cwin is not None and len(self.lines) != 0:
             # Get the row constraint for this Textfield
             maxlines = self.win.get_last_row() - self.row + 1
 
             for i in range(min(len(self.lines), maxlines)):
-
                 # Get a string of spaces as long as the text line
-                blanktxt = f'{"":<{len(self.lines[i])}}' 
+                blanktxt = f'{"":<{len(self.lines[i])}}'
 
                 # Get the actual start row, column and max
                 # length for this line.
@@ -192,26 +184,25 @@ class Textfield:
                 try:
                     # Turn off the Textfield's attributes as we
                     # write blank characters.
-                    self.win.cwin.attroff(self.attrs)      
-                    self.win.cwin.addnstr(
-                        start_row, start_col, blanktxt, maxchars)           
+                    self.win.cwin.attroff(self.attrs)
+                    self.win.cwin.addnstr(start_row, start_col, blanktxt, maxchars)
                 except Exception as e:
                     if log is None:
                         # test comment
                         print("Log is None in hide()")
                     else:
                         log.warning(
-                            ('In hide(): At ({0},{1}) "{2}" '
-                            'is outside of its window'
-                            ).format(start_row, start_col,
-                                     self.lines[i])
+                            (
+                                'In hide(): At ({0},{1}) "{2}" '
+                                "is outside of its window"
+                            ).format(start_row, start_col, self.lines[i])
                         )
                     break
 
-    def move(self, row, col, constrain = True):
-        """ Moves this Textfield to a new row and column position.
-        The values are normally clamped to remain inside the 
-        parent window, unless constrain is False. 
+    def move(self, row, col, constrain=True):
+        """Moves this Textfield to a new row and column position.
+        The values are normally clamped to remain inside the
+        parent window, unless constrain is False.
 
         An unconstrained move is only useful when the new location
         is on a Window's border.  Any other unconstrained location
@@ -231,7 +222,7 @@ class Textfield:
             self.show()
 
     def set_update_cb(self, update_cb):
-        """ Provide a callback routine to update this
+        """Provide a callback routine to update this
         Textfield's content. The callback takes no
         parameters and returns a fully formatted text
         string for display.
@@ -239,7 +230,7 @@ class Textfield:
         self.update_cb = update_cb
 
     def update(self):
-        """ Update this Textfield by calling its
+        """Update this Textfield by calling its
         update callback function, if one has been
         provided.
         """
@@ -247,7 +238,7 @@ class Textfield:
             self.write(self.update_cb())
 
     def add_attrs(self, attrs):
-        """ Add these character attributes for this
+        """Add these character attributes for this
         Textfield. You can specify multiple attributes
         by combining the curses character attribute constants
         with a bitwise-OR.
@@ -255,34 +246,34 @@ class Textfield:
         self.attrs |= attrs
 
     def remove_attrs(self, attrs):
-        """ Removes these character attributes from
-        this Textfield. You can specify multiple 
+        """Removes these character attributes from
+        this Textfield. You can specify multiple
         attributes by combining the curses character
         attribute constants with a bitwise-OR.
         """
         self.attrs &= ~attrs
 
     def get_attrs(self):
-        """ Returns the current default character
+        """Returns the current default character
         attributes for this Textfield.
         """
         return self.attrs
 
     def set_selectable(self, flag: bool = True):
-        """ Allow or prevent selecting this Textfield. """
+        """Allow or prevent selecting this Textfield."""
         self.selectable = flag
 
     def select(self):
-        """ Select this Textfield, if selectable. """
+        """Select this Textfield, if selectable."""
         if self.selectable:
             self.selected = True
 
     def unselect(self):
-        """ Unselect this Textfield. """
+        """Unselect this Textfield."""
         self.selected = False
 
     def draw_selection(self, showit: bool = True):
-        """ Changes the attributes of this Textfield
+        """Changes the attributes of this Textfield
         to indicate whether or not it is selected.
         You can override this if you want to
         change how a selected Textfield is displayed.
@@ -296,7 +287,7 @@ class Textfield:
             self.remove_attrs(attr)
 
     def set_dialog(self, dialog: "EditDialog"):
-        """ Installs an EditDialog instance
+        """Installs an EditDialog instance
         for this Textfield.  The dialog allows
         the user to modify the data shown by
         the Textfield.
@@ -308,33 +299,33 @@ class Textfield:
             set_selectable(False)
 
     def get_dialog(self):
-        """ Returns the currently installed
+        """Returns the currently installed
         EditDialog instance, or None if one
         is not installed.
         """
         return self.dialog
-        
+
 
 class KeyResponse:
-    """ This class encapsulates a Window's responses to a
+    """This class encapsulates a Window's responses to a
     specific key or group of keys. It is used by the CursesUI
     class to bind one or more key values to a response routine.
 
     The name parameter is required; it should be a unique
     text string that you can use later to retrieve that specific
-    instance. 
+    instance.
 
     While not recommended, you can actually create and install
-    more than one KeyResponse instance with the same name string.  
+    more than one KeyResponse instance with the same name string.
     However the system will match and then react only to the first
     one it finds -- which may cause subtle, unexpected behavior.
-    
+
     After creating a KeyResponse instance, you can bind or
-    unbind response routines to it at any time. 
+    unbind response routines to it at any time.
 
     When a user keyhit passed to the KeyResponse _respond()
     method matches one of its keyvalues, the instance will call
-    the current response routine bound to it. 
+    the current response routine bound to it.
 
     Each response routine receives the matched keyvalue, which
     allows you to have a single response routine that can respond
@@ -352,7 +343,7 @@ class KeyResponse:
     binding, thereby restoring the previous binding (if any).
     """
 
-    def __init__(self, name, keyvalue = None):
+    def __init__(self, name, keyvalue=None):
         self.name = name
         self.keyvalues = []
         if keyvalue is not None:
@@ -361,28 +352,28 @@ class KeyResponse:
         self.filter = lambda keyhit: False
 
     def get_name(self):
-        """ Returns the name string that identifies
+        """Returns the name string that identifies
         this KeyResponse instance.
         """
         return self.name
 
     def add_keyvalues(self, values):
-        """ Adds one or more integer keyvalues that this
+        """Adds one or more integer keyvalues that this
         KeyResponse instance will respond to. The given
         values can be either a single integer or a list
         of integers.
-        """ 
-        try: 
+        """
+        try:
             for value in values:
                 self.keyvalues.append(value)
         except:
             self.keyvalues.append(values)
 
     def remove_keyvalues(self, values: list):
-        """ Removes one or more integer keyvalues that this
+        """Removes one or more integer keyvalues that this
         KeyResponse instance responds to. Ignores any
         integer values that are not found in the list.
-        """ 
+        """
         for value in values:
             try:
                 self.keyvalues.remove(value)
@@ -390,30 +381,30 @@ class KeyResponse:
                 continue
 
     def get_keyvalues(self):
-        """ Returns the array of specific 
+        """Returns the array of specific
         integer key values that this KeyResponse
         instance will recognize.  This does
         not include values matched through
         any filter routine (e.g. isdigit()
         added to this KeyResponse instance.
-        """ 
+        """
         return self.keyvalues
 
     def set_filter(self, filter):
-        """ Installs a filter routine (e.g.
+        """Installs a filter routine (e.g.
         isdigit() to specify key values this
         KeyResponse instance will respond to.
-        """ 
+        """
         self.filter = filter
 
     def bind(self, response_routine):
-        """ Add this response routine to the 
+        """Add this response routine to the
         the list of responses to this keyhit.
         """
         self.responses.append(response_routine)
 
-    def unbind(self, response_routine = None):
-        """ Removes this response routine from the
+    def unbind(self, response_routine=None):
+        """Removes this response routine from the
         list of key responses, or the one most
         recently added if None.
         """
@@ -427,39 +418,33 @@ class KeyResponse:
 
     def _respond(self, keyhit):
         # Calls the most recently bound response routine when
-        # the keyhit is found in the list of keyvalues, or an 
+        # the keyhit is found in the list of keyvalues, or an
         # installed filter routine returns True when given the
         # keyhit.
         #
         # Each response routine gets the Window instance with the
         # matching KeyResponse instance as well as the key value
         # that matched.
-        # 
+        #
         # Returns True on a match, False otherwise.
 
-        if (self.responses and
-               (
-                keyhit in self.keyvalues or
-                self.filter(keyhit)
-               )
-           ):
+        if self.responses and (keyhit in self.keyvalues or self.filter(keyhit)):
             self.responses[-1](keyhit)
             return True
         return False
 
 
 class Window:
-    """ Base class for common Window object behaviors. """
+    """Base class for common Window object behaviors."""
 
-    def __init__(self, parent, nrows, ncols, title = None):
-
+    def __init__(self, parent, nrows, ncols, title=None):
         # Current dimensions. These may be smaller than
         # max dimensions when the Window is constrained
         # by its parent.
         self.nrows = nrows
         self.ncols = ncols
 
-        # Max dimensions when unconstrained by a 
+        # Max dimensions when unconstrained by a
         # parent.
         self.maxrows = nrows
         self.maxcols = ncols
@@ -486,9 +471,9 @@ class Window:
         # Default Window characteristics
         self.has_border = True
         self.border_height = 1  # In rows per horizontal border line
-        self.border_width = 1   # In columns per vertical border line
-        self.set_selectable()   # Windows are selectable by default
-        self.unselect()         # Windows are unselected by default
+        self.border_width = 1  # In columns per vertical border line
+        self.set_selectable()  # Windows are selectable by default
+        self.unselect()  # Windows are unselected by default
 
         # Character attributes to apply to the entire window.
         # Bitwise-OR these to combine multiple attributes.
@@ -501,7 +486,7 @@ class Window:
 
         # Automatically create and add a Textfield for the title,
         # if a title is provided.
-        if title is not None: 
+        if title is not None:
             self.add_title(title)
 
         # Counter for multiple resize() calls needed to
@@ -509,37 +494,34 @@ class Window:
         self._resize_count = 0
 
     def add_title(self, newtitle):
-        """ Adds a title Textfield to this Window """
+        """Adds a title Textfield to this Window"""
         if newtitle is None:
             self.remove_title()
         else:
-            self.titlefield = Textfield(self.get_first_row() - 1,
-                                        self.get_center_col(),
-                                        Align.CENTER)
+            self.titlefield = Textfield(
+                self.get_first_row() - 1, self.get_center_col(), Align.CENTER
+            )
             self.add_field(self.titlefield)
             self.titlefield.write(newtitle)
 
     def _reposition_title(self):
-        """ Repositions the title Textfield for this Window. Used
+        """Repositions the title Textfield for this Window. Used
         to adjust a Window's title position after the Window has
         been resized with persistent = True.
         """
         # Reposition the title Textfield. Don't constrain
         # the move though, since we intentially want it to
         # be on the border of the Window.
-        self.titlefield.move(self.get_first_row() - 1,
-                             self.get_center_col(),
-                             False
-                            )
+        self.titlefield.move(self.get_first_row() - 1, self.get_center_col(), False)
 
     def remove_title(self):
-        """ Removes the title Textfield from this Window """
+        """Removes the title Textfield from this Window"""
         self.remove_field(self.titlefield)
         self.titlefield = None
         self.title = None
 
     def get_title(self):
-        """ Returns the Window's title string, or None
+        """Returns the Window's title string, or None
         if there isn't one.
         """
         if self.titlefield is not None:
@@ -547,7 +529,7 @@ class Window:
         return None
 
     def add_child(self, win):
-        """ Adds a child window to this one. Child windows get
+        """Adds a child window to this one. Child windows get
         repainted whenever this window is repainted, in the
         order they were added. So for children that may overlap,
         add the windows in order from bottom to topmost.
@@ -555,18 +537,18 @@ class Window:
         self.children.append(win)
 
     def remove_child(self, win):
-        """ Removes a child window from this one. """
+        """Removes a child window from this one."""
         self.children.remove(win)
 
     def get_children(self) -> list:
-        """ Returns the list of this Window's children.
+        """Returns the list of this Window's children.
         Probably not necessary but provided here so
         that it may be overridden.
         """
         return self.children
 
     def get_first_child(self):
-        """ Returns the bottommost child of this Window
+        """Returns the bottommost child of this Window
         or None if there are no child Windows.
         """
         if len(self.get_children()) == 0:
@@ -574,8 +556,8 @@ class Window:
         else:
             return self.get_children()[0]
 
-    def get_next_child(self, child: 'Window'):
-        """ Returns the next child up, in this Window. If
+    def get_next_child(self, child: "Window"):
+        """Returns the next child up, in this Window. If
         the given child is not found, returns None.  If the
         given child is the topmost child, then this will
         return the bottommost child Window.
@@ -583,12 +565,12 @@ class Window:
         leni = len(self.get_children())
         for i in range(leni):
             if self.get_children()[i] == child:
-                nxti= (i + 1) % leni
+                nxti = (i + 1) % leni
                 return self.get_children()[nxti]
         return None
 
     def get_child_by_title(self, title):
-        """ Returns the first child in this
+        """Returns the first child in this
         Window with the given title, or None
         if not found.
         """
@@ -599,20 +581,20 @@ class Window:
         return None
 
     def set_selectable(self, flag: bool = True):
-        """ Allow or prevent selecting this Window. """
+        """Allow or prevent selecting this Window."""
         self.selectable = flag
 
     def select(self):
-        """ Select this Window, if selectable. """
+        """Select this Window, if selectable."""
         if self.selectable:
             self.selected = True
 
     def unselect(self):
-        """ Unselect this Window. """
+        """Unselect this Window."""
         self.selected = False
 
     def select_child(self, given):
-        """ Selects the given child Window after unselecting
+        """Selects the given child Window after unselecting
         any currently selected Window. Returns the newly
         selected child Window, or None on failure.
         """
@@ -625,7 +607,7 @@ class Window:
         return None
 
     def get_selected_child(self):
-        """ Returns the first selected child Window in
+        """Returns the first selected child Window in
         this Window. If no child Window is currently
         selected then this method will select the first
         child Window and return that.  If there are no
@@ -647,7 +629,7 @@ class Window:
         return None
 
     def select_child_by_title(self, title):
-        """ Selects a child of this Window with the given title.
+        """Selects a child of this Window with the given title.
         Returns the child Window, or None if not found or not
         selectable.
         """
@@ -659,30 +641,30 @@ class Window:
         return None
 
     def unselect_all_children(self):
-        """ Insures that no child Windows are selected """
+        """Insures that no child Windows are selected"""
         for child in self.get_children():
             if child.selected:
                 child.unselect()
 
     def add_field(self, txtfield: Textfield):
-        """ Adds a Textfield to this Window object. """
+        """Adds a Textfield to this Window object."""
         txtfield.add_to(self)
         self.textfields.append(txtfield)
 
     def remove_field(self, txtfield: Textfield):
-        """ Removes a Textfield from this Window object. """
+        """Removes a Textfield from this Window object."""
         txtfield.add_to(None)
         self.textfields.remove(txtfield)
 
     def get_textfields(self) -> list:
-        """ Returns the list of this Window's Textfields.
+        """Returns the list of this Window's Textfields.
         Probably not necessary but provided here so
         that it may be overridden.
         """
         return self.textfields
 
     def get_first_field(self):
-        """ Returns the first Textfield in this Window
+        """Returns the first Textfield in this Window
         or None if there are no Textfields.
 
         Note that the Window's title Textfield is a
@@ -696,7 +678,7 @@ class Window:
         return None
 
     def get_next_field(self, given: Textfield):
-        """ Returns the next Textfield in this Window.
+        """Returns the next Textfield in this Window.
         If the given Textfield is not found, returns None.
         If the given Textfield is the last in this Window,
         this method will return the first Textfield.
@@ -714,7 +696,7 @@ class Window:
         n = len(self.get_textfields())
         for i in range(n):
             # Use modulo to wrap from last to first
-            nxti= (gi + i + 1) % n
+            nxti = (gi + i + 1) % n
             # Get a copy of the next field
             nxtf = self.get_textfields()[nxti]
             # Done unless next is the title
@@ -723,7 +705,7 @@ class Window:
         return nxtf
 
     def select_field(self, given):
-        """ Selects the given Textfield after unselecting
+        """Selects the given Textfield after unselecting
         any currently selected Textfield and makes the
         selection visible. Returns the newly selected
         Textfield, or None on failure.
@@ -738,7 +720,7 @@ class Window:
         return None
 
     def get_selected_field(self):
-        """ Returns the first selected Textfield in
+        """Returns the first selected Textfield in
         this Window. If no Textfield is currently
         selected then this method will select the first
         Textfield and return that.  If there are no
@@ -765,7 +747,7 @@ class Window:
         return None
 
     def show_selected_field(self, flag: bool = True):
-        """ Highlights the currently selected 
+        """Highlights the currently selected
         Textfield in this Window.
 
         Note that the Window's title Textfield is a
@@ -777,7 +759,7 @@ class Window:
                 tf.draw_selection(flag)
 
     def draw_selection(self):
-        """ Changes the attributes of the Window
+        """Changes the attributes of the Window
         to indicate whether or not it is selected.
         You can override this if you want to
         change how a selected Window is displayed.
@@ -791,7 +773,7 @@ class Window:
             self.remove_attrs(attr)
 
     def unselect_all_fields(self):
-        """ Insures that no Textfields in this Window
+        """Insures that no Textfields in this Window
         are selected.
         """
         for tf in self.get_textfields():
@@ -799,32 +781,32 @@ class Window:
                 tf.unselect()
 
     def show_all_fields(self):
-        """ Makes all Textfields visible in this Window object. """       
+        """Makes all Textfields visible in this Window object."""
         for tf in self.textfields:
             tf.show()
 
     def update_all_fields(self):
-        """ Updates all Textfields in this Window object by
-        calling each Textfield's update callback function. 
+        """Updates all Textfields in this Window object by
+        calling each Textfield's update callback function.
         """
         for tf in self.textfields:
             tf.update()
 
     def get_first_col(self):
-        """ Returns the leftmost writeable column value
-        inside of this Window. 
+        """Returns the leftmost writeable column value
+        inside of this Window.
         """
         return self.border_width if self.has_border else 0
 
     def get_center_col(self):
-        """ Finds the approximate center column inside of 
-        this Window. 
+        """Finds the approximate center column inside of
+        this Window.
         """
         # Add 1 to round up (looks better in narrow Windows)
         return int(self.get_last_col() / 2) + 1
 
     def get_last_col(self):
-        """ Returns the rightmost writeable column value
+        """Returns the rightmost writeable column value
         inside of this Window.
         """
         last_col = max(self.ncols - 1, 0)
@@ -834,27 +816,26 @@ class Window:
         return last_col
 
     def constrain_col(self, col):
-        """ Clamps the column value to be inside this Window """
+        """Clamps the column value to be inside this Window"""
         # Note: get_first_col() and get_last_col() account
         # for any border this Window has.
-        return min(self.get_last_col(),
-                   max(self.get_first_col(), col))
+        return min(self.get_last_col(), max(self.get_first_col(), col))
 
     def get_first_row(self):
-        """ Returns the topmost writeable row value
-        inside of this Window. 
+        """Returns the topmost writeable row value
+        inside of this Window.
         """
         return self.border_height if self.has_border else 0
 
     def get_center_row(self):
-        """ Finds the approximate middle row inside
-        this Window. 
+        """Finds the approximate middle row inside
+        this Window.
         """
         # Add 1 to round up (looks better?)
         return int(self.get_last_row() / 2) + 1
 
     def get_last_row(self):
-        """ Returns the bottommost writeable row value
+        """Returns the bottommost writeable row value
         inside this Window.
         """
         last_row = max(self.nrows - 1, 0)
@@ -864,24 +845,23 @@ class Window:
         return last_row
 
     def constrain_row(self, row):
-        """ Clamps the given row value to be inside 
-        this Window object. 
+        """Clamps the given row value to be inside
+        this Window object.
         """
         # Note: get_first_row() and get_last_row() account
         # for any border this Window has.
-        return min(self.get_last_row(),
-                   max(self.get_first_row(), row))
+        return min(self.get_last_row(), max(self.get_first_row(), row))
 
     def show_border(self):
-        """ Displays a border around this Window object. """  
+        """Displays a border around this Window object."""
         self.has_border = True
 
     def hide_border(self):
-        """ Removes the border around this Window """    
+        """Removes the border around this Window"""
         self.has_border = False
 
     def draw_border(self):
-        """ Draws a single line border around the
+        """Draws a single line border around the
         inside perimeter of this Window. You can
         override this if you need more complex
         borders.
@@ -893,30 +873,30 @@ class Window:
             self.cwin.box()
 
     def add_attrs(self, attrs):
-        """ Adds the character attributes for the inside
-        of this Window. You can specify multiple 
+        """Adds the character attributes for the inside
+        of this Window. You can specify multiple
         attributes by combining the curses character
         attribute constants with a bitwise-OR.
         """
         self.attrs |= attrs
 
     def remove_attrs(self, attrs):
-        """ Removes these character attributes from
-        the inside of this Window. You can specify multiple 
+        """Removes these character attributes from
+        the inside of this Window. You can specify multiple
         attributes by combining the curses character
         attribute constants with a bitwise-OR.
         """
         self.attrs &= ~attrs
 
-    def resize(self, nrows, ncols, persistent = True):
-        """ Resizes the curses window object to the new
-        dimensions. 
+    def resize(self, nrows, ncols, persistent=True):
+        """Resizes the curses window object to the new
+        dimensions.
 
         A temporary change only affects the nrows and
         ncols attributes of the Window instance and the
         curses window object, shrinking the window as
-        needed to remain inside its parent. 
- 
+        needed to remain inside its parent.
+
         A persistent change modifies the maxrows and
         maxcols attributes which are the dimensions of
         the Window object when unconstrained by the
@@ -933,9 +913,9 @@ class Window:
         # accurately displayed on screen.
         if self.nrows != nrows:
             if persistent:
-                self.maxrows = nrows   
+                self.maxrows = nrows
             self.nrows = min(nrows, self.maxrows)
-            self._resize_count = 2          
+            self._resize_count = 2
         if self.ncols != ncols:
             if persistent:
                 self.maxcols = ncols
@@ -954,18 +934,17 @@ class Window:
         # This seems to always happen with the bottom row border,
         # and only occasionally happen with the right side border
         # -- which suggests to me that it is somehow a timing
-        # related issue in the underlying curses library. 
-        # 
+        # related issue in the underlying curses library.
+        #
         # In any case we use self._resize_count here to call
         # resize() more than once, each time we need to resize
         # the window. This insures that the curses window object
         # always accurately reflects the state of our Window
         # object.
-        if (self.cwin is not None and
-            self._resize_count > 0):
+        if self.cwin is not None and self._resize_count > 0:
             self.cwin.resize(nrows, ncols)
             self._resize_count -= 1
- 
+
         # If the resize is persistent, then reposition
         # the Window's title. We want to do this after
         # the curses window object has been resized to
@@ -975,7 +954,7 @@ class Window:
             self._reposition_title()
 
     def _constrain(self):
-        """ Temporarily constrains the Window to remain within
+        """Temporarily constrains the Window to remain within
         the current dimensions of the parent, if needed.
 
         Returns True if the Window is still visible, else False.
@@ -984,7 +963,7 @@ class Window:
         row_limit = self.parent.get_last_row()
         col_limit = self.parent.get_last_col()
 
-        # This Window is invisible if the upper left corner is 
+        # This Window is invisible if the upper left corner is
         # outside of the parent's limits.
         if self.ulcrow > row_limit or self.ulccol > col_limit:
             return False
@@ -1004,13 +983,13 @@ class Window:
         return True
 
     def refresh(self):
-        """ Transfers this window's content to the curses virtual
+        """Transfers this window's content to the curses virtual
         screen.
         """
         self.cwin.noutrefresh()
 
     def repaint(self):
-        """ Constrains this curses window object as needed to fit
+        """Constrains this curses window object as needed to fit
         inside its parent,  If still visible then this routine
         clears this curses window object, repaints its contents
         and then does the same for any child windows, in order,
@@ -1024,7 +1003,7 @@ class Window:
 
         # Set the current background character and attributes
         # for this entire curses window object.
-        self.cwin.bkgd(' ', self.attrs)
+        self.cwin.bkgd(" ", self.attrs)
 
         # Fill the curses window object with background
         # characters.
@@ -1052,19 +1031,19 @@ class Window:
             child.repaint()
 
     def add_key(self, key: KeyResponse):
-        """ Adds this KeyResponse instance to the
-        CursesUI's list of active key bindings. 
+        """Adds this KeyResponse instance to the
+        CursesUI's list of active key bindings.
         """
         self.keys.append(key)
 
     def remove_key(self, key: KeyResponse):
-        """ Deletes this KeyResponse instance from the
+        """Deletes this KeyResponse instance from the
         CursesUI's list of active key bindings.
         """
         self.keys.remove(key)
 
     def get_key(self, name) -> KeyResponse:
-        """ Returns the KeyResponse instance with the
+        """Returns the KeyResponse instance with the
         given name string. If not found then this method
         will return None.
         """
@@ -1074,7 +1053,7 @@ class Window:
         return None
 
     def _process_keyhit(self, keyhit):
-        """ Search the list of KeyResponse instances
+        """Search the list of KeyResponse instances
         until a KeyResponse matches this keyhit.
 
         When there is a currently selected child
@@ -1082,15 +1061,13 @@ class Window:
 
         When there is a match, quit searching further
         and call the current key response routine
-        bound to the matching KeyResponse. The 
+        bound to the matching KeyResponse. The
         response routine gets passed the Window
         with the matching KeyResponse instance, as
         well as the key value that matched.
         """
         child = self.get_selected_child()
-        if (child is not None and
-            child._process_keyhit(keyhit)
-           ):
+        if child is not None and child._process_keyhit(keyhit):
             return True
         for key in self.keys:
             if key._respond(keyhit):
@@ -1098,7 +1075,7 @@ class Window:
         return False
 
     def kr_select_next_child(self, _):
-        """ This key response routine finds the currently
+        """This key response routine finds the currently
         selected child Window. If found it unselects it,
         finds the next selectable child, and selects that
         one.  Returns the newly selected child Window, or
@@ -1117,12 +1094,12 @@ class Window:
         return None
 
     def kr_select_next_field(self, _):
-        """ This key response routine finds the
+        """This key response routine finds the
         currently selected Textfield.  If found
         it unselects it, finds the next selectable
         Textfield, and selects that one.  Returns
         the newly selected Textfield, or None on
-        failure.       
+        failure.
         """
         sf = self.get_selected_field()
         if sf != None:
@@ -1139,7 +1116,7 @@ class Window:
         return None
 
     def kr_begin_child_edit(self, _):
-        """ This key response routine begins an edit
+        """This key response routine begins an edit
         session on the currently selected child Window.
 
         In that child Window, it highlights the currently
@@ -1164,7 +1141,7 @@ class Window:
             return
 
         # Make the currently selected Textfield
-        # visible. 
+        # visible.
         child.show_selected_field(True)
 
         # The ENTER key now should begin editing
@@ -1183,7 +1160,7 @@ class Window:
         esc_key.bind(self.kr_end_child_edit)
 
     def kr_end_child_edit(self, _):
-        """ This key response routine finds the currently
+        """This key response routine finds the currently
         selected child Window, and unhighlights the
         currently selected Textfield. Lastly it restores
         the previous key bindings.
@@ -1198,13 +1175,13 @@ class Window:
 
 
 class SubWindow(Window):
-    """ Encapsulates the behavior of a curses subwindow. Subwindows
+    """Encapsulates the behavior of a curses subwindow. Subwindows
     share the same buffer space as their parent window, so writing to the
     subwindow will overwrite anything under it in the parent. Refreshing
     a subwindow only refreshes that area in the parent window object.
     """
 
-    def __init__(self, parent, nrows, ncols, ulcrow, ulccol, title = None):
+    def __init__(self, parent, nrows, ncols, ulcrow, ulccol, title=None):
         super().__init__(parent, nrows, ncols, title)
         self.ulcrow = ulcrow
         self.ulccol = ulccol
@@ -1215,8 +1192,7 @@ class SubWindow(Window):
         # subwin() might generate a "curses function returned NULL"
         # fatal error.
         self._constrain()
-        self.cwin = parent.cwin.subwin(self.nrows, self.ncols,
-                                       self.ulcrow, self.ulccol)
+        self.cwin = parent.cwin.subwin(self.nrows, self.ncols, self.ulcrow, self.ulccol)
 
     # Probably not needed but here for completeness anyway.
     def __del__(self):
@@ -1224,7 +1200,7 @@ class SubWindow(Window):
             del self.cwin
 
     def move(self, row, col):
-        """ Moves this SubWindow to a new row and column position.
+        """Moves this SubWindow to a new row and column position.
         The values are clamped to remain inside the parent window.
         """
         self.ulcrow = self.parent.constrain_row(row)
@@ -1234,28 +1210,28 @@ class SubWindow(Window):
         self.cwin.mvwin(self.ulcrow, self.ulccol)
 
     def get_left_edge_col(self):
-        """ Returns the column value of the leftmost
+        """Returns the column value of the leftmost
         outside edge of this Window, in the parent Window's
         row and column coordinates.
         """
         return self.ulccol
 
     def get_right_edge_col(self):
-        """ Returns the column value of the rightmost
+        """Returns the column value of the rightmost
         outside edge of this Window, in the parent Window's
         row and column coordinates.
         """
         return self.ulccol + self.ncols
 
     def get_top_edge_row(self):
-        """ Returns the row value of the topmost outside
+        """Returns the row value of the topmost outside
         edge of this Window, in the parent Window's
         row and column coordinates.
         """
         return self.ulcrow
 
     def get_bottom_edge_row(self):
-        """ Returns the row value of the bottommost
+        """Returns the row value of the bottommost
         outside edge of this Window, in the parent Window's
         row and column coordinates.
         """
@@ -1263,15 +1239,15 @@ class SubWindow(Window):
 
 
 class NewWindow(Window):
-    """ Encapsulates the behavior of a curses newwindow. These
-    do NOT share the same buffer space as their parent window, so 
+    """Encapsulates the behavior of a curses newwindow. These
+    do NOT share the same buffer space as their parent window, so
     writing to a NewWindow will not change anything in a parent
     Window. They can also exist outside the boundaries of other
     curses window objects. Thus NewWindows can be useful for popup
     or overlay-type windows.
     """
 
-    def __init__(self, parent, nrows, ncols, ulcrow, ulccol, title = None):
+    def __init__(self, parent, nrows, ncols, ulcrow, ulccol, title=None):
         super().__init__(parent, nrows, ncols, title)
         self.ulcrow = ulcrow
         self.ulccol = ulccol
@@ -1279,8 +1255,7 @@ class NewWindow(Window):
 
         # A curses newwindow has no parent window so does not need
         # to be constrained.
-        self.cwin = curses.newwin(self.nrows, self.ncols,
-                                  self.ulcrow, self.ulccol)
+        self.cwin = curses.newwin(self.nrows, self.ncols, self.ulcrow, self.ulccol)
 
     # Probably not needed but here for completeness anyway.
     def __del__(self):
@@ -1288,7 +1263,7 @@ class NewWindow(Window):
             del self.cwin
 
     def move(self, row, col):
-        """ Moves this NewWindow to a new row and column position.
+        """Moves this NewWindow to a new row and column position.
         The values are clamped to remain inside the parent window.
         """
         self.ulcrow = self.parent.constrain_row(row)
@@ -1298,48 +1273,48 @@ class NewWindow(Window):
         self.cwin.mvwin(self.ulcrow, self.ulccol)
 
     def get_left_edge_col(self):
-        """ Returns the column value of the leftmost
+        """Returns the column value of the leftmost
         outside edge of this Window, in the parent Window's
         row and column coordinates.
         """
         return self.ulccol
 
     def get_right_edge_col(self):
-        """ Returns the column value of the rightmost
+        """Returns the column value of the rightmost
         outside edge of this Window, in the parent Window's
         row and column coordinates.
         """
         return self.ulccol + self.ncols
 
     def get_top_edge_row(self):
-        """ Returns the row value of the topmost outside
+        """Returns the row value of the topmost outside
         edge of this Window, in the parent Window's
         row and column coordinates.
         """
         return self.ulcrow
 
     def get_bottom_edge_row(self):
-        """ Returns the row value of the bottommost
+        """Returns the row value of the bottommost
         outside edge of this Window, in the parent Window's
         row and column coordinates.
         """
         return self.ulcrow + self.nrows
 
     def _constrain(self):
-        """ Since NewWindows do not need to exist inside of
+        """Since NewWindows do not need to exist inside of
         another Window, they do not need to be constrained
         """
         return True
 
 
 class EditDialog(NewWindow):
-    """ Encapsulates the behavior of temporary, popup dialog Window
+    """Encapsulates the behavior of temporary, popup dialog Window
     used to modify the data displayed in a Textfield.
 
     Given its parent Window, a prompt string, and a callback function
     that will save the new value to the appropriate variable, this
     class creates, maintains, and closes the dialog Window when
-    the user is done. 
+    the user is done.
 
     The default conversion method convert_to_int() returns an int
     value. You can replace that with others, for instance to convert
@@ -1351,8 +1326,8 @@ class EditDialog(NewWindow):
     however you need.
     """
 
-    def __init__(self, parent, prompt, save_cb = None):
-        # Initialize this dialog Window instance. 
+    def __init__(self, parent, prompt, save_cb=None):
+        # Initialize this dialog Window instance.
         #
         # Note that in this case we won't actually call the dialog
         # Window's super().__init__() method until it is time to
@@ -1380,7 +1355,7 @@ class EditDialog(NewWindow):
         self.cwin = None
 
     def _build_dialog(self):
-        """ Creates and places the Textfields needed for
+        """Creates and places the Textfields needed for
         this dialog Window.  Override this method if
         you want to display a dialog differently.
         """
@@ -1395,7 +1370,7 @@ class EditDialog(NewWindow):
 
         self.editfield = Textfield(row, col)
         # Reserve a blank line for user input
-        self.editfield.write('')
+        self.editfield.write("")
         row += self.editfield.get_required_rows()
 
         self.stsfield = Textfield(row, col)
@@ -1423,27 +1398,28 @@ class EditDialog(NewWindow):
         # ncols is currently just the space needed for the longest
         # dialog text. We still need to account for both the left
         # and right borders (if any).
-        ncols += 2*self.border_width if self.has_border else 0
+        ncols += 2 * self.border_width if self.has_border else 0
 
         self.resize(nrows, ncols, True)
 
-        # Now recenter this resized dialog Window. 
-        ulcrow = self.parent.get_center_row() - int(nrows/2)
-        ulccol = self.parent.get_center_col() - int(ncols/2)
+        # Now recenter this resized dialog Window.
+        ulcrow = self.parent.get_center_row() - int(nrows / 2)
+        ulccol = self.parent.get_center_col() - int(ncols / 2)
         self.move(ulcrow, ulccol)
 
     def _setup_dialog_keys(self):
-        """ Configures a KeyResponse instance to handle
+        """Configures a KeyResponse instance to handle
         user keyhits for this dialog Window.  Override
         this method if you want to handle user keyhits
         differently.
         """
         # The edit KeyResponse needs to be different
         # for different edit types (e.g. int, float, enum, text)
-        key_list = [curses.KEY_BACKSPACE,
-                    # curses.KEY_DC,
-                    ord('-'),
-                   ]
+        key_list = [
+            curses.KEY_BACKSPACE,
+            # curses.KEY_DC,
+            ord("-"),
+        ]
         edit_keys = KeyResponse("Edit", key_list)
         edit_keys.set_filter(curses.ascii.isdigit)
         self.add_key(edit_keys)
@@ -1451,9 +1427,7 @@ class EditDialog(NewWindow):
         def _kr_edit_text(keyhit):
             # Write digits and minus signs into the Textfield
             curtext = self.editfield.get_text()
-            if (curses.ascii.isdigit(keyhit) or
-                keyhit == ord('-')
-                ):
+            if curses.ascii.isdigit(keyhit) or keyhit == ord("-"):
                 curtext += chr(keyhit)
             elif keyhit == curses.KEY_BACKSPACE:
                 curtext = curtext[:-1]
@@ -1478,9 +1452,9 @@ class EditDialog(NewWindow):
         self.parent.get_key("esc").bind(self._kr_quit_field_edit)
 
     def kr_begin_field_edit(self, _):
-        """ This key response routine begins an edit
+        """This key response routine begins an edit
         session on the currently selected Textfield.
-        
+
         This is the only dialog key response routine
         that needs to be publicly accessible. The
         others are only referenced internally by the
@@ -1502,7 +1476,7 @@ class EditDialog(NewWindow):
         self._quit()
 
     def convert_to_int(self):
-        """ Tries to convert the editfield text
+        """Tries to convert the editfield text
         into an integer value.
         """
         try:
@@ -1513,7 +1487,7 @@ class EditDialog(NewWindow):
             return None
 
     def convert_to_float(self):
-        """ Tries to convert the editfield text
+        """Tries to convert the editfield text
         into a floating point value.
         """
         try:
@@ -1524,27 +1498,25 @@ class EditDialog(NewWindow):
             return None
 
     def begin(self):
-        """ Begins an edit session on the currently
+        """Begins an edit session on the currently
         selected Textfield.
         """
         # The _build_dialog() method will resize and reposition the
-        # curses new window after it is created so these size and 
+        # curses new window after it is created so these size and
         # position values are arbitrary.
         nrows = 10
         ncols = 20
-        ulcrow = self.parent.get_center_row() - int(nrows/2)
-        ulccol = self.parent.get_center_col() - int(ncols/2)
+        ulcrow = self.parent.get_center_row() - int(nrows / 2)
+        ulccol = self.parent.get_center_col() - int(ncols / 2)
 
         # Create the dialog Window and add it to its parent
-        super().__init__(self.parent, nrows,
-                         ncols, ulcrow,
-                         ulccol, "Edit")
+        super().__init__(self.parent, nrows, ncols, ulcrow, ulccol, "Edit")
 
         # Populate the dialog Window and configure how
         # it will respond to user keyhits.
         self._build_dialog()
         self._setup_dialog_keys()
- 
+
         # Save the previously selected Window so that we can
         # restore it when the dialog is finished.  Then select
         # this dialog Window to bring the user focus here.
@@ -1552,7 +1524,7 @@ class EditDialog(NewWindow):
         self.parent.select_child(self)
 
     def default_validator(self, result):
-        """ A simple input validation routine for user input. """
+        """A simple input validation routine for user input."""
 
         if result is not None:
             return True
@@ -1560,7 +1532,7 @@ class EditDialog(NewWindow):
             return False
 
     def default_save_cb(self, result):
-        """A simple callback for saving validated user input. """
+        """A simple callback for saving validated user input."""
 
         print("Entered {0}".format(result))
 
@@ -1589,22 +1561,22 @@ class EditDialog(NewWindow):
 
 
 class TextDialog(EditDialog):
-    """ Encapsulates the behavior of temporary, popup dialog Window
+    """Encapsulates the behavior of temporary, popup dialog Window
     used to modify the text string displayed in a Textfield.
 
     Given its parent Window, a prompt string, and a callback function
     that will save the new string to the appropriate variable, this
     class creates, maintains, and closes the dialog Window when
-    the user is done. 
+    the user is done.
     """
 
-    def __init__(self, parent, prompt, save_cb = None):
+    def __init__(self, parent, prompt, save_cb=None):
         super().__init__(parent, prompt, save_cb)
 
         self.converter = self.convert_to_text
 
     def _setup_dialog_keys(self):
-        """ Override's the parent method to allow all
+        """Override's the parent method to allow all
         ASCII characters.
         """
         key_list = [curses.KEY_BACKSPACE]
@@ -1614,8 +1586,7 @@ class TextDialog(EditDialog):
 
         def _kr_edit_text(keyhit):
             curtext = self.editfield.get_text()
-            if (curses.ascii.isgraph(keyhit)
-                ):
+            if curses.ascii.isgraph(keyhit):
                 curtext += chr(keyhit)
             elif keyhit == curses.KEY_BACKSPACE:
                 curtext = curtext[:-1]
@@ -1638,27 +1609,27 @@ class TextDialog(EditDialog):
         self.parent.get_key("esc").bind(self._kr_quit_field_edit)
 
     def convert_to_text(self):
-        """ Simply returns the Editfield text string """
+        """Simply returns the Editfield text string"""
         return self.editfield.get_text()
 
 
 class EnumDialog(EditDialog):
-    """ Encapsulates the behavior of temporary, popup dialog Window
+    """Encapsulates the behavior of temporary, popup dialog Window
     used to modify a Textfield displaying an enumerated constant. One
     of the constructor's arguments is the enum class itself. The
     dialog displays all members of the enum and allows the user to
     select any member. The dialog's conversion method then returns
-    that selected member of the given enum class. 
+    that selected member of the given enum class.
     """
 
-    def __init__(self, parent, enum_class, prompt, save_cb = None):
+    def __init__(self, parent, enum_class, prompt, save_cb=None):
         super().__init__(parent, prompt, save_cb)
 
         self.enum_class = enum_class
         self.converter = self.convert_to_enum
 
     def _build_dialog(self):
-        """ Overrides the parent's _build_dialog() method to
+        """Overrides the parent's _build_dialog() method to
         display and select among a set of enumerated constants.
         """
         # Create and place Textfields for the prompt,
@@ -1708,17 +1679,17 @@ class EnumDialog(EditDialog):
         # ncols is currently just the space needed for the longest
         # dialog text. We still need to account for both the left
         # and right borders (if any).
-        ncols += 2*self.border_width if self.has_border else 0
+        ncols += 2 * self.border_width if self.has_border else 0
 
         self.resize(nrows, ncols, True)
 
-        # Now recenter this resized dialog Window. 
-        ulcrow = self.parent.get_center_row() - int(nrows/2)
-        ulccol = self.parent.get_center_col() - int(ncols/2)
+        # Now recenter this resized dialog Window.
+        ulcrow = self.parent.get_center_row() - int(nrows / 2)
+        ulccol = self.parent.get_center_col() - int(ncols / 2)
         self.move(ulcrow, ulccol)
 
     def _setup_dialog_keys(self):
-        """ Overrides the parent method to handle keyhits for
+        """Overrides the parent method to handle keyhits for
         enum Textfields.
         """
         # There is no editing to be done with an enum Textfield
@@ -1733,7 +1704,7 @@ class EnumDialog(EditDialog):
             # selected Textfield.  If found it unselects it,
             # finds the next selectable Textfield, and selects
             # that one.  Returns the newly selected Textfield,
-            # or None on failure.       
+            # or None on failure.
             sf = self.get_selected_field()
             if sf != None:
                 sf.unselect()
@@ -1755,7 +1726,7 @@ class EnumDialog(EditDialog):
         self.parent.get_key("esc").bind(self._kr_quit_field_edit)
 
     def begin(self):
-        """ Begins an edit session dialog for the currently
+        """Begins an edit session dialog for the currently
         selected enum Textfield.
         """
         # Begin the normal dialog first. This will open the
@@ -1767,11 +1738,11 @@ class EnumDialog(EditDialog):
         # select the first one.
         self.get_selected_field()
 
-        # Make the currently selected Textfield visible. 
+        # Make the currently selected Textfield visible.
         self.show_selected_field(True)
 
     def convert_to_enum(self):
-        """ Tries to convert the selected Textfield
+        """Tries to convert the selected Textfield
         into an enumerated constant.
         """
         # Find the currently selected enum Textfield
@@ -1786,22 +1757,22 @@ class EnumDialog(EditDialog):
 
 
 class ListDialog(EditDialog):
-    """ Encapsulates the behavior of temporary, popup dialog Window
-    used to modify a Textfield displaying an element of a list of 
-    strings. One of the constructor's arguments is the list. The 
+    """Encapsulates the behavior of temporary, popup dialog Window
+    used to modify a Textfield displaying an element of a list of
+    strings. One of the constructor's arguments is the list. The
     dialog displays all list elements and allows the user to select
     any one element. The dialog's conversion method then returns
-    the index value of that selected element. 
+    the index value of that selected element.
     """
 
-    def __init__(self, parent, string_list, prompt, save_cb = None):
+    def __init__(self, parent, string_list, prompt, save_cb=None):
         super().__init__(parent, prompt, save_cb)
 
         self.string_list = string_list
         self.converter = self.convert_to_index
 
     def _build_dialog(self):
-        """ Overrides the parent's _build_dialog() method to
+        """Overrides the parent's _build_dialog() method to
         display and select among a set of enumerated constants.
         """
         # Create and place Textfields for the prompt,
@@ -1851,17 +1822,17 @@ class ListDialog(EditDialog):
         # ncols is currently just the space needed for the longest
         # dialog text. We still need to account for both the left
         # and right borders (if any).
-        ncols += 2*self.border_width if self.has_border else 0
+        ncols += 2 * self.border_width if self.has_border else 0
 
         self.resize(nrows, ncols, True)
 
-        # Now recenter this resized dialog Window. 
-        ulcrow = self.parent.get_center_row() - int(nrows/2)
-        ulccol = self.parent.get_center_col() - int(ncols/2)
+        # Now recenter this resized dialog Window.
+        ulcrow = self.parent.get_center_row() - int(nrows / 2)
+        ulccol = self.parent.get_center_col() - int(ncols / 2)
         self.move(ulcrow, ulccol)
 
     def _setup_dialog_keys(self):
-        """ Overrides the parent method to handle keyhits for
+        """Overrides the parent method to handle keyhits for
         list Textfields.
         """
         # There is no editing to be done with a list Textfield
@@ -1876,7 +1847,7 @@ class ListDialog(EditDialog):
             # selected Textfield.  If found it unselects it,
             # finds the next selectable Textfield, and selects
             # that one.  Returns the newly selected Textfield,
-            # or None on failure.       
+            # or None on failure.
             sf = self.get_selected_field()
             if sf != None:
                 sf.unselect()
@@ -1898,7 +1869,7 @@ class ListDialog(EditDialog):
         self.parent.get_key("esc").bind(self._kr_quit_field_edit)
 
     def begin(self):
-        """ Begins an edit session dialog for the currently
+        """Begins an edit session dialog for the currently
         selected list Textfield.
         """
         # Begin the normal dialog first. This will open the
@@ -1910,11 +1881,11 @@ class ListDialog(EditDialog):
         # select the first one.
         self.get_selected_field()
 
-        # Make the currently selected Textfield visible. 
+        # Make the currently selected Textfield visible.
         self.show_selected_field(True)
 
     def convert_to_index(self):
-        """ Tries to convert the selected Textfield
+        """Tries to convert the selected Textfield
         into an index into the dialog's list of strings.
         """
         # Find the currently selected list Textfield
@@ -1929,11 +1900,11 @@ class ListDialog(EditDialog):
 
 
 class PadWindow(Window):
-    """ Encapsulates the behavior of a curses padwindow. PadWindows
+    """Encapsulates the behavior of a curses padwindow. PadWindows
     are much like NewWindows except that they can have a size larger
     than what is visible on screen. You can scroll the pad under the
     visible window (the "viewport") to reveal hidden portions of the
-    pad. 
+    pad.
 
     Use PadWindows to display things like status histories and log
     streams.
@@ -1947,16 +1918,16 @@ class PadWindow(Window):
 
     To actually give the viewport a border we need to first create
     another type of window with a border, then fill it entirely with
-    the PadWindow's viewport. 
+    the PadWindow's viewport.
 
     We do that here with a SubWindow. Its only purpose is to provide
     border, title and selection behaviors to the viewport of this
     PadWindow.
     """
 
-    def __init__(self, parent, nrows, ncols, 
-                 ulcrow, ulccol, lrcrow, lrccol, title = None):
-
+    def __init__(
+        self, parent, nrows, ncols, ulcrow, ulccol, lrcrow, lrccol, title=None
+    ):
         # Create a SubWindow for the viewport first. This encloses
         # the PadWindow's viewport with a border and a title, making
         # PadWindows look much like the other Window subclasses. This
@@ -1964,8 +1935,7 @@ class PadWindow(Window):
         # visible border around the PadWindow's viewport.
         vprows = lrcrow - ulcrow + 1
         vpcols = lrccol - ulccol + 1
-        self.vpwin = SubWindow(parent, vprows, vpcols, 
-                               ulcrow, ulccol, title)
+        self.vpwin = SubWindow(parent, vprows, vpcols, ulcrow, ulccol, title)
 
         # Now create the PadWindow itself, as a child of the viewport
         # SubWindow. This overlays the visible contents of the curses
@@ -1975,7 +1945,7 @@ class PadWindow(Window):
         self.padcol = 0
         self.ulcrow = ulcrow + 1
         self.ulccol = ulccol + 1
-        self.lrcrow = lrcrow 
+        self.lrcrow = lrcrow
         self.lrccol = lrccol
         self.parent = self.vpwin
         self.has_border = False
@@ -1989,28 +1959,28 @@ class PadWindow(Window):
         # PadWindows are scrollable by default
         self.cwin.scrollok(True)
 
-    def set_selectable(self, flag : bool = True):
-        """ Override the parent method to apply the
+    def set_selectable(self, flag: bool = True):
+        """Override the parent method to apply the
         selectable flag to the PadWindow's viewport
-        Window instead. 
+        Window instead.
         """
         self.vpwin.selectable = flag
 
     def select(self):
-        """ Override the parent method to select
-        the PadWindow's viewport Window instead. 
+        """Override the parent method to select
+        the PadWindow's viewport Window instead.
         """
         if self.vpwin.selectable:
             self.vpwin.selected = True
 
     def unselect(self):
-        """ Override the parent method to unselect the
-        PadWindow's viewport Window instead. 
+        """Override the parent method to unselect the
+        PadWindow's viewport Window instead.
         """
         self.vpwin.selected = False
 
     def move(self, row, col):
-        """ Moves this PadWindow's viewport to a new row and 
+        """Moves this PadWindow's viewport to a new row and
         column position. The values are clamped to remain
         inside the parent window.
         """
@@ -2022,28 +1992,28 @@ class PadWindow(Window):
         self.vpwin.cwin.mvwin(self.ulcrow, self.ulccol)
 
     def get_left_edge_col(self):
-        """ Returns the column value of the leftmost
+        """Returns the column value of the leftmost
         outside edge of this Window, in the parent Window's
         row and column coordinates.
         """
         return self.ulccol
 
     def get_right_edge_col(self):
-        """ Returns the column value of the rightmost
+        """Returns the column value of the rightmost
         outside edge of this Window, in the parent Window's
         row and column coordinates.
         """
         return self.lrccol
 
     def get_top_edge_row(self):
-        """ Returns the row value of the topmost outside
+        """Returns the row value of the topmost outside
         edge of this Window, in the parent Window's
         row and column coordinates.
         """
         return self.ulcrow
 
     def get_bottom_edge_row(self):
-        """ Returns the row value of the bottommost
+        """Returns the row value of the bottommost
         outside edge of this Window, in the parent Window's
         row and column coordinates.
         """
@@ -2052,11 +2022,11 @@ class PadWindow(Window):
     # PadWindows don't get a border; that will apply
     # to their viewport SubWindow instead.
     def draw_border(self):
-        """ Overrides the default Window object behavior """
+        """Overrides the default Window object behavior"""
         pass
 
     def scroll_up(self):
-        """ Scrolls the PadWindow's pad contents up within
+        """Scrolls the PadWindow's pad contents up within
         the viewport.
         """
         maxrow = self.nrows - 1
@@ -2064,14 +2034,14 @@ class PadWindow(Window):
         self.padrow = newrow if newrow < maxrow else maxrow
 
     def scroll_down(self):
-        """ Scrolls the PadWindow's pad contents down within
+        """Scrolls the PadWindow's pad contents down within
         the viewport.
         """
         newrow = self.padrow - 1
         self.padrow = newrow if newrow > 0 else 0
 
     def scroll_left(self):
-        """ Scrolls the PadWindow's pad contents left within
+        """Scrolls the PadWindow's pad contents left within
         the viewport.
         """
         maxcol = self.ncols - 1
@@ -2079,14 +2049,14 @@ class PadWindow(Window):
         self.padcol = newcol if newcol < maxcol else maxcol
 
     def scroll_right(self):
-        """ Scrolls the PadWindow's pad contents right within
+        """Scrolls the PadWindow's pad contents right within
         the viewport.
         """
         newcol = self.padcol - 1
         self.padcol = newcol if newcol > 0 else 0
 
     def _constrain(self):
-        """ PadWindows are different from other Windows in
+        """PadWindows are different from other Windows in
         that their curses window is a viewport onto a pad. The
         pad itself does not ever need to be constrained. So
         we override the base method here to do nothing. All
@@ -2096,7 +2066,7 @@ class PadWindow(Window):
         return True
 
     def add_attrs(self, attrs):
-        """ Overrides the parent's method to add
+        """Overrides the parent's method to add
         the same attributes to the viewport SubWindow
         that contains this PadWindow.
         """
@@ -2104,7 +2074,7 @@ class PadWindow(Window):
         super().add_attrs(attrs)
 
     def refresh(self):
-        """ Overrides the parent's method to transfer
+        """Overrides the parent's method to transfer
         this PadWindow viewport's content to the curses
         virtual screen, constrained by the parent's
         current row & column limits.
@@ -2141,17 +2111,18 @@ class PadWindow(Window):
         lrccol = min(self.lrccol - bh, col_limit)
 
         # A curses padwindow refresh requires all 6 parameters
-        self.cwin.noutrefresh(self.padrow, self.padcol, 
-                              self.ulcrow, self.ulccol, lrcrow, lrccol)
+        self.cwin.noutrefresh(
+            self.padrow, self.padcol, self.ulcrow, self.ulccol, lrcrow, lrccol
+        )
 
 
 class Display(Window):
-    """ Encapsulates the behavior of a curses top level display window.
+    """Encapsulates the behavior of a curses top level display window.
     The Display Window never has a parent Window object.
     """
 
-    def __init__(self, stdscr, title = None):
-        # Get the current dimensions of this entire display window 
+    def __init__(self, stdscr, title=None):
+        # Get the current dimensions of this entire display window
         nrows, ncols = stdscr.getmaxyx()
         super().__init__(None, nrows, ncols, title)
         self.cwin = stdscr
@@ -2164,23 +2135,23 @@ class Display(Window):
         return True
 
     def repaint(self):
-        """ Repaints the Display Window and all child Windows at
+        """Repaints the Display Window and all child Windows at
         the Display Window's current size.
         """
-        # Get the current dimensions of this entire Display Window 
+        # Get the current dimensions of this entire Display Window
         self.nrows, self.ncols = self.cwin.getmaxyx()
 
         # Repaint this Window and all its children onto the curses
         # virtual display screen.
         super().repaint()
 
-        # Now transfer the curses virtual screen to the physical 
+        # Now transfer the curses virtual screen to the physical
         # display.
         curses.doupdate()
 
 
 class TextBuffer:
-    """ A generic Text buffer used by the CursesUI class to
+    """A generic Text buffer used by the CursesUI class to
     temporarily replace stdout and stderr. We need to redirect
     these to prevent anything from writing to the actual screen
     while curses has control of the display screen.
@@ -2190,16 +2161,16 @@ class TextBuffer:
     set_maxlines() method.
     """
 
-    def __init__(self, maxlines = 30):
+    def __init__(self, maxlines=30):
         self.set_maxlines(maxlines)
         self.clear()
 
     def clear(self):
-        """ Empty the text buffer. """
+        """Empty the text buffer."""
         self.text = ""
 
     def write(self, newtxt):
-        """ Adds one or more lines to the text buffer. The
+        """Adds one or more lines to the text buffer. The
         total number of lines in the buffer is limited to
         maxlines which defaults to 30.  When the limit is
         reached, the oldest lines will be dropped first.
@@ -2209,44 +2180,43 @@ class TextBuffer:
         # Because of the newline character, we need to add
         # one here to maxlines to be able to keep at most
         # maxlines of text in the buffer.
-        self.text = '\n'.join(self.text.split('\n')[-(self.maxlines + 1):])
+        self.text = "\n".join(self.text.split("\n")[-(self.maxlines + 1) :])
 
-    def read(self, start = 0, end = -1):
-        """ Reads (from start to end) lines from the text buffer.
+    def read(self, start=0, end=-1):
+        """Reads (from start to end) lines from the text buffer.
         If start and end are not specified, this will return the
         entire buffer contents.
         """
-        return '\n'.join(self.text.split('\n')[start:end])
+        return "\n".join(self.text.split("\n")[start:end])
 
     def get_length(self):
-        """ Returns the total number of characters in the buffer. """
+        """Returns the total number of characters in the buffer."""
         return len(self.text)
 
     def get_maxlines(self):
-        """ Returns the maximum number of lines that can be held
+        """Returns the maximum number of lines that can be held
         in the buffer. When the maximum is reached, older lines
         will be dropped. Default is 30.
         """
         return self.maxlines
 
     def set_maxlines(self, newmax):
-        """ Change the maximum number of lines that can be held
+        """Change the maximum number of lines that can be held
         in the buffer. The minimum allowed value is clamped to 1.
         """
         self.maxlines = max(newmax, 1)
 
 
 class CursesUI:
-    """ Creates and maintains the user interface for a text-mode
-    windowed console application using the Python curses and 
+    """Creates and maintains the user interface for a text-mode
+    windowed console application using the Python curses and
     asyncio libraries. Regularly repaints the screen and responds
     to user input until the application ends. On exit it restores
     normal console display and keyboard behavior before returning
     to the command line.
     """
 
-    def __init__(self, display_builder = None, 
-                 response_builder = None, title = None):
+    def __init__(self, display_builder=None, response_builder=None, title=None):
         self.display = None
         self.has_colors = None
         self.can_change_color = None
@@ -2269,27 +2239,27 @@ class CursesUI:
             self.set_response_builder(self.setup_default_responses)
 
     def add_title(self, title):
-        """ Adds a title to the top-level display Window. """
+        """Adds a title to the top-level display Window."""
         self.title = title
 
     def kr_done_with_ui(self, _):
-        """ This key response routine ends the CursesUI
+        """This key response routine ends the CursesUI
         session.
         """
         self.done = True
 
     def get_display(self):
-        """ Returns the top-level Display Window for this
+        """Returns the top-level Display Window for this
         CursesUI instance.
         """
         return self.display
 
     def set_display_builder(self, display_builder):
-        """ Installs the routine that your CursesUI instance
+        """Installs the routine that your CursesUI instance
         will call to set up its initial display Window. Your
         routine will get passed a reference to your CursesUI
         instance.
-        
+
         You can use this method instead of providing the display
         builder routine to the CursesUI constructor. If you do
         use this method, be sure to call it before you call the
@@ -2298,11 +2268,11 @@ class CursesUI:
         self.display_builder = display_builder
 
     def set_response_builder(self, response_builder):
-        """ Installs the routine that your CursesUI instance
+        """Installs the routine that your CursesUI instance
         will call to set up its initial key responses. Your
         routine will get passed a reference to your CursesUI
         instance.
-        
+
         You can use this method instead of providing the key
         response builder routine to the CursesUI constructor.
         If you do use this method, be sure to call it before
@@ -2311,7 +2281,7 @@ class CursesUI:
         self.response_builder = response_builder
 
     def add_coroutine(self, coroutine):
-        """ Add an asynchronous coroutine for this CursesUI
+        """Add an asynchronous coroutine for this CursesUI
         session to run concurrently. You can add coroutines
         at any time during the CursesUI session.
 
@@ -2329,7 +2299,7 @@ class CursesUI:
         while True:
             do_something_useful()
             await asyncio.sleep(0.1)
-        
+
         Note: you can set a sleep delay of zero in order
         to still yield, but do so with minimal delay.
 
@@ -2356,13 +2326,13 @@ class CursesUI:
             self.coroutines.remove(coroutine)
 
     def initialize_loglevel(self, loglevel):
-        """ Set up the default log reporting level for this
+        """Set up the default log reporting level for this
         CursesUI instance.
         """
         self.loglevel = loglevel
 
     def _setup_logging(self):
-        # Set up a logger to use for this module. 
+        # Set up a logger to use for this module.
         #
         # This turns out to be quite tricky, since the logging
         # library is designed to make sure log messages get seen
@@ -2387,13 +2357,13 @@ class CursesUI:
         # to a text buffer instead.  We switch to the buffered
         # handler just before the curses window session starts,
         # and then switch back to the stderr handler when curses
-        # is done using the console screen. 
+        # is done using the console screen.
         #
         # The main reason we explicitly set up the stderr handler
         # (instead of letting the logging library create one by
         # default) is that we get full control of the handler we
-        # create and therefore the ability to remove it cleanly 
-        # and reliably, when we need to prevent any logging to 
+        # create and therefore the ability to remove it cleanly
+        # and reliably, when we need to prevent any logging to
         # the screen.
         #
         # Finally, note that your application should NOT EVER call
@@ -2402,7 +2372,7 @@ class CursesUI:
         # log level, and write log messages as you normally would.
 
         self.sh = logging.StreamHandler(sys.stderr)
-        self.formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
+        self.formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s")
         self.sh.setFormatter(self.formatter)
         log.addHandler(self.sh)
         log.setLevel(self.loglevel)
@@ -2481,15 +2451,13 @@ class CursesUI:
             log.info("----Dumping log buffer to stdout----")
             sys.stdout.write(self.stdout_bfr.read())
             # Add a newline after the dump.
-            sys.stdout.write('\n')
+            sys.stdout.write("\n")
             log.info("----Log dump complete----")
 
     async def _event_loop(self):
-
         # Run the CursesUI event loop asynchronously.
         # so that other processes can also run concurrently.
         while not self.done:
-
             # I'm not exactly sure why, but if you try to start
             # the coroutine processes outside of this event loop
             # they will break the careful redirection of log
@@ -2504,7 +2472,7 @@ class CursesUI:
 
             # Repaint the display window and its contents,
             # then transfer that to the curses virtual screen.
-            # Then repaint all child windows and transfer 
+            # Then repaint all child windows and transfer
             # each one, in order, to overlay onto the virtual
             # screen.  Finally, transfer the virtual screen
             # to the physical display screen.
@@ -2517,7 +2485,7 @@ class CursesUI:
             # before getch(). An extra refresh should
             # not be a problem, but if it ever is, the
             # way to avoid it would be to call getch()
-            # from a dummy window that you do not use 
+            # from a dummy window that you do not use
             # to display anything. Make sure echo is
             # off too!
             keyvalue = self.display.cwin.getch()
@@ -2526,7 +2494,6 @@ class CursesUI:
             # key has been pressed.  So just yield to other
             # async processes and then try again.
             if keyvalue == curses.ERR:
-
                 # Note that a sleep time of 0 will still
                 # yield, but with minimal delay. Or
                 # increase the delay to 2 seconds if
@@ -2541,7 +2508,7 @@ class CursesUI:
                 self.display._process_keyhit(keyvalue)
 
     def _run_wrapped_ui(self, stdscr):
-        """ Starts and and maintains the console UI until
+        """Starts and and maintains the console UI until
         done. This method gets passed a curses stdscr object
         which is the top-level display window for the curses
         session.
@@ -2550,23 +2517,23 @@ class CursesUI:
         # terminal's color support.
         self.has_colors = curses.has_colors()
         if self.has_colors:
-            self.can_change_color = curses.can_change_color() 
+            self.can_change_color = curses.can_change_color()
             self.total_color_numbers = curses.COLORS
             # Even though curses.COLOR_PAIRS can be as large as
             # 65535, any color pair number over 255 does not work
             # correctly.
             self.total_color_pairs = min(curses.COLOR_PAIRS, 255)
         else:
-            self.can_change_color = False 
+            self.can_change_color = False
             self.total_color_numbers = 1
             self.total_color_pairs = 1
 
         # Create a Display instance for the curses screen.
         self.display = Display(stdscr, self.title)
 
-        # Set up the curses library defaults for user input. 
+        # Set up the curses library defaults for user input.
         self.config_input()
-        
+
         # Build the initial display and set up the initial
         # key responses. By default these will create simple
         # CursesUI demonstration applications.  Create and
@@ -2576,7 +2543,7 @@ class CursesUI:
         self.display_builder(self)
         self.response_builder(self)
 
-        # Run the CursesUI event loop asynchronously, maintaining 
+        # Run the CursesUI event loop asynchronously, maintaining
         # the display and responding to user input until done.
         #
         # Running the loop asynchronously allows you to have other
@@ -2585,12 +2552,12 @@ class CursesUI:
         # them. (The DemoProcess class is a very simple example of
         # this kind of asynchronous concurrent coroutine.)
         asyncio.run(self._event_loop())
- 
+
     def run(self):
-        """ Sets up the proper environment, then runs the CursesUI
-       instance until the user ends it. If there are unhandled
-       (fatal) exceptions then this method will grab the Python
-       traceback info and dump it to the console on exit.
+        """Sets up the proper environment, then runs the CursesUI
+        instance until the user ends it. If there are unhandled
+        (fatal) exceptions then this method will grab the Python
+        traceback info and dump it to the console on exit.
         """
         # Explicitly set up our own stream handlers for logging.
         self._setup_logging()
@@ -2608,23 +2575,21 @@ class CursesUI:
 
         # Handle any exception type.
         except:
-
             # Python traceback stack dumps normally use their own
             # connection to the console. So to be able to see
             # traceback info on Python fatal errors, we need to
-            # explicitly tell Python to send that dump to our 
+            # explicitly tell Python to send that dump to our
             # redirected stderr sink (i.e. the TextBuffer) instead.
             traceback.print_exc(file=sys.stderr)
 
         finally:
-
             # clean up before exit by restoring normal console
             # output and then dumping any buffered console output
             # to the screen.
             self._restore_console()
 
     def config_input(self):
-        """ Sets up defaults for user input. You probably
+        """Sets up defaults for user input. You probably
         won't need to change this, but if you do simply
         override it.
         """
@@ -2639,8 +2604,8 @@ class CursesUI:
         self.display.cwin.keypad(True)
 
     def setup_default_display(self, _):
-        """ Default method to create a simmple demonstration
-        display. 
+        """Default method to create a simmple demonstration
+        display.
         """
         # Create a SubWindow instance for menu messages
         menuwin = SubWindow(self.display, 10, 30, 2, 2, "Menu")
@@ -2654,14 +2619,16 @@ class CursesUI:
         # will be stripped from your text.
         menurow = menuwin.get_first_row()
         menucol = menuwin.get_center_col()
-        menu1 = ("Resize at will\n"
-                 "Ctrl-x to exit\n"
-                 "\n"
-                 "-- Could not find --\n"
-                 "-- demoprocess.py --\n"
-                 "\n"
-                 "Provide that module\n"
-                 "to see more features!")
+        menu1 = (
+            "Resize at will\n"
+            "Ctrl-x to exit\n"
+            "\n"
+            "-- Could not find --\n"
+            "-- demoprocess.py --\n"
+            "\n"
+            "Provide that module\n"
+            "to see more features!"
+        )
         menu1field = Textfield(menurow, menucol, Align.CENTER)
         menu1field.write(menu1)
         menuwin.add_field(menu1field)
@@ -2670,12 +2637,12 @@ class CursesUI:
         menuwin.set_selectable(False)
 
     def setup_default_responses(self, _):
-        """ Configure the default key responses for this simple
+        """Configure the default key responses for this simple
         demonstration UI.
         """
         # Note that curses.ascii.ctrl('x') returns the same
         # type you pass to it; given 'x' it returns string
-        # '\x18', not the integer value 0x18. 
+        # '\x18', not the integer value 0x18.
         #
         # ord() converts a character to its integer value.
         #
@@ -2685,7 +2652,7 @@ class CursesUI:
         #
         # Create a KeyResponse instance for Ctrl-x and
         # add it to the display Window.
-        ctrl_x_key = KeyResponse("ctrl_x", ord(curses.ascii.ctrl('x')))
+        ctrl_x_key = KeyResponse("ctrl_x", ord(curses.ascii.ctrl("x")))
         self.display.add_key(ctrl_x_key)
         ctrl_x_key.bind(self.kr_done_with_ui)
 
@@ -2693,10 +2660,9 @@ class CursesUI:
 #
 # The code below runs only when cursesui.py is invoked from the command
 # line with "python3 cursesui.py"
-# 
+#
 if __name__ == "__main__":
-
-    # The normal curses keyboard handling system adds a 
+    # The normal curses keyboard handling system adds a
     # configurable delay to the ESCAPE key so that it can
     # be combined with other keys to generate special keycodes.
     # The delay is typically around 1 second, which can be
@@ -2706,21 +2672,25 @@ if __name__ == "__main__":
     # the curses windowing system gets initialized.
     #
     # Since the demoUI system does use the ESCAPE key we will set
-    # a shorter delay (in milliseconds) here. 
+    # a shorter delay (in milliseconds) here.
     import os
-    os.environ.setdefault('ESCDELAY', '25')
+
+    os.environ.setdefault("ESCDELAY", "25")
 
     # Try to set up a simple demonstration process to run
     # concurrently with the CursesUI instance.
     try:
         from demoprocess import DemoProcess
+
         demo_process = DemoProcess()
 
         # Create the demonstration user interface, telling it how
         # to set up the display and keyboard responses.
-        demoUI = CursesUI(demo_process.setup_demo_display, 
-                          demo_process.setup_demo_responses,
-                          "CursesUI Full Demo")
+        demoUI = CursesUI(
+            demo_process.setup_demo_display,
+            demo_process.setup_demo_responses,
+            "CursesUI Full Demo",
+        )
 
         # Alternatively you can install the display and key response
         # setup routines after creating the CursesUI instance, like
@@ -2731,8 +2701,8 @@ if __name__ == "__main__":
         # demoUI.set_response_builder(demo_process.setup_demo_responses)
 
         # Tell the user interface to run some demo processes concurrently.
-        demoUI.add_coroutine(demo_process.run_fast)    
-        demoUI.add_coroutine(demo_process.run_slow)    
+        demoUI.add_coroutine(demo_process.run_fast)
+        demoUI.add_coroutine(demo_process.run_slow)
 
     # Import of demoprocess failed. So just run a very simple
     # demonstration without a concurrent process.
@@ -2742,7 +2712,7 @@ if __name__ == "__main__":
 
     # Set up the logging level for this demonstration.
     #
-    # Typical log filter levels are logging.DEBUG 
+    # Typical log filter levels are logging.DEBUG
     # for development, logging.ERROR for normal use.
     # Set level to logging.CRITICAL + 1 to suppress
     # all log messages from a CursesUI instance.

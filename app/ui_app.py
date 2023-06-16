@@ -1,6 +1,7 @@
 """ Provides a text-mode windowing user interface for jacuzzi.py. """
 
 import asyncio
+
 try:
     import jacuzziRS485
 except ImportError:
@@ -9,21 +10,32 @@ except ImportError:
 # These are the specific CursesUI identifiers that this application
 # references.
 try:
-    from cursesui import (log, Align, Textfield, KeyResponse, SubWindow,
-                          NewWindow, PadWindow, EditDialog, EnumDialog,
-                          ListDialog, TextDialog)
+    from cursesui import (
+        log,
+        Align,
+        Textfield,
+        KeyResponse,
+        SubWindow,
+        NewWindow,
+        PadWindow,
+        EditDialog,
+        EnumDialog,
+        ListDialog,
+        TextDialog,
+    )
 except ImportError:
     print("Could not import something needed from cursesui.py!")
     exit()
 
-import curses.ascii    # Provides useful key value constants
+import curses.ascii  # Provides useful key value constants
 
 from enum import Enum
 import time
 import random
 
+
 def setup_ui_display(spa_ui):
-    """ Defines all the Windows for the Jacuzzi Spa UI. """
+    """Defines all the Windows for the Jacuzzi Spa UI."""
     # Create a SubWindow instance for menu messages
     menuwin = SubWindow(spa_ui.display, 15, 30, 2, 2, "Menu")
 
@@ -36,13 +48,15 @@ def setup_ui_display(spa_ui):
     # will be stripped from your text.
     menurow = menuwin.get_first_row() + 1
     menucol = menuwin.get_center_col()
-    menu1 = ("Press <Tab> to select next\n"
-             "<Enter> to go in selected\n"
-             "<Esc> to go back out\n"
-             "Ctrl-p adds a message\n"
-             "Arrows scroll messages\n"
-             "Resize at will\n"
-             "Ctrl-x to exit")
+    menu1 = (
+        "Press <Tab> to select next\n"
+        "<Enter> to go in selected\n"
+        "<Esc> to go back out\n"
+        "Ctrl-p adds a message\n"
+        "Arrows scroll messages\n"
+        "Resize at will\n"
+        "Ctrl-x to exit"
+    )
     menu1field = Textfield(menurow, menucol, Align.CENTER)
     menu1field.write(menu1)
     menuwin.add_field(menu1field)
@@ -65,8 +79,7 @@ def setup_ui_display(spa_ui):
     timefield = Textfield(row, col, Align.CENTER)
 
     def _get_current_time_text():
-        return "{0}".format(
-            time.asctime(time.localtime(time.time())))
+        return "{0}".format(time.asctime(time.localtime(time.time())))
 
     timefield.set_update_cb(_get_current_time_text)
     stswin.add_field(timefield)
@@ -158,7 +171,7 @@ def setup_ui_display(spa_ui):
     def _get_uvon_text():
         # A local routine to get current UV lamp status
         return "UV: {0}".format("On" if spa.isUVOn else "Off")
-    
+
     # Add current spa UV value to the status window.
     uvonfield = Textfield(row, col)
     uvonfield.set_update_cb(_get_uvon_text)
@@ -176,9 +189,7 @@ def setup_ui_display(spa_ui):
 
     def _get_filters_text():
         # Returns both primary and secondary filter texts
-        return "Pri: {0} Sec: {1}".format(
-               _get_primary_text(),
-               _get_secondary_text())
+        return "Pri: {0} Sec: {1}".format(_get_primary_text(), _get_secondary_text())
 
     # Add current Primary and Secondary filter states to the status window.
     filterfield = Textfield(row, col)
@@ -209,27 +220,24 @@ def setup_ui_display(spa_ui):
         "Vio",
         "Unk8",
         "Aqua",
-        "Blnd"
+        "Blnd",
     ]
 
     def _get_light_mode_text():
         # Returns just the light mode text.
         light_mode = spa.get_lightMode()
         # Convert blend mode value to a list index
-        if light_mode == 0x80: light_mode = 10
-        return "Lights:{0}".format(
-                _light_mode_names[light_mode])
+        if light_mode == 0x80:
+            light_mode = 10
+        return "Lights:{0}".format(_light_mode_names[light_mode])
 
     def _get_brightness_text():
         # Returns just the brightness text.
-        return "Level:{0}%".format(
-                spa.get_lightBrightness())
+        return "Level:{0}%".format(spa.get_lightBrightness())
 
     def _get_full_light_cb():
         # Returns both light mode and brightness text
-        return "{0} {1}".format(
-                _get_light_mode_text(),
-                _get_brightness_text())
+        return "{0} {1}".format(_get_light_mode_text(), _get_brightness_text())
 
     # Add full light mode text to the status window.
     lightfield = Textfield(row, col)
@@ -249,11 +257,14 @@ def setup_ui_display(spa_ui):
     # Initialize the curses color info
     light_color_pair = spa_ui.total_color_pairs - 1
 
-    spa.log.info('Colors: {0} Pair: {1} Has Color: {2} Can Change: {3}'.format(
-                 spa_ui.total_color_numbers, 
-                 light_color_pair, 
-                 spa_ui.has_colors, 
-                 spa_ui.can_change_color))
+    spa.log.info(
+        "Colors: {0} Pair: {1} Has Color: {2} Can Change: {3}".format(
+            spa_ui.total_color_numbers,
+            light_color_pair,
+            spa_ui.has_colors,
+            spa_ui.can_change_color,
+        )
+    )
 
     # When TERM=xterm, can_change_color is False even though
     # has_colors is True and total_color_numbers = 8, while
@@ -265,7 +276,7 @@ def setup_ui_display(spa_ui):
     if spa_ui.has_colors and spa_ui.can_change_color:
 
         def _set_light_color():
-            # Assigns a new color number to the Textfield 
+            # Assigns a new color number to the Textfield
             # that displays the current spa LED color, based
             # on the current RGB and brightness values sent
             # by the spa.
@@ -274,7 +285,7 @@ def setup_ui_display(spa_ui):
             # of displayed colors via init_color(), not all
             # terminals (notably puTTY) support that direct
             # control. However any terminal that supports the
-            # TERM=xterm-256color standard will display a 
+            # TERM=xterm-256color standard will display a
             # fixed palette of colors which can approximate
             # an arbitrary RGB color value.
             #
@@ -285,23 +296,25 @@ def setup_ui_display(spa_ui):
             # and RichardBronosky (https://gist.github.com/RichardBronosky)
             # from the discussion at https://gist.github.com/MicahElliott/719710
 
-            y = spa.lightBrightness / 100    # Division converts to float
-            red = int(y * spa.lightR)        # int() converts back to integer
+            y = spa.lightBrightness / 100  # Division converts to float
+            red = int(y * spa.lightR)  # int() converts back to integer
             green = int(y * spa.lightG)
             blue = int(y * spa.lightB)
 
             # Default color levels for the color cube
-            cubelevels = [0x00, 0x5f, 0x87, 0xaf, 0xd7, 0xff]
+            cubelevels = [0x00, 0x5F, 0x87, 0xAF, 0xD7, 0xFF]
             # Generate a list of midpoints of the above list
-            snaps = [(x+y)/2 for x, y in zip(cubelevels, [0]+cubelevels)][1:]
+            snaps = [(x + y) / 2 for x, y in zip(cubelevels, [0] + cubelevels)][1:]
 
             def _rgb2short(r, g, b):
                 # Converts RGB values to the nearest equivalent xterm-256 color.
                 #
                 # Using the list of snap points, convert RGB value to cube indexes
-                r, g, b = map(lambda x: len(tuple(s for s in snaps if s < x)), (r, g, b))
+                r, g, b = map(
+                    lambda x: len(tuple(s for s in snaps if s < x)), (r, g, b)
+                )
                 # Simple colorcube transform
-                return r*36 + g*6 + b + 16
+                return r * 36 + g * 6 + b + 16
 
             colornum = _rgb2short(red, green, blue)
 
@@ -333,7 +346,7 @@ def setup_ui_display(spa_ui):
         # next row.
         # swatchfield.update()
 
-    # Create a SubWindow for values that the user can control. 
+    # Create a SubWindow for values that the user can control.
     # Position it relative to the menu and status Windows.
     row = menuwin.get_top_edge_row()
     col = stswin.get_right_edge_col() + 2
@@ -350,17 +363,16 @@ def setup_ui_display(spa_ui):
 
     def _change_settemp(newtemp):
         # This local routine starts an asynchronous task to send the
-        # new temperature setpoint to the spa. 
-        # 
+        # new temperature setpoint to the spa.
+        #
         # Note that we use a lambda to include the newtemp parameter
         # with the coroutine.
         spa_ui.add_coroutine(lambda: spa.send_temp_change(newtemp))
 
     # Now add the dialog to the Textfield
-    tsetdialog = EditDialog(spa_ui.display, 
-                           "Enter the new setpoint\n"
-                           "temperature:",
-                           _change_settemp)
+    tsetdialog = EditDialog(
+        spa_ui.display, "Enter the new setpoint\n" "temperature:", _change_settemp
+    )
     tsetfield.set_dialog(tsetdialog)
 
     # Add pump 2 to the controls Window.
@@ -370,25 +382,24 @@ def setup_ui_display(spa_ui):
     pump2setfield.update()
     row += pump2setfield.get_required_rows()
 
-
     class Pump2States(Enum):
-        """ enum types for pump 2 states. """
+        """enum types for pump 2 states."""
+
         Off = 0
         On = 1
 
-
-    def _change_pump2(newstate):    
+    def _change_pump2(newstate):
         # This local routine starts an asynchronous task to send the
-        # new pump 2 state to the spa. 
-        # 
+        # new pump 2 state to the spa.
+        #
         # Note that we use a lambda to include the newstate parameter
         # with the coroutine.
         spa_ui.add_coroutine(lambda: spa.change_pump(2, newstate))
 
     # Now add the list dialog to the Textfield
-    pump2setdialog = ListDialog(spa_ui.display, _pump2_text,
-                           "Select the new state:",
-                           _change_pump2)
+    pump2setdialog = ListDialog(
+        spa_ui.display, _pump2_text, "Select the new state:", _change_pump2
+    )
     pump2setfield.set_dialog(pump2setdialog)
 
     # Add pump 1 to the controls Window.
@@ -398,30 +409,29 @@ def setup_ui_display(spa_ui):
     pump1setfield.update()
     row += pump1setfield.get_required_rows()
 
-
     class Pump1States(Enum):
-        """ enum types for pump 1 states. """
+        """enum types for pump 1 states."""
+
         Off = 0
         Low = 1
         High = 2
 
-
     def _change_pump1(newstate):
         # This local routine starts an asynchronous task to send the
-        # new pump 1 state to the spa. 
-        # 
+        # new pump 1 state to the spa.
+        #
         # Note that we use a lambda to include the newstate parameter
         # with the coroutine.
-        # 
+        #
         # Since in this case newstate is a attribute of an instance of
         # an enum class, we need to convert it to an integer value before
         # passing it to change_pump().
         spa_ui.add_coroutine(lambda: spa.change_pump(1, newstate.value))
 
     # Now add the enum dialog to the Textfield
-    pump1setdialog = EnumDialog(spa_ui.display, Pump1States,
-                           "Select the new state:",
-                           _change_pump1)
+    pump1setdialog = EnumDialog(
+        spa_ui.display, Pump1States, "Select the new state:", _change_pump1
+    )
     pump1setfield.set_dialog(pump1setdialog)
 
     # Add spa time to the controls Window.
@@ -433,17 +443,17 @@ def setup_ui_display(spa_ui):
 
     def _change_spatime(time_text):
         # This local routine starts an asynchronous task to send the
-        # new spa time to the spa. 
-        # 
+        # new spa time to the spa.
+        #
         # Note that we use a lambda to include the new_time parameter
         # with the coroutine.
         new_time = time.strptime(time_text, "%H:%M")
         spa_ui.add_coroutine(lambda: spa.set_time(new_time))
 
     # Now add the text dialog to the Textfield
-    timesetdialog = TextDialog(spa_ui.display,
-                           "Enter time in hr:min format:",
-                           _change_spatime)
+    timesetdialog = TextDialog(
+        spa_ui.display, "Enter time in hr:min format:", _change_spatime
+    )
     timesetfield.set_dialog(timesetdialog)
 
     # Add spa date to the controls Window.
@@ -455,17 +465,17 @@ def setup_ui_display(spa_ui):
 
     def _change_spadate(date_text):
         # This local routine starts an asynchronous task to send the
-        # new spa date to the spa. 
-        # 
+        # new spa date to the spa.
+        #
         # Note that we use a lambda to include the new_date parameter
         # with the coroutine.
         new_date = time.strptime(date_text, "%m/%d/%y")
         spa_ui.add_coroutine(lambda: spa.set_date(new_date))
 
     # Now add the text dialog to the Textfield
-    datesetdialog = TextDialog(spa_ui.display,
-                           "Enter date in m/d/y format:",
-                           _change_spadate)
+    datesetdialog = TextDialog(
+        spa_ui.display, "Enter date in m/d/y format:", _change_spadate
+    )
     datesetfield.set_dialog(datesetdialog)
 
     # Add light mode to the controls Window.
@@ -482,7 +492,7 @@ def setup_ui_display(spa_ui):
 
     def _change_light_mode(newmode):
         # This local routine starts an asynchronous task to send the
-        # new light state to the spa. 
+        # new light state to the spa.
         #
         # The spa controller won't set the mode to Off; instead
         # we need to tell it to set the brightness to 0.
@@ -493,15 +503,15 @@ def setup_ui_display(spa_ui):
         # The spa controller also won't directly set the mode
         # to Blend. Instead the only way to put the spa lights
         # into blend mode is to turn the brightness from 0
-        # to some other level. 
+        # to some other level.
         #
         # After we have started a coroutine to set the brightness
-        # to zero, we can start another coroutine to set the 
+        # to zero, we can start another coroutine to set the
         # brightness to 100%. Since the second task cannot run
         # until the first has finished, this should always work.
         if newmode == 10:
             _change_brightness(0)
-            _change_brightness(5)    # 20 * 5 = 100%
+            _change_brightness(5)  # 20 * 5 = 100%
             return
 
         # For any other light mode just send the mode command
@@ -509,19 +519,12 @@ def setup_ui_display(spa_ui):
         spa_ui.add_coroutine(lambda: spa.change_light(newmode))
 
     # Now add the list dialog to the light mode Textfield
-    lightsetdialog = ListDialog(spa_ui.display, _light_mode_names,
-                           "Select the new mode:",
-                           _change_light_mode)
+    lightsetdialog = ListDialog(
+        spa_ui.display, _light_mode_names, "Select the new mode:", _change_light_mode
+    )
     lightsetfield.set_dialog(lightsetdialog)
 
-    _brightness_levels = [
-        "Off",
-        "20%",
-        "40%",
-        "60%",
-        "80%",
-        "100%"
-    ]
+    _brightness_levels = ["Off", "20%", "40%", "60%", "80%", "100%"]
 
     # Add light brightness control to the controls Window.
     brightsetfield = Textfield(brightrow, brightcol)
@@ -530,8 +533,8 @@ def setup_ui_display(spa_ui):
 
     def _change_brightness(newlevelindex):
         # This local routine starts an asynchronous task to send the
-        # new light brightness to the spa. 
-        # 
+        # new light brightness to the spa.
+        #
         # If the light mode was off and new brightness level is
         # not 0, then the spa controller will also set the light mode
         # to blend.
@@ -545,9 +548,9 @@ def setup_ui_display(spa_ui):
         spa_ui.add_coroutine(lambda: spa.change_brightness(newlevel))
 
     # Now add the list dialog to the Textfield
-    brightsetdialog = ListDialog(spa_ui.display, _brightness_levels,
-                           "Select the new level:",
-                           _change_brightness)
+    brightsetdialog = ListDialog(
+        spa_ui.display, _brightness_levels, "Select the new level:", _change_brightness
+    )
     brightsetfield.set_dialog(brightsetdialog)
 
     # Add primary filter cycle controls to the controls Window.
@@ -565,19 +568,20 @@ def setup_ui_display(spa_ui):
 
     def _change_filter1_cyclehr(newhour):
         # This local routine starts an asynchronous task to send the
-        # new primary filter cycle start hour to the spa. 
-        # 
+        # new primary filter cycle start hour to the spa.
+        #
         # Note that we use a lambda to include the newhour parameter
         # with the coroutine.
-        spa_ui.add_coroutine(lambda: spa.change_filter1_cycle(
-                             newhour, 
-                             spa.filter1DurationHours,
-                             spa.filter1Freq))
+        spa_ui.add_coroutine(
+            lambda: spa.change_filter1_cycle(
+                newhour, spa.filter1DurationHours, spa.filter1Freq
+            )
+        )
 
     # Now add the edit dialog to the Textfield
-    cyc1hrsetdialog = EditDialog(spa_ui.display,
-                           "Enter the new start hour (24hr):",
-                           _change_filter1_cyclehr)
+    cyc1hrsetdialog = EditDialog(
+        spa_ui.display, "Enter the new start hour (24hr):", _change_filter1_cyclehr
+    )
     cyc1hrsetfield.set_dialog(cyc1hrsetdialog)
 
     def _get_cyc1dur_text():
@@ -592,19 +596,20 @@ def setup_ui_display(spa_ui):
 
     def _change_filter1_cycle_dur(newdur):
         # This local routine starts an asynchronous task to send the
-        # new primary filter cycle duration hours to the spa. 
-        # 
+        # new primary filter cycle duration hours to the spa.
+        #
         # Note that we use a lambda to include the newdur parameter
         # with the coroutine.
-        spa_ui.add_coroutine(lambda: spa.change_filter1_cycle(
-                             spa.filter1StartHour, 
-                             newdur,
-                             spa.filter1Freq))
+        spa_ui.add_coroutine(
+            lambda: spa.change_filter1_cycle(
+                spa.filter1StartHour, newdur, spa.filter1Freq
+            )
+        )
 
     # Now add the edit dialog to the Textfield
-    cyc1dursetdialog = EditDialog(spa_ui.display,
-                           "Enter the new duration (hours):",
-                           _change_filter1_cycle_dur)
+    cyc1dursetdialog = EditDialog(
+        spa_ui.display, "Enter the new duration (hours):", _change_filter1_cycle_dur
+    )
     cyc1dursetfield.set_dialog(cyc1dursetdialog)
 
     def _get_cyc1freq_text():
@@ -616,19 +621,20 @@ def setup_ui_display(spa_ui):
 
     def _change_filter1_cycle_freq(newfreq):
         # This local routine starts an asynchronous task to send the
-        # new primary filter cycle duration hours to the spa. 
-        # 
+        # new primary filter cycle duration hours to the spa.
+        #
         # Note that we use a lambda to include the newfreq parameter
         # with the coroutine.
-        spa_ui.add_coroutine(lambda: spa.change_filter1_cycle(
-                             spa.filter1StartHour, 
-                             spa.filter1DurationHours,
-                             newfreq))
+        spa_ui.add_coroutine(
+            lambda: spa.change_filter1_cycle(
+                spa.filter1StartHour, spa.filter1DurationHours, newfreq
+            )
+        )
 
     # Now add the edit dialog to the Textfield
-    cyc1freqsetdialog = EditDialog(spa_ui.display,
-                           "Enter the new frequency (per day):",
-                           _change_filter1_cycle_freq)
+    cyc1freqsetdialog = EditDialog(
+        spa_ui.display, "Enter the new frequency (per day):", _change_filter1_cycle_freq
+    )
     cyc1freqsetfield.set_dialog(cyc1freqsetdialog)
 
     # Add secondary filter cycle controls to the controls Window.
@@ -643,11 +649,7 @@ def setup_ui_display(spa_ui):
     # will work with Jacuzzi hot tub models that have a Secondary
     # Filter Cycle feature?
 
-    _cycle2_mode_names = [
-        "Holiday",
-        "Light",
-        "Heavy"
-    ]
+    _cycle2_mode_names = ["Holiday", "Light", "Heavy"]
 
     def _get_cyc2mode_text():
         mode = spa.filter2Mode
@@ -662,16 +664,16 @@ def setup_ui_display(spa_ui):
 
     def _change_filter2_mode(mode):
         # This local routine starts an asynchronous task to send the
-        # new secondary filter cycle mode value to the spa. 
-        # 
+        # new secondary filter cycle mode value to the spa.
+        #
         # Note that we use a lambda to include the mode parameter
         # with the coroutine.
         spa_ui.add_coroutine(lambda: spa.change_filter2_cycle(mode))
 
     # Now add the edit dialog to the Textfield
-    cyc2modesetdialog = ListDialog(spa_ui.display, _cycle2_mode_names,
-                           "Enter the new mode:",
-                           _change_filter2_mode)
+    cyc2modesetdialog = ListDialog(
+        spa_ui.display, _cycle2_mode_names, "Enter the new mode:", _change_filter2_mode
+    )
     cyc2modesetfield.set_dialog(cyc2modesetdialog)
 
     # Create a PadWindow at the bottom for status messages.
@@ -696,7 +698,7 @@ def setup_ui_display(spa_ui):
 
     # Specify lower-right corner of the viewport.
     #
-    # These make the Messages Window fill the entire bottom 
+    # These make the Messages Window fill the entire bottom
     # section of the display Window at whatever its current size
     # is when the CursesUI instance starts.
     # lrcrow = spa_ui.display.get_last_row()
@@ -713,8 +715,9 @@ def setup_ui_display(spa_ui):
         return spa_ui.stdout_bfr.read()
 
     # Create the Messages PadWindow
-    msgwin = PadWindow(spa_ui.display, height, width, ulcrow,
-                       ulccol, lrcrow, lrccol, "Messages")
+    msgwin = PadWindow(
+        spa_ui.display, height, width, ulcrow, ulccol, lrcrow, lrccol, "Messages"
+    )
 
     # The Messages Window is read-only so make it unselectable
     msgwin.set_selectable(False)
@@ -733,11 +736,10 @@ def setup_ui_display(spa_ui):
     # Create the KeyResponse instance for arrow keys.
     # These keys will scroll the contents of the Messages
     # Window.
-    arrow_key_list = [curses.KEY_UP, curses.KEY_DOWN,
-                      curses.KEY_RIGHT, curses.KEY_LEFT]
+    arrow_key_list = [curses.KEY_UP, curses.KEY_DOWN, curses.KEY_RIGHT, curses.KEY_LEFT]
     arrow_keys = KeyResponse("arrows", arrow_key_list)
 
-    # If we add this KeyResponse to the msgwin, then the 
+    # If we add this KeyResponse to the msgwin, then the
     # arrow keys will only be active while the msgwin is
     # selected.  If instead we add the KeyResponse instance
     # to the display Window, then the arrow keys will be
@@ -765,16 +767,17 @@ def setup_ui_display(spa_ui):
     # arrow keys.
     arrow_keys.bind(_kr_scroll_msgwin)
 
+
 def setup_ui_responses(spa_ui):
-    """ Configure the initial key responses for the Jacuzzi
+    """Configure the initial key responses for the Jacuzzi
     Spaa UI.
 
     This sets up key responses that will be active during the
-    entire UI session. 
+    entire UI session.
     """
     # Note that curses.ascii.ctrl('x') returns the same
     # type you pass to it; given 'x' it returns string
-    # '\x18', not the integer value 0x18. 
+    # '\x18', not the integer value 0x18.
     #
     # ord() converts a character to its integer value.
     #
@@ -784,12 +787,12 @@ def setup_ui_responses(spa_ui):
     #
     # Create a KeyResponse instance for Ctrl-x and
     # add it to the display Window.
-    ctrl_x_key = KeyResponse("ctrl_x", ord(curses.ascii.ctrl('x')))
+    ctrl_x_key = KeyResponse("ctrl_x", ord(curses.ascii.ctrl("x")))
     spa_ui.display.add_key(ctrl_x_key)
     ctrl_x_key.bind(spa_ui.kr_done_with_ui)
 
     # Create and install the KeyResponse instance for Ctrl-p
-    ctrl_p_key = KeyResponse("ctrl_p", ord(curses.ascii.ctrl('p')))
+    ctrl_p_key = KeyResponse("ctrl_p", ord(curses.ascii.ctrl("p")))
     spa_ui.display.add_key(ctrl_p_key)
 
     def _kr_ctrl_p_response(_):
@@ -804,13 +807,13 @@ def setup_ui_responses(spa_ui):
             "So long and thanks for all the fish.",
             "Don't panic.",
             "THIS IS AN EX-PARROT!!",
-            ]
+        ]
 
         # Note that while the CursesUI instance has control of the
         # screen, you can still use simple print statements even
         # though curses is maintaining its windows.  Output from
         # print() statements will go instead into the stdout_bfr
-        # which will be dumped to the screen on exit. 
+        # which will be dumped to the screen on exit.
         #
         # Also, the Message Window displays the contents of the
         # stdout_bfr. So for the demo, any print() output will be
@@ -834,11 +837,11 @@ def setup_ui_responses(spa_ui):
     # ENTER will begin editing the selected child Window
     enter_key.bind(spa_ui.display.kr_begin_child_edit)
 
+
 # The code below runs only when jacuzziui.py is invoked from the
 # command line with "python3 jacuzziui.py"
 if __name__ == "__main__":
-
-    # The normal curses keyboard handling system adds a 
+    # The normal curses keyboard handling system adds a
     # configurable delay to the ESCAPE key so that it can
     # be combined with other keys to generate special keycodes.
     # The delay is typically around 1 second, which can be
@@ -848,34 +851,38 @@ if __name__ == "__main__":
     # the curses windowing system gets initialized.
     #
     # Since the demoUI system does use the ESCAPE key we will set
-    # a shorter delay (in milliseconds) here. 
+    # a shorter delay (in milliseconds) here.
     import os
-    os.environ.setdefault('ESCDELAY', '25')
+
+    os.environ.setdefault("ESCDELAY", "25")
 
     import logging
 
-    # Set up a CursesUI instance to run concurrently with the 
+    # Set up a CursesUI instance to run concurrently with the
     # SpaProcess instance.
     from cursesui import CursesUI
+
     spahost = "10.100.10.216"
     spa = jacuzziRS485.JacuzziRS485(spahost)
 
     # Create the user interface, telling it how
     # to set up the display and keyboard responses.
-    spa_ui = CursesUI(setup_ui_display, 
-                      setup_ui_responses,
-                      "JacuzziRS485 Spa UI - Thanks to dhmsjs for UI creation")
+    spa_ui = CursesUI(
+        setup_ui_display,
+        setup_ui_responses,
+        "JacuzziRS485 Spa UI - Thanks to dhmsjs for UI creation",
+    )
 
     # Tell the spa instance to use the CursesUI logging instance
     spa.log = log
 
     # Tell the user interface to run spa communications concurrently.
-    spa_ui.add_coroutine(spa.check_connection_status)    
-    spa_ui.add_coroutine(spa.listen)    
+    spa_ui.add_coroutine(spa.check_connection_status)
+    spa_ui.add_coroutine(spa.listen)
 
     # Set up the logging level for this user interface.
     #
-    # Typical log filter levels are logging.DEBUG 
+    # Typical log filter levels are logging.DEBUG
     # for development, logging.ERROR for normal use.
     # Set level to logging.CRITICAL + 1 to suppress
     # all log messages from a CursesUI instance.
@@ -884,7 +891,7 @@ if __name__ == "__main__":
     spa_ui.initialize_loglevel(logging.INFO)
 
     fh = logging.FileHandler("logfile.txt")
-    formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
+    formatter = logging.Formatter("%(asctime)s:%(levelname)s:%(message)s")
     fh.setFormatter(formatter)
     log.addHandler(fh)
 
