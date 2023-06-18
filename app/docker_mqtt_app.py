@@ -24,6 +24,7 @@ def on_connect(mqttc, obj, flags, rc):
 
 def on_message(mqttc, obj, msg):
     """This is triggered whenever we recieve a message on MQTT"""
+    global spa
     log.info(
         "MQTT message received on topic: "
         + msg.topic
@@ -31,7 +32,7 @@ def on_message(mqttc, obj, msg):
         + msg.payload.decode()
     )
     if msg.topic == "homie/hot_tub/J335/set_temperature/set":
-        new_temp = float(msg.payload.decode())
+        new_temp = spa.set_temp_value_formatter(msg.payload.decode())
         asyncio.run(spa.send_temp_change(new_temp))
     else:
         log.debug("Unhandled MQTT message on topic {}.".format(msg.topic))
