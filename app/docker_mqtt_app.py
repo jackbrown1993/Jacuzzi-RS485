@@ -18,12 +18,12 @@ serial_port = int(os.environ.get("SERIAL_PORT"))
 
 
 def on_connect(mqttc, obj, flags, rc):
-    """ This is triggered whenever we connect to MQTT"""
+    """This is triggered whenever we connect to MQTT"""
     log.info("Connected to MQTT.")
 
 
 def on_message(mqttc, obj, msg):
-    """ This is triggered whenever we recieve a message on MQTT"""
+    """This is triggered whenever we recieve a message on MQTT"""
     log.info(
         "MQTT message received on topic: "
         + msg.topic
@@ -38,7 +38,7 @@ def on_message(mqttc, obj, msg):
 
 
 async def read_spa_data(spa, lastupd):
-    """ This is triggered whenever spa data has changed"""
+    """This is triggered whenever spa data has changed"""
     await asyncio.sleep(1)
     if spa.lastupd != lastupd:
         lastupd = spa.lastupd
