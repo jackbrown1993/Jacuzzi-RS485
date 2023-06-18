@@ -1218,3 +1218,17 @@ class JacuzziRS485(BalboaSpaWifi):
             time_difference = current_time - input_datetime
             second_since_update = int(time_difference.total_seconds())
             return "Last Update: {0}s ago".format(second_since_update)
+            
+    def set_temp_value_formatter(self, val):
+        # We accept float at .0 and .5 if temp scale is celsius
+        # If temp scale if fahrenheit we round to the nearest whole numer
+
+        # Ensure input is float
+        val = float(val)
+
+        if self.tempscale == self.TSCALE_C:
+            new_temp = round(val * 2) / 2
+        else:
+            new_temp = round(val,0)
+
+        return new_temp
