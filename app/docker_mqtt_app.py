@@ -19,10 +19,12 @@ serial_port = int(os.environ.get("SERIAL_PORT"))
 
 
 def on_connect(mqttc, obj, flags, rc):
+    """ This is triggered whenever we connect to MQTT"""
     log.info("Connected to MQTT.")
 
 
 def on_message(mqttc, obj, msg):
+    """ This is triggered whenever we recieve a message on MQTT"""
     log.info(
         "MQTT message received on topic: "
         + msg.topic
@@ -30,10 +32,8 @@ def on_message(mqttc, obj, msg):
         + msg.payload.decode()
     )
     if msg.topic == "homie/hot_tub/J335/set_temperature/set":
-        # Figure this out
-        new_temp = int(msg.payload.decode())
+        new_temp = float(msg.payload.decode())
         asyncio.run(spa.send_temp_change(new_temp))
-        log.info("as")
     else:
         log.debug("Unhandled MQTT message on topic {}.".format(msg.topic))
 
