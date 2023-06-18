@@ -1,7 +1,9 @@
-import jacuzziRS485
-
+import logging
+import os
 import asyncio
 import paho.mqtt.client as mqtt
+
+import jacuzziRS485
 import os
 import sys
 import logging
@@ -72,6 +74,7 @@ def on_message(mqttc, obj, msg):
 
 
 async def read_spa_data(spa, lastupd):
+    """ This is triggered whenever spa data has changed"""
     await asyncio.sleep(1)
     if spa.lastupd != lastupd:
         lastupd = spa.lastupd
