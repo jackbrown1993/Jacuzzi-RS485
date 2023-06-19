@@ -62,9 +62,8 @@ services:
 ```
 
 <h3>Inspirations and Credits</h3>
-- [https://github.com/ccutrer/balboa_worldwide_app](https://github.com/ccutrer/balboa_worldwide_app) for so much research and documentation on the messages.
-- [https://github.com/HyperActiveJ/sundance780-jacuzzi-balboa-rs485-tcp](https://github.com/HyperActiveJ/sundance780-jacuzzi-balboa-rs485-tcp) for getting me started on decoding messages for my specific Jacuzzi model.
-- [https://github.com/garbled1/pybalboa](https://github.com/garbled1/pybalboa) for providing the Python module that this code was based on.
-- [https://github.com/peterg79/bwalink](https://github.com/jshank/bwalink) for testing and documenting on the RS485 to WiFi process.
-- [https://github.com/dhmsjs/pyjacuzzi](https://github.com/dhmsjs/pyjacuzzi) for making lots of progress on getting this to work with Jacuzzi and his effort on code readability and commenting.
-- [https://github.com/jackbrown1993/Jacuzzi-RS485/graphs/contributors](Contributors).
+* https://github.com/ccutrer/balboa_worldwide_app for so much research and documentation on the messages.
+* https://github.com/HyperActiveJ/sundance780-jacuzzi-balboa-rs485-tcp for getting me started on decoding messages for my specific Jacuzzi model.
+* https://github.com/garbled1/pybalboa for providing the Python module that this code was based on.
+* https://github.com/peterg79/bwalink for testing and documenting on the RS485 to WiFi process.
+* https://github.com/dhmsjs/pyjacuzzi for making lots of progress on getting this to work with Jacuzzi and his effort on code readability and commenting.
