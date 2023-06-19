@@ -4,13 +4,13 @@
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 </p>
 
-<h2 align="center">Project Purpose</h2>
+<h2>Project Purpose</h2>
 
 To provide an interface for Jacuzzi's with or without the ProLink module. An RS485 Serial to WiFi adaptor can instead be used, connected to the RS485 port on the main board. The adaptor I used was around £25 on Amazon.co.uk (https://www.amazon.co.uk/gp/product/B097C8PT6F).
 
 Currently the project allows control via MQTT or a terminal interface.
 
-<h2 align="center">Getting Started</h2>
+<h2>Getting Started</h2>
 
 Whether you utilize the Jacuzzi ProLink module or opt for an RS485 to WiFi Adaptor, it is essential to determine the IP address assigned to the module on your home network. In the following example, we have identified the module's IP address as 192.168.1.125. By default, the ProLink module tends to employ port 4257, but if desired, you can specify an alternative port using the "--port" flag.
 
@@ -38,11 +38,11 @@ An MQTT Bridge is provided to allow easy integration with other systems. You wil
 
 Publishing a float value to ```homie/hot_tub/J335/set_temperature/set``` will change the set temp value of Jacuzzi.
 
-## Docker:
+<h4>Docker</h4>
 
 Run docker image using ```docker run -d -e MQTT_IP= -e MQTT_PORT= -e MQTT_USER= -e MQTT_PASSWORD= -e JACUZZI_IP= -e JACUZZI_PORT= ghcr.io/jackbrown1993/jacuzzi-rs485:latest```
 
-### docker-compose example:
+docker-compose example:
 
 ```
 version: '3.8'
@@ -61,9 +61,10 @@ services:
       - JACUZZI_PORT=
 ```
 
-Inspired from / credit to:
+<h3>Inspirations and Credits</h3>
 - [https://github.com/ccutrer/balboa_worldwide_app](https://github.com/ccutrer/balboa_worldwide_app) for so much research and documentation on the messages.
 - [https://github.com/HyperActiveJ/sundance780-jacuzzi-balboa-rs485-tcp](https://github.com/HyperActiveJ/sundance780-jacuzzi-balboa-rs485-tcp) for getting me started on decoding messages for my specific Jacuzzi model.
 - [https://github.com/garbled1/pybalboa](https://github.com/garbled1/pybalboa) for providing the Python module that this code was based on.
 - [https://github.com/peterg79/bwalink](https://github.com/jshank/bwalink) for testing and documenting on the RS485 to WiFi process.
 - [https://github.com/dhmsjs/pyjacuzzi](https://github.com/dhmsjs/pyjacuzzi) for making lots of progress on getting this to work with Jacuzzi and his effort on code readability and commenting.
+- To all [https://github.com/jackbrown1993/Jacuzzi-RS485/graphs/contributors](Contributors).
