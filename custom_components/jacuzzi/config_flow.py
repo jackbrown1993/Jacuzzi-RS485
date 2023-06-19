@@ -8,7 +8,7 @@ from .const import DOMAIN, DEFAULT_JACUZZI_PORT, _LOGGER
 
 
 # Below code to import our Jacuzzi module by adding the path for 2 directories above current
-sys.path.append(os.path.abspath(os.path.join(os.path.abspath(__file__), '..', '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.abspath(__file__), "..", "..")))
 import app.jacuzziRS485 as jacuzziRS485
 
 ##In this example, the MyHacsConfigFlow class extends config_entries.ConfigFlow and sets the DOMAIN variable to the name of your integration. The async_step_user method is responsible for handling the configuration flow.
@@ -20,11 +20,12 @@ import app.jacuzziRS485 as jacuzziRS485
 # This data schema defines what we are asking and other options which will display in UI such as labels and default values
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME, default='Jacuzzi'): str,
-        vol.Required(CONF_HOST, default='10.100.10.216'): str,
-        vol.Optional('jacuzzi_port', default=DEFAULT_JACUZZI_PORT): int
+        vol.Required(CONF_NAME, default="Jacuzzi"): str,
+        vol.Required(CONF_HOST, default="10.100.10.216"): str,
+        vol.Optional("jacuzzi_port", default=DEFAULT_JACUZZI_PORT): int,
     }
 )
+
 
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
@@ -33,16 +34,21 @@ async def validate_input(hass: core.HomeAssistant, data):
             raise AlreadyConfigured
 
     _LOGGER.debug("Attempting to connect to %s", data[CONF_HOST])
-    spa = jacuzziRS485.JacuzziRS485(data[CONF_HOST], data['jacuzzi_port'])
+    spa = jacuzziRS485.JacuzziRS485(data[CONF_HOST], data["jacuzzi_port"])
     await spa.connect()
 
     if spa.connected:
-        _LOGGER.info("Successfully connected to Jacuzzi ({}:{})".format(data[CONF_HOST], data['jacuzzi_port']))
+        _LOGGER.info(
+            "Successfully connected to Jacuzzi ({}:{})".format(
+                data[CONF_HOST], data["jacuzzi_port"]
+            )
+        )
         # Disconnect from spa
         await spa.disconnect()
         return {"title": data[CONF_NAME]}
     else:
         raise CannotConnect
+
 
 class JacuzziConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ## This is first form shown after user adds integration, it asks for defined values.
@@ -62,13 +68,12 @@ class JacuzziConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-    
+
         # No user_input so show form asking for data input
         return self.async_show_form(
-            step_id='user',
-            data_schema=DATA_SCHEMA,
-            errors=errors
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
