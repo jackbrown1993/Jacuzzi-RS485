@@ -67,4 +67,4 @@ services:
 - [https://github.com/garbled1/pybalboa](https://github.com/garbled1/pybalboa) for providing the Python module that this code was based on.
 - [https://github.com/peterg79/bwalink](https://github.com/jshank/bwalink) for testing and documenting on the RS485 to WiFi process.
 - [https://github.com/dhmsjs/pyjacuzzi](https://github.com/dhmsjs/pyjacuzzi) for making lots of progress on getting this to work with Jacuzzi and his effort on code readability and commenting.
-- To all [https://github.com/jackbrown1993/Jacuzzi-RS485/graphs/contributors](Contributors).
+- [https://github.com/jackbrown1993/Jacuzzi-RS485/graphs/contributors](Contributors).
