@@ -40,9 +40,16 @@ Publishing a float value to ```homie/hot_tub/J335/set_temperature/set``` will ch
 
 <h4>Docker</h4>
 
-Run docker image using ```docker run -d -e MQTT_IP= -e MQTT_PORT= -e MQTT_USER= -e MQTT_PASSWORD= -e JACUZZI_IP= -e JACUZZI_PORT= ghcr.io/jackbrown1993/jacuzzi-rs485:latest```
+There is published docker image at ghcr.io/jackbrown1993/jacuzzi-rs485:latest which is based on the master branch.
 
-docker-compose example:
+Run docker image using published image ```docker run -d -e MQTT_IP= -e MQTT_PORT= -e MQTT_USER= -e MQTT_PASSWORD= -e JACUZZI_IP= -e JACUZZI_PORT= ghcr.io/jackbrown1993/jacuzzi-rs485:latest```
+
+Run docker image using local code:
+
+Fist build the image: ```docker build -t jacuzzi-rs485 .```
+Then run the image: ```docker run -e MQTT_IP= -e MQTT_PORT= -e MQTT_USER= -e MQTT_PASSWORD= -e JACUZZI_IP= -e JACUZZI_PORT= jacuzzi-rs485```
+
+docker-compose example using published image:
 
 ```
 version: '3.8'
