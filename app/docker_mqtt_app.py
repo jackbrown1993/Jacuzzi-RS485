@@ -3,20 +3,51 @@ import jacuzziRS485
 import asyncio
 import paho.mqtt.client as mqtt
 import os
+import sys
 from datetime import datetime
 import logging
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s:%(levelname)s:%(message)s")
 log = logging.getLogger("__name__")
 
-mqtt_host = os.environ.get("MQTT_HOST")
-mqtt_port = int(os.environ.get("MQTT_PORT"))
-mqtt_user = os.environ.get("MQTT_USER")
-mqtt_password = os.environ.get("MQTT_PASSWORD")
+optional_variables = {
+    'mqtt_port': 1883,
+    'jacuzzi_port': 4257
+}
 
-serial_ip = os.environ.get("SERIAL_IP")
-serial_port = int(os.environ.get("SERIAL_PORT"))
+if 'MQTT_IP' not in os.environ:
+    log.error("MQTT host not provided, please provide IP address or hostname of your MQTT server.")
+    sys.exit(1)
+else:
+    mqtt_ip = os.environ.get("MQTT_IP")
 
+if 'MQTT_USER' not in os.environ:
+    log.error("MQTT user not provided, please provide username of your MQTT server.")
+    sys.exit(1)
+else:
+    mqtt_user = os.environ.get("MQTT_USER")
+
+if 'MQTT_PASSWORD' not in os.environ:
+    log.error("MQTT password not provided, please provide password of your MQTT server.")
+    sys.exit(1)
+else:
+    mqtt_password = os.environ.get("MQTT_PASSWORD")
+
+if 'JACUZZI_IP' not in os.environ:
+    log.error("Jacuzzi IP not provided, please provide IP address or hostname of your Prolink or RS485 Module.")
+    sys.exit(1)
+else:
+    jacuzzi_ip = os.environ.get("JACUZZI_IP")
+
+if 'MQTT_PORT' not in os.environ:
+    mqtt_port = 1883
+else:
+    mqtt_port = os.environ.get("MQTT_PORT")
+
+if 'JACUZZI_PORT' not in os.environ:
+    jacuzzi_port = 4257
+else:
+    jacuzzi_port = os.environ.get("JACUZZI_PORT")
 
 def on_connect(mqttc, obj, flags, rc):
     log.info("Connected to MQTT.")
@@ -71,7 +102,7 @@ async def start_mqtt():
 
     mqtt_client.publish("homie/hot_tub/$homie", payload="3.0", qos=0, retain=False)
     mqtt_client.publish(
-        "homie/hot_tub/$name", payload="Acorns J335", qos=0, retain=False
+        "homie/hot_tub/$name", payload="Jaccuzi", qos=0, retain=False
     )
     mqtt_client.publish("homie/hot_tub/$state", payload="ready", qos=0, retain=False)
     mqtt_client.publish("homie/hot_tub/$nodes", payload="J335", qos=0, retain=False)
@@ -126,8 +157,8 @@ async def start_app():
     # Connect to MQTT
     await start_mqtt()
 
-    # Connect to Spa (Serial Device)
-    spa = jacuzziRS485.JacuzziRS485(serial_ip, serial_port)
+    # Connect to Jacuzzi
+    spa = jacuzziRS485.JacuzziRS485(jacuzzi_ip, jacuzzi_port)
 
     asyncio.ensure_future(spa.check_connection_status())
     asyncio.ensure_future(spa.listen())
