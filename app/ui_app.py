@@ -142,26 +142,14 @@ def setup_ui_display(spa_ui):
 
     def _get_pump1_text():
         # A local routine to get current pump 1 status
-        return "Pump 1: {0}".format(spa.get_pump(1, True))
+        return "Jet Pump 1: {0}".format(spa.get_pump(1, True))
 
     # Add current spa pump 1 value to the status window.
     pump1field = Textfield(row, col)
     pump1field.set_update_cb(_get_pump1_text)
     stswin.add_field(pump1field)
     pump1field.update()
-    flowrow = row
-    flowcol = pump1field.get_required_cols() + 3
     row += pump1field.get_required_rows()
-
-    def _get_flow_text():
-        # A local routine to get current flow status
-        return "Flow: {0}".format("On" if spa.statusByte17 else "Off")
-
-    # Add current flow status to the status window.
-    flowfield = Textfield(flowrow, flowcol)
-    flowfield.set_update_cb(_get_flow_text)
-    stswin.add_field(flowfield)
-    flowfield.update()
 
     # Jacuzzi spas return a pump status of 0x02 when pump
     # 2 is On, which means the text returned by get_pump()
@@ -172,7 +160,7 @@ def setup_ui_display(spa_ui):
 
     def _get_pump2_text():
         # A local routine to get current pump 2 status
-        return "Pump 2: {0}".format(_pump2_text[spa.get_pump(2, False)])
+        return "Jet Pump 2: {0}".format(_pump2_text[spa.get_pump(2, False)])
 
     # Add current spa pump 2 value to the status window.
     pump2field = Textfield(row, col)
@@ -181,11 +169,30 @@ def setup_ui_display(spa_ui):
     pump2field.update()
     row += pump2field.get_required_rows()
 
+
+    # Circulation pump for heater and filter cycles
+    _pump2_text = ["Off", "On", "On"]
+
+    def _get_flow_text():
+        # A local routine to get current flow status
+        return "Circulation Pump: {0}".format("On" if spa.statusByte17 else "Off")
+
+    # Add current spa pump 2 value to the status window.
+    circpumpfield = Textfield(row, col)
+    circpumpfield.set_update_cb(_get_flow_text)
+    stswin.add_field(circpumpfield)
+    circpumpfield.update()
+    row += circpumpfield.get_required_rows()
+
+
+
+
+
     def _get_uvon_text():
         # A local routine to get current UV lamp status
         return "UV (ClearRay): {0}".format("On" if spa.isUVOn else "Off")
 
-    # Add current spa UV value to the status window.
+    # Add current spa UV (clearray) value to the status window.
     uvonfield = Textfield(row, col)
     uvonfield.set_update_cb(_get_uvon_text)
     stswin.add_field(uvonfield)
@@ -225,15 +232,15 @@ def setup_ui_display(spa_ui):
     _light_mode_names = [
         "Off",
         "Unk1",
-        "Blu",
-        "Grn",
+        "Blue",
+        "Green",
         "Unk4",
-        "Org",
+        "Orange",
         "Red",
-        "Vio",
+        "Violet",
         "Unk8",
         "Aqua",
-        "Blnd",
+        "Blend",
     ]
 
     def _get_light_mode_text():
