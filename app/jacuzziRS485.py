@@ -946,7 +946,7 @@ class JacuzziRS485(BalboaSpaWifi):
             # on any socket read error.
 
             if not self.connected:
-                self.log.info("Connecting...")
+                self.log.info("Attempting to connect to Jacuzzi...")
                 await self.connect()
                 self.connection_state = ConnectionStates.Connecting
 
