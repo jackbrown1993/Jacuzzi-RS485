@@ -8,8 +8,8 @@ import argparse
 parser = argparse.ArgumentParser()
 
 # Add an IP address argument
-parser.add_argument('--ip', type=str, help='IP address')
-parser.add_argument('--port', type=int, help='Port number', default=4257)
+parser.add_argument("--ip", type=str, help="IP address")
+parser.add_argument("--port", type=int, help="Port number", default=4257)
 
 # Parse the arguments
 args = parser.parse_args()
@@ -20,7 +20,9 @@ jacuzzi_port = args.port
 
 # Check if IP address is provided
 if not jacuzzi_ip_address:
-    print("Error: Please provide an IP address for Jacuzzi using the --ip flag. eg. python3 ui_app.py --ip 192.168.1.125")
+    print(
+        "Error: Please provide an IP address for Jacuzzi using the --ip flag. eg. python3 ui_app.py --ip 192.168.1.125"
+    )
     sys.exit(1)
 
 try:
