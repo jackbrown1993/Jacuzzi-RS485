@@ -1,43 +1,38 @@
-<h2 align="center">Jacuzzi Hot Tub (Spa) Smart Control</h2>
+<h2 align="center">Jacuzzi Smart Control</h2>
 
 <p align="center">
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 </p>
 
-## Purpose:
+## Purpose
 
-To provide an interface for Jacuzzi Hot Tubs / Spa's without the expensive SmartTub / ProLink module and celluar subscription (although if you have it, that is also ok). An RS485 Serial to WiFi adaptor can instead be used, connected to the RS485 port on the main board. The adaptor I used was around £25 on Amazon.co.uk (https://www.amazon.co.uk/gp/product/B097C8PT6F).
+To provide an interface for Jacuzzi's without the expensive ProLink module (although if you have it, that is also ok). An RS485 Serial to WiFi adaptor can instead be used, connected to the RS485 port on the main board. The adaptor I used was around £25 on Amazon.co.uk (https://www.amazon.co.uk/gp/product/B097C8PT6F).
 
-The aim is to allow control from either MQTT, Home Assistant, and, a terminal UI.
+Currently the project allows control via MQTT or a terminal interface.
 
+## Running the project
 
-## Configuration:
+Regardless of you using the Jacuzzi ProLink module or an RS485 to WiFi Adaptor, you will need to know the IP address the module has on your home network, in the below example we have identified the module to have an IP address of 192.168.1.125, by default the ProLink module seems to use port 4257, you can optionally supply a different port using the --port flag.
 
-### If using a Jacuzzi ProLink (not yet supported)
+# Terminal Interface (port flag is optional and defaults to 4257)
 
-`MQTT_HOST` - DNS or IP of your MQTT server.
+python 3 app/ui_app.py --ip 192.168.1.125 --port 9988
 
-`MQTT_PORT` - Port that your MQTT server is listening on.
+# MQTT (Current only supported using a Docker container)
 
-`MQTT_USER` - Username of MQTT server.
+The following environment variables are supported when deploying the MQTT app via Docker.
 
-`MQTT_PASSWORD` - Password of MQTT server.
+`MQTT_IP` - IP address of your MQTT server.
 
-### If using a RS485 Serial to WiFi Adaptor
-
-`MQTT_HOST` - DNS or IP of your MQTT server.
-
-`MQTT_PORT` - Port that your MQTT server is listening on.
+`MQTT_PORT` - Port that your MQTT server is listening on. (Optional - Defaults to 1883)
 
 `MQTT_USER` - Username of MQTT server.
 
 `MQTT_PASSWORD` - Password of MQTT server.
 
-`SERIAL_IP` - IP address of your Elfin serial to WiFi device (only required if pro_link = false).
+`JACUZZI_IP` - IP address of your ProLink or RS485 to WiFi module.
 
-`SERIAL_PORT` - Port that the NETP service of your serial to WiFi device is running on (only required if pro_link = false).
-
-## MQTT
+`JACUZZI_PORT` - Port of your ProLink or RS485 to WiFi module. (Optional - Defaults to 4257)
 
 An MQTT Bridge is provided to allow easy integration with other systems. You will need a separate MQTT server running (Mosquitto is a relatively easy and robust one). The MQTT topics follow the Homie convention, making them self-describing.
 
@@ -45,25 +40,9 @@ Publishing a float value to ```homie/hot_tub/J335/set_temperature/set``` will ch
 
 ## Docker:
 
-Run docker image using ```docker run -d -e MQTT_HOST= -e MQTT_PORT=1883 -e MQTT_USER= -e MQTT_PASSWORD= -e SERIAL_IP= -e SERIAL_PORT=8899 ghcr.io/jackbrown1993/jacuzzi-rs485:latest```
+Run docker image using ```docker run -d -e MQTT_IP= -e MQTT_PORT= -e MQTT_USER= -e MQTT_PASSWORD= -e JACUZZI_IP= -e JACUZZI_PORT= ghcr.io/jackbrown1993/jacuzzi-rs485:latest```
 
-### docker-compose Example (if using a Jacuzzi ProLink):
-
-```
-version: '3.8'
-services:
-
-  jacuzzi-rs485:
-    image: ghcr.io/jackbrown1993/jacuzzi-rs485:latest
-    container_name: jacuzzi
-    restart: unless-stopped
-    environment:
-      - MQTT_HOST=
-      - MQTT_PORT=1883
-      - MQTT_USER=
-      - MQTT_PASSWORD=
-```
-### docker-compose Example (if using a RS485 Serial to WiFi Adaptor):
+### docker-compose example:
 
 ```
 version: '3.8'
@@ -75,16 +54,16 @@ services:
     restart: unless-stopped
     environment:
       - MQTT_HOST=
-      - MQTT_PORT=1883
+      - MQTT_PORT=
       - MQTT_USER=
       - MQTT_PASSWORD=
-      - SERIAL_IP=
-      - SERIAL_PORT=8899
+      - JACUZZI_IP=
+      - JACUZZI_PORT=
 ```
 
 Inspired from / credit to:
-- [https://github.com/ccutrer/balboa_worldwide_app](https://github.com/ccutrer/balboa_worldwide_app)
+- [https://github.com/ccutrer/balboa_worldwide_app](https://github.com/ccutrer/balboa_worldwide_app) for so much research and documentation on the messages.
 - [https://github.com/HyperActiveJ/sundance780-jacuzzi-balboa-rs485-tcp](https://github.com/HyperActiveJ/sundance780-jacuzzi-balboa-rs485-tcp) for getting me started on decoding messages for my specific Jacuzzi model.
-- [https://github.com/garbled1/pybalboa](https://github.com/garbled1/pybalboa) 
+- [https://github.com/garbled1/pybalboa](https://github.com/garbled1/pybalboa) for providing the Python module that this code was based on.
 - [https://github.com/peterg79/bwalink](https://github.com/jshank/bwalink) for testing and documenting on the RS485 to WiFi process.
-- [https://github.com/dhmsjs/pyjacuzzi](https://github.com/dhmsjs/pyjacuzzi) for making lots of progress on getting this to work with Jacuzzi and especially for code commenting.
+- [https://github.com/dhmsjs/pyjacuzzi](https://github.com/dhmsjs/pyjacuzzi) for making lots of progress on getting this to work with Jacuzzi and his effort on code readability and commenting.
