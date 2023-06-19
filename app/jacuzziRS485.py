@@ -18,10 +18,7 @@ along with several others here unnamed, who have helped reverse engineer
 balboa hot tub control systems and their many rebranded derivatives.
 """
 import asyncio
-import errno
-import logging
 import time
-import warnings
 import queue
 from datetime import datetime
 

@@ -11,7 +11,6 @@ import logging
 log = logging.getLogger(__name__)
 
 import traceback
-import time
 
 # Interface to the Python curses library.
 import curses
