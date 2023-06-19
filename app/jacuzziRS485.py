@@ -660,6 +660,7 @@ class JacuzziRS485(BalboaSpaWifi):
         # end of a filter cycle though; turning off and back on
         # briefly. Perhaps this is a flow sensor signal?
         # UPDATE: Yes I believe it is the flow switch signal
+        # jackbrown1993: This is the ciculation pump on J335, which comes on for filtration and heating cycles. Other models may use pump1 in low speed?
         self.statusByte17 = data[17]
 
         # Modified for Prolink; was data[14] ; logic reversed??
@@ -1066,7 +1067,7 @@ class JacuzziRS485(BalboaSpaWifi):
             elif mtype == CLEAR_TO_SEND:
                 if not channel in self.discoveredChannels:
                     self.discoveredChannels.append(data[2])
-                    self.log.info(
+                    self.log.debug(
                         "Discovered Channels: {0}".format(self.discoveredChannels)
                     )
                 elif channel == self.channel:
@@ -1081,7 +1082,7 @@ class JacuzziRS485(BalboaSpaWifi):
                 if mtype == CC_REQ:
                     if not channel in self.activeChannels:
                         self.activeChannels.append(data[2])
-                        self.log.info(
+                        self.log.debug(
                             "Active Channels: {0}".format(self.activeChannels)
                         )
                     elif (
