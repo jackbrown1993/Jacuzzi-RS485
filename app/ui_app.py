@@ -183,7 +183,7 @@ def setup_ui_display(spa_ui):
 
     def _get_uvon_text():
         # A local routine to get current UV lamp status
-        return "UV: {0}".format("On" if spa.isUVOn else "Off")
+        return "UV (ClearRay): {0}".format("On" if spa.isUVOn else "Off")
 
     # Add current spa UV value to the status window.
     uvonfield = Textfield(row, col)
