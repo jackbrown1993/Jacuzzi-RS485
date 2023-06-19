@@ -140,14 +140,6 @@ def setup_ui_display(spa_ui):
     tempfield.update()
     row += tempfield.get_required_rows()
 
-    # Add the second water temperature to the status
-    # Window.
-    temp2field = Textfield(row, col)
-    temp2field.set_update_cb(spa.get_2ndtemp_text)
-    stswin.add_field(temp2field)
-    temp2field.update()
-    row += temp2field.get_required_rows()
-
     # Jacuzzi spas return a pump status of 0x02 when pump
     # 2 is On, which means the text returned by get_pump()
     # is "High". Since pump 2 has only 2 states (On or Off)
