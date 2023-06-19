@@ -10,13 +10,8 @@ import logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s:%(levelname)s:%(message)s")
 log = logging.getLogger("__name__")
 
-optional_variables = {
-    'mqtt_port': 1883,
-    'jacuzzi_port': 4257
-}
-
 if 'MQTT_IP' not in os.environ:
-    log.error("MQTT host not provided, please provide IP address or hostname of your MQTT server.")
+    log.error("MQTT IP not provided, please provide IP address or hostname of your MQTT server.")
     sys.exit(1)
 else:
     mqtt_ip = os.environ.get("MQTT_IP")
