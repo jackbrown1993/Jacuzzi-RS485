@@ -60,7 +60,7 @@ services:
     container_name: jacuzzi
     restart: unless-stopped
     environment:
-      - MQTT_HOST=
+      - MQTT_IP=
       - MQTT_PORT=
       - MQTT_USER=
       - MQTT_PASSWORD=
