@@ -1,20 +1,14 @@
-# Jacuzzi App
+<h2 align="center">Jacuzzi Hot Tub (Spa) Smart Control</h2>
 
-This repo is still under development.
-
-Inspired from / credit to:
-- [https://github.com/ccutrer/balboa_worldwide_app](https://github.com/ccutrer/balboa_worldwide_app)
-- [https://github.com/HyperActiveJ/sundance780-jacuzzi-balboa-rs485-tcp](https://github.com/garbled1/pybalboa)
-- [https://github.com/garbled1/pybalboa](https://github.com/garbled1/pybalboa)
-- [https://github.com/peterg79/bwalink](https://github.com/jshank/bwalink)
-- [https://github.com/dhmsjs/pyjacuzzi](https://github.com/dhmsjs/pyjacuzzi) for making lots of progress on getting this to work with Jacuzzi and especially for code commenting.
-
+<p align="center">
+<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
+</p>
 
 ## Purpose:
 
-To remotely control the Jacuzzi J335 without the expensive SmartTub / ProLink module and celluar subscription (although if you have it, that is also ok). An RS485 Serial to WiFi adaptor is used instead connected to the RS485 port on the main board. The adaptor I used was around £25 on Amazon.co.uk (https://www.amazon.co.uk/gp/product/B097C8PT6F).
+To provide an interface for Jacuzzi Hot Tubs / Spa's without the expensive SmartTub / ProLink module and celluar subscription (although if you have it, that is also ok). An RS485 Serial to WiFi adaptor can instead be used, connected to the RS485 port on the main board. The adaptor I used was around £25 on Amazon.co.uk (https://www.amazon.co.uk/gp/product/B097C8PT6F).
 
-The aim is to allow control from either MQTT or from Home Assistant.
+The aim is to allow control from either MQTT, Home Assistant, and, a terminal UI.
 
 
 ## Configuration:
@@ -87,7 +81,10 @@ services:
       - SERIAL_IP=
       - SERIAL_PORT=8899
 ```
-## Code Quality Checks
 
-When pull requests are opened a Github action is used to ensure code quality:
-- Black to ensure code is formatted
+Inspired from / credit to:
+- [https://github.com/ccutrer/balboa_worldwide_app](https://github.com/ccutrer/balboa_worldwide_app)
+- [https://github.com/HyperActiveJ/sundance780-jacuzzi-balboa-rs485-tcp](https://github.com/HyperActiveJ/sundance780-jacuzzi-balboa-rs485-tcp) for getting me started on decoding messages for my specific Jacuzzi model.
+- [https://github.com/garbled1/pybalboa](https://github.com/garbled1/pybalboa) 
+- [https://github.com/peterg79/bwalink](https://github.com/jshank/bwalink) for testing and documenting on the RS485 to WiFi process.
+- [https://github.com/dhmsjs/pyjacuzzi](https://github.com/dhmsjs/pyjacuzzi) for making lots of progress on getting this to work with Jacuzzi and especially for code commenting.
