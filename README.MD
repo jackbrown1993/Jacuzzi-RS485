@@ -12,7 +12,7 @@ Currently the project allows control via MQTT or a terminal interface.
 
 ## Running the project
 
-Regardless of you using the Jacuzzi ProLink module or an RS485 to WiFi Adaptor, you will need to know the IP address the module has on your home network, in the below example we have identified the module to have an IP address of 192.168.1.125, by default the ProLink module seems to use port 4257, you can optionally supply a different port using the --port flag.
+Whether you utilize the Jacuzzi ProLink module or opt for an RS485 to WiFi Adaptor, it is essential to determine the IP address assigned to the module on your home network. In the following example, we have identified the module's IP address as 192.168.1.125. By default, the ProLink module tends to employ port 4257, but if desired, you can specify an alternative port using the "--port" flag.
 
 # Terminal Interface (port flag is optional and defaults to 4257)
 
