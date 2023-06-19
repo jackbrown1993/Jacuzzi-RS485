@@ -246,7 +246,7 @@ def setup_ui_display(spa_ui):
 
     def _get_brightness_text():
         # Returns just the brightness text.
-        return "Level:{0}%".format(spa.get_lightBrightness())
+        return "Brightness:{0}%".format(spa.get_lightBrightness())
 
     def _get_full_light_cb():
         # Returns both light mode and brightness text
@@ -564,7 +564,7 @@ def setup_ui_display(spa_ui):
 
     # Now add the list dialog to the Textfield
     brightsetdialog = ListDialog(
-        spa_ui.display, _brightness_levels, "Select the new level:", _change_brightness
+        spa_ui.display, _brightness_levels, "Select the new brightness:", _change_brightness
     )
     brightsetfield.set_dialog(brightsetdialog)
 
