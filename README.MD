@@ -16,7 +16,7 @@ Whether you utilize the Jacuzzi ProLink module or opt for an RS485 to WiFi Adapt
 
 <h3>Terminal Interface (port flag is optional and defaults to 4257)</h3>
 
-python 3 app/ui_app.py --ip 192.168.1.125 --port 9988
+python3 app/ui_app.py --ip 192.168.1.125 --port 9988
 
 <h3>MQTT (Current only supported using a Docker container)</h3>
 
