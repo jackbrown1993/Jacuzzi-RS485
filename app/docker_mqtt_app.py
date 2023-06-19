@@ -92,7 +92,7 @@ async def start_mqtt():
     mqtt_client.username_pw_set(username=mqtt_user, password=mqtt_password)
     mqtt_client.on_connect = on_connect
     mqtt_client.on_message = on_message
-    mqtt_client.connect(mqtt_host, mqtt_port)
+    mqtt_client.connect(mqtt_ip, mqtt_port)
     mqtt_client.loop_start()
 
     mqtt_client.publish("homie/hot_tub/$homie", payload="3.0", qos=0, retain=False)
