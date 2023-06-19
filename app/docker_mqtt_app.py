@@ -55,7 +55,7 @@ def on_message(mqttc, obj, msg):
         + " with value: "
         + msg.payload.decode()
     )
-    if msg.topic == "homie/hot_tub/J335/set_temperature/set":
+    if msg.topic == "homie/hot_tub/jacuzzi/set_temperature/set":
         # Figure this out
         new_temp = int(msg.payload.decode())
         asyncio.run(spa.send_temp_change(new_temp))
@@ -73,14 +73,14 @@ async def read_spa_data(spa, lastupd):
         )
 
         mqtt_client.publish(
-            "homie/hot_tub/J335/set_temperature",
+            "homie/hot_tub/jacuzzi/set_temperature",
             payload=spa.get_settemp(),
             qos=0,
             retain=False,
         )
 
         mqtt_client.publish(
-            "homie/hot_tub/J335/temperature", payload=spa.curtemp, qos=0, retain=False
+            "homie/hot_tub/jacuzzi/temperature", payload=spa.curtemp, qos=0, retain=False
         )
 
     return lastupd
@@ -100,50 +100,50 @@ async def start_mqtt():
         "homie/hot_tub/$name", payload="Jaccuzi", qos=0, retain=False
     )
     mqtt_client.publish("homie/hot_tub/$state", payload="ready", qos=0, retain=False)
-    mqtt_client.publish("homie/hot_tub/$nodes", payload="J335", qos=0, retain=False)
+    mqtt_client.publish("homie/hot_tub/$nodes", payload="jacuzzi", qos=0, retain=False)
     mqtt_client.publish(
-        "homie/hot_tub/J335/set_temperature/$name",
+        "homie/hot_tub/jacuzzi/set_temperature/$name",
         payload="Set Temperature",
         qos=0,
         retain=False,
     )
     mqtt_client.publish(
-        "homie/hot_tub/J335/set_temperature/$unit", payload="°C", qos=0, retain=False
+        "homie/hot_tub/jacuzzi/set_temperature/$unit", payload="°C", qos=0, retain=False
     )
     mqtt_client.publish(
-        "homie/hot_tub/J335/set_temperature/$datatype",
+        "homie/hot_tub/jacuzzi/set_temperature/$datatype",
         payload="integer",
         qos=0,
         retain=False,
     )
     mqtt_client.publish(
-        "homie/hot_tub/J335/set_temperature/$settable",
+        "homie/hot_tub/jacuzzi/set_temperature/$settable",
         payload="true",
         qos=0,
         retain=False,
     )
 
     mqtt_client.publish(
-        "homie/hot_tub/J335/temperature/$name",
+        "homie/hot_tub/jacuzzi/temperature/$name",
         payload="Temperature",
         qos=0,
         retain=False,
     )
     mqtt_client.publish(
-        "homie/hot_tub/J335/temperature/$unit", payload="°C", qos=0, retain=False
+        "homie/hot_tub/jacuzzi/temperature/$unit", payload="°C", qos=0, retain=False
     )
     mqtt_client.publish(
-        "homie/hot_tub/J335/temperature/$datatype",
+        "homie/hot_tub/jacuzzi/temperature/$datatype",
         payload="integer",
         qos=0,
         retain=False,
     )
     mqtt_client.publish(
-        "homie/hot_tub/J335/temperature/$settable", payload="false", qos=0, retain=False
+        "homie/hot_tub/jacuzzi/temperature/$settable", payload="false", qos=0, retain=False
     )
 
     # Subscribe to MQTT
-    mqtt_client.subscribe("homie/hot_tub/J335/set_temperature/set")
+    mqtt_client.subscribe("homie/hot_tub/jacuzzi/set_temperature/set")
 
 
 async def start_app():
