@@ -140,24 +140,6 @@ def setup_ui_display(spa_ui):
     tempfield.update()
     row += tempfield.get_required_rows()
 
-    # Jacuzzi spas return a pump status of 0x02 when pump
-    # 2 is On, which means the text returned by get_pump()
-    # is "High". Since pump 2 has only 2 states (On or Off)
-    # we use this local string array instead.
-
-    _pump2_text = ["Off", "On", "On"]
-
-    def _get_pump2_text():
-        # A local routine to get current pump 2 status
-        return "Pump 2: {0}".format(_pump2_text[spa.get_pump(2, False)])
-
-    # Add current spa pump 2 value to the status window.
-    pump2field = Textfield(row, col)
-    pump2field.set_update_cb(_get_pump2_text)
-    stswin.add_field(pump2field)
-    pump2field.update()
-    row += pump2field.get_required_rows()
-
     def _get_pump1_text():
         # A local routine to get current pump 1 status
         return "Pump 1: {0}".format(spa.get_pump(1, True))
@@ -180,6 +162,24 @@ def setup_ui_display(spa_ui):
     flowfield.set_update_cb(_get_flow_text)
     stswin.add_field(flowfield)
     flowfield.update()
+
+    # Jacuzzi spas return a pump status of 0x02 when pump
+    # 2 is On, which means the text returned by get_pump()
+    # is "High". Since pump 2 has only 2 states (On or Off)
+    # we use this local string array instead.
+
+    _pump2_text = ["Off", "On", "On"]
+
+    def _get_pump2_text():
+        # A local routine to get current pump 2 status
+        return "Pump 2: {0}".format(_pump2_text[spa.get_pump(2, False)])
+
+    # Add current spa pump 2 value to the status window.
+    pump2field = Textfield(row, col)
+    pump2field.set_update_cb(_get_pump2_text)
+    stswin.add_field(pump2field)
+    pump2field.update()
+    row += pump2field.get_required_rows()
 
     def _get_uvon_text():
         # A local routine to get current UV lamp status
@@ -388,34 +388,7 @@ def setup_ui_display(spa_ui):
     )
     tsetfield.set_dialog(tsetdialog)
 
-    # Add pump 2 to the controls Window.
-    pump2setfield = Textfield(row, col)
-    pump2setfield.set_update_cb(_get_pump2_text)
-    ctlwin.add_field(pump2setfield)
-    pump2setfield.update()
-    row += pump2setfield.get_required_rows()
-
-    class Pump2States(Enum):
-        """enum types for pump 2 states."""
-
-        Off = 0
-        On = 1
-
-    def _change_pump2(newstate):
-        # This local routine starts an asynchronous task to send the
-        # new pump 2 state to the spa.
-        #
-        # Note that we use a lambda to include the newstate parameter
-        # with the coroutine.
-        spa_ui.add_coroutine(lambda: spa.change_pump(2, newstate))
-
-    # Now add the list dialog to the Textfield
-    pump2setdialog = ListDialog(
-        spa_ui.display, _pump2_text, "Select the new state:", _change_pump2
-    )
-    pump2setfield.set_dialog(pump2setdialog)
-
-    # Add pump 1 to the controls Window.
+        # Add pump 1 to the controls Window.
     pump1setfield = Textfield(row, col)
     pump1setfield.set_update_cb(_get_pump1_text)
     ctlwin.add_field(pump1setfield)
@@ -446,6 +419,35 @@ def setup_ui_display(spa_ui):
         spa_ui.display, Pump1States, "Select the new state:", _change_pump1
     )
     pump1setfield.set_dialog(pump1setdialog)
+
+    # Add pump 2 to the controls Window.
+    pump2setfield = Textfield(row, col)
+    pump2setfield.set_update_cb(_get_pump2_text)
+    ctlwin.add_field(pump2setfield)
+    pump2setfield.update()
+    row += pump2setfield.get_required_rows()
+
+    class Pump2States(Enum):
+        """enum types for pump 2 states."""
+
+        Off = 0
+        On = 1
+
+    def _change_pump2(newstate):
+        # This local routine starts an asynchronous task to send the
+        # new pump 2 state to the spa.
+        #
+        # Note that we use a lambda to include the newstate parameter
+        # with the coroutine.
+        spa_ui.add_coroutine(lambda: spa.change_pump(2, newstate))
+
+    # Now add the list dialog to the Textfield
+    pump2setdialog = ListDialog(
+        spa_ui.display, _pump2_text, "Select the new state:", _change_pump2
+    )
+    pump2setfield.set_dialog(pump2setdialog)
+
+
 
     # Add spa time to the controls Window.
     timesetfield = Textfield(row, col)
