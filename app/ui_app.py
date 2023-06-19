@@ -1,7 +1,6 @@
 """ Provides a text-mode windowing user interface for jacuzziRS485.py. """
 
 import sys
-import asyncio
 import argparse
 
 # Create an argument parser
@@ -39,7 +38,6 @@ try:
         Textfield,
         KeyResponse,
         SubWindow,
-        NewWindow,
         PadWindow,
         EditDialog,
         EnumDialog,
