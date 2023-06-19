@@ -1,6 +1,27 @@
-""" Provides a text-mode windowing user interface for jacuzzi.py. """
+""" Provides a text-mode windowing user interface for jacuzziRS485.py. """
 
+import sys
 import asyncio
+import argparse
+
+# Create an argument parser
+parser = argparse.ArgumentParser()
+
+# Add an IP address argument
+parser.add_argument('--ip', type=str, help='IP address')
+parser.add_argument('--port', type=int, help='Port number', default=4257)
+
+# Parse the arguments
+args = parser.parse_args()
+
+# Access the IP address argument
+jacuzzi_ip_address = args.ip
+jacuzzi_port = args.port
+
+# Check if IP address is provided
+if not jacuzzi_ip_address:
+    print("Error: Please provide an IP address for Jacuzzi using the --ip flag. eg. python3 ui_app.py --ip 192.168.1.125")
+    sys.exit(1)
 
 try:
     import jacuzziRS485
@@ -862,8 +883,7 @@ if __name__ == "__main__":
     # SpaProcess instance.
     from cursesui import CursesUI
 
-    spahost = "10.100.10.216"
-    spa = jacuzziRS485.JacuzziRS485(spahost)
+    spa = jacuzziRS485.JacuzziRS485(jacuzzi_ip_address, jacuzzi_port)
 
     # Create the user interface, telling it how
     # to set up the display and keyboard responses.

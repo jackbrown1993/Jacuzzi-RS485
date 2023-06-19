@@ -3,20 +3,46 @@ import jacuzziRS485
 import asyncio
 import paho.mqtt.client as mqtt
 import os
+import sys
 from datetime import datetime
 import logging
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s:%(levelname)s:%(message)s")
 log = logging.getLogger("__name__")
 
-mqtt_host = os.environ.get("MQTT_HOST")
-mqtt_port = int(os.environ.get("MQTT_PORT"))
-mqtt_user = os.environ.get("MQTT_USER")
-mqtt_password = os.environ.get("MQTT_PASSWORD")
+if 'MQTT_IP' not in os.environ:
+    log.error("MQTT IP not provided, please provide IP address or hostname of your MQTT server.")
+    sys.exit(1)
+else:
+    mqtt_ip = os.environ.get("MQTT_IP")
 
-serial_ip = os.environ.get("SERIAL_IP")
-serial_port = int(os.environ.get("SERIAL_PORT"))
+if 'MQTT_USER' not in os.environ:
+    log.error("MQTT user not provided, please provide username of your MQTT server.")
+    sys.exit(1)
+else:
+    mqtt_user = os.environ.get("MQTT_USER")
 
+if 'MQTT_PASSWORD' not in os.environ:
+    log.error("MQTT password not provided, please provide password of your MQTT server.")
+    sys.exit(1)
+else:
+    mqtt_password = os.environ.get("MQTT_PASSWORD")
+
+if 'JACUZZI_IP' not in os.environ:
+    log.error("Jacuzzi IP not provided, please provide IP address or hostname of your Prolink or RS485 Module.")
+    sys.exit(1)
+else:
+    jacuzzi_ip = os.environ.get("JACUZZI_IP")
+
+if 'MQTT_PORT' not in os.environ:
+    mqtt_port = 1883
+else:
+    mqtt_port = os.environ.get("MQTT_PORT")
+
+if 'JACUZZI_PORT' not in os.environ:
+    jacuzzi_port = 4257
+else:
+    jacuzzi_port = os.environ.get("JACUZZI_PORT")
 
 def on_connect(mqttc, obj, flags, rc):
     log.info("Connected to MQTT.")
@@ -29,7 +55,7 @@ def on_message(mqttc, obj, msg):
         + " with value: "
         + msg.payload.decode()
     )
-    if msg.topic == "homie/hot_tub/J335/set_temperature/set":
+    if msg.topic == "homie/hot_tub/jacuzzi/set_temperature/set":
         # Figure this out
         new_temp = int(msg.payload.decode())
         asyncio.run(spa.send_temp_change(new_temp))
@@ -47,14 +73,14 @@ async def read_spa_data(spa, lastupd):
         )
 
         mqtt_client.publish(
-            "homie/hot_tub/J335/set_temperature",
+            "homie/hot_tub/jacuzzi/set_temperature",
             payload=spa.get_settemp(),
             qos=0,
             retain=False,
         )
 
         mqtt_client.publish(
-            "homie/hot_tub/J335/temperature", payload=spa.curtemp, qos=0, retain=False
+            "homie/hot_tub/jacuzzi/temperature", payload=spa.curtemp, qos=0, retain=False
         )
 
     return lastupd
@@ -66,58 +92,58 @@ async def start_mqtt():
     mqtt_client.username_pw_set(username=mqtt_user, password=mqtt_password)
     mqtt_client.on_connect = on_connect
     mqtt_client.on_message = on_message
-    mqtt_client.connect(mqtt_host, mqtt_port)
+    mqtt_client.connect(mqtt_ip, mqtt_port)
     mqtt_client.loop_start()
 
     mqtt_client.publish("homie/hot_tub/$homie", payload="3.0", qos=0, retain=False)
     mqtt_client.publish(
-        "homie/hot_tub/$name", payload="Acorns J335", qos=0, retain=False
+        "homie/hot_tub/$name", payload="Jaccuzi", qos=0, retain=False
     )
     mqtt_client.publish("homie/hot_tub/$state", payload="ready", qos=0, retain=False)
-    mqtt_client.publish("homie/hot_tub/$nodes", payload="J335", qos=0, retain=False)
+    mqtt_client.publish("homie/hot_tub/$nodes", payload="jacuzzi", qos=0, retain=False)
     mqtt_client.publish(
-        "homie/hot_tub/J335/set_temperature/$name",
+        "homie/hot_tub/jacuzzi/set_temperature/$name",
         payload="Set Temperature",
         qos=0,
         retain=False,
     )
     mqtt_client.publish(
-        "homie/hot_tub/J335/set_temperature/$unit", payload="°C", qos=0, retain=False
+        "homie/hot_tub/jacuzzi/set_temperature/$unit", payload="°C", qos=0, retain=False
     )
     mqtt_client.publish(
-        "homie/hot_tub/J335/set_temperature/$datatype",
+        "homie/hot_tub/jacuzzi/set_temperature/$datatype",
         payload="integer",
         qos=0,
         retain=False,
     )
     mqtt_client.publish(
-        "homie/hot_tub/J335/set_temperature/$settable",
+        "homie/hot_tub/jacuzzi/set_temperature/$settable",
         payload="true",
         qos=0,
         retain=False,
     )
 
     mqtt_client.publish(
-        "homie/hot_tub/J335/temperature/$name",
+        "homie/hot_tub/jacuzzi/temperature/$name",
         payload="Temperature",
         qos=0,
         retain=False,
     )
     mqtt_client.publish(
-        "homie/hot_tub/J335/temperature/$unit", payload="°C", qos=0, retain=False
+        "homie/hot_tub/jacuzzi/temperature/$unit", payload="°C", qos=0, retain=False
     )
     mqtt_client.publish(
-        "homie/hot_tub/J335/temperature/$datatype",
+        "homie/hot_tub/jacuzzi/temperature/$datatype",
         payload="integer",
         qos=0,
         retain=False,
     )
     mqtt_client.publish(
-        "homie/hot_tub/J335/temperature/$settable", payload="false", qos=0, retain=False
+        "homie/hot_tub/jacuzzi/temperature/$settable", payload="false", qos=0, retain=False
     )
 
     # Subscribe to MQTT
-    mqtt_client.subscribe("homie/hot_tub/J335/set_temperature/set")
+    mqtt_client.subscribe("homie/hot_tub/jacuzzi/set_temperature/set")
 
 
 async def start_app():
@@ -126,8 +152,8 @@ async def start_app():
     # Connect to MQTT
     await start_mqtt()
 
-    # Connect to Spa (Serial Device)
-    spa = jacuzziRS485.JacuzziRS485(serial_ip, serial_port)
+    # Connect to Jacuzzi
+    spa = jacuzziRS485.JacuzziRS485(jacuzzi_ip, jacuzzi_port)
 
     asyncio.ensure_future(spa.check_connection_status())
     asyncio.ensure_future(spa.listen())

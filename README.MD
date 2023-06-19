@@ -1,75 +1,55 @@
-# Jacuzzi App
+<h1 align="center">Jacuzzi Smart Control</h1>
 
-This repo is still under development.
+<p align="center">
+<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
+</p>
 
-Inspired from / credit to:
-- [https://github.com/ccutrer/balboa_worldwide_app](https://github.com/ccutrer/balboa_worldwide_app)
-- [https://github.com/HyperActiveJ/sundance780-jacuzzi-balboa-rs485-tcp](https://github.com/garbled1/pybalboa)
-- [https://github.com/garbled1/pybalboa](https://github.com/garbled1/pybalboa)
-- [https://github.com/peterg79/bwalink](https://github.com/jshank/bwalink)
-- [https://github.com/dhmsjs/pyjacuzzi](https://github.com/dhmsjs/pyjacuzzi) for making lots of progress on getting this to work with Jacuzzi and especially for code commenting.
+<h2>Project Purpose</h2>
 
+To provide an interface for Jacuzzi's with or without the ProLink module. An RS485 Serial to WiFi adaptor can instead be used, connected to the RS485 port on the main board. The adaptor I used was around £25 on Amazon.co.uk (https://www.amazon.co.uk/gp/product/B097C8PT6F).
 
-## Purpose:
+Currently the project allows control via MQTT or a terminal interface.
 
-To remotely control the Jacuzzi J335 without the expensive SmartTub / ProLink module and celluar subscription (although if you have it, that is also ok). An RS485 Serial to WiFi adaptor is used instead connected to the RS485 port on the main board. The adaptor I used was around £25 on Amazon.co.uk (https://www.amazon.co.uk/gp/product/B097C8PT6F).
+<h2>Getting Started</h2>
 
-The aim is to allow control from either MQTT or from Home Assistant.
+Whether you utilize the Jacuzzi ProLink module or opt for an RS485 to WiFi Adaptor, it is essential to determine the IP address assigned to the module on your home network. In the following example, we have identified the module's IP address as 192.168.1.125. By default, the ProLink module tends to employ port 4257, but if desired, you can specify an alternative port using the "--port" flag.
 
+<h3>Terminal Interface (port flag is optional and defaults to 4257)</h3>
 
-## Configuration:
+python3 app/ui_app.py --ip 192.168.1.125 --port 9988
 
-### If using a Jacuzzi ProLink (not yet supported)
+<h3>MQTT (Current only supported using a Docker container)</h3>
 
-`MQTT_HOST` - DNS or IP of your MQTT server.
+The following environment variables are supported when deploying the MQTT app via Docker.
 
-`MQTT_PORT` - Port that your MQTT server is listening on.
+`MQTT_IP` - IP address of your MQTT server.
 
-`MQTT_USER` - Username of MQTT server.
-
-`MQTT_PASSWORD` - Password of MQTT server.
-
-### If using a RS485 Serial to WiFi Adaptor
-
-`MQTT_HOST` - DNS or IP of your MQTT server.
-
-`MQTT_PORT` - Port that your MQTT server is listening on.
+`MQTT_PORT` - Port that your MQTT server is listening on. (Optional - Defaults to 1883)
 
 `MQTT_USER` - Username of MQTT server.
 
 `MQTT_PASSWORD` - Password of MQTT server.
 
-`SERIAL_IP` - IP address of your Elfin serial to WiFi device (only required if pro_link = false).
+`JACUZZI_IP` - IP address of your ProLink or RS485 to WiFi module.
 
-`SERIAL_PORT` - Port that the NETP service of your serial to WiFi device is running on (only required if pro_link = false).
-
-## MQTT
+`JACUZZI_PORT` - Port of your ProLink or RS485 to WiFi module. (Optional - Defaults to 4257)
 
 An MQTT Bridge is provided to allow easy integration with other systems. You will need a separate MQTT server running (Mosquitto is a relatively easy and robust one). The MQTT topics follow the Homie convention, making them self-describing.
 
 Publishing a float value to ```homie/hot_tub/J335/set_temperature/set``` will change the set temp value of Jacuzzi.
 
-## Docker:
+<h4>Docker</h4>
 
-Run docker image using ```docker run -d -e MQTT_HOST= -e MQTT_PORT=1883 -e MQTT_USER= -e MQTT_PASSWORD= -e SERIAL_IP= -e SERIAL_PORT=8899 ghcr.io/jackbrown1993/jacuzzi-rs485:latest```
+There is published docker image at ghcr.io/jackbrown1993/jacuzzi-rs485:latest which is based on the master branch.
 
-### docker-compose Example (if using a Jacuzzi ProLink):
+Run docker image using published image ```docker run -d -e MQTT_IP= -e MQTT_PORT= -e MQTT_USER= -e MQTT_PASSWORD= -e JACUZZI_IP= -e JACUZZI_PORT= ghcr.io/jackbrown1993/jacuzzi-rs485:latest```
 
-```
-version: '3.8'
-services:
+Run docker image using local code:
 
-  jacuzzi-rs485:
-    image: ghcr.io/jackbrown1993/jacuzzi-rs485:latest
-    container_name: jacuzzi
-    restart: unless-stopped
-    environment:
-      - MQTT_HOST=
-      - MQTT_PORT=1883
-      - MQTT_USER=
-      - MQTT_PASSWORD=
-```
-### docker-compose Example (if using a RS485 Serial to WiFi Adaptor):
+Fist build the image: ```docker build -t jacuzzi-rs485 .```
+Then run the image: ```docker run -e MQTT_IP= -e MQTT_PORT= -e MQTT_USER= -e MQTT_PASSWORD= -e JACUZZI_IP= -e JACUZZI_PORT= jacuzzi-rs485```
+
+docker-compose example using published image:
 
 ```
 version: '3.8'
@@ -80,14 +60,22 @@ services:
     container_name: jacuzzi
     restart: unless-stopped
     environment:
-      - MQTT_HOST=
-      - MQTT_PORT=1883
+      - MQTT_IP=
+      - MQTT_PORT=
       - MQTT_USER=
       - MQTT_PASSWORD=
-      - SERIAL_IP=
-      - SERIAL_PORT=8899
+      - JACUZZI_IP=
+      - JACUZZI_PORT=
 ```
-## Code Quality Checks
 
-When pull requests are opened a Github action is used to ensure code quality:
-- Black to ensure code is formatted
+<h3>Inspirations and Credits</h3>
+
+* https://github.com/ccutrer/balboa_worldwide_app for so much research and documentation on the messages.
+
+* https://github.com/HyperActiveJ/sundance780-jacuzzi-balboa-rs485-tcp for getting me started on decoding messages for my specific Jacuzzi model.
+
+* https://github.com/garbled1/pybalboa for providing the Python module that this code was based on.
+
+* https://github.com/peterg79/bwalink for testing and documenting on the RS485 to WiFi process.
+
+* https://github.com/dhmsjs/pyjacuzzi for making lots of progress on getting this to work with Jacuzzi and his effort on code readability and commenting.
