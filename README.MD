@@ -1,24 +1,24 @@
-<h2 align="center">Jacuzzi Smart Control</h2>
+<h1 align="center">Jacuzzi Smart Control</h1>
 
 <p align="center">
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 </p>
 
-## Purpose
+<h2 align="center">Project Purpose</h2>
 
 To provide an interface for Jacuzzi's with or without the ProLink module. An RS485 Serial to WiFi adaptor can instead be used, connected to the RS485 port on the main board. The adaptor I used was around £25 on Amazon.co.uk (https://www.amazon.co.uk/gp/product/B097C8PT6F).
 
 Currently the project allows control via MQTT or a terminal interface.
 
-## Running the project
+<h2 align="center">Getting Started</h2>
 
 Whether you utilize the Jacuzzi ProLink module or opt for an RS485 to WiFi Adaptor, it is essential to determine the IP address assigned to the module on your home network. In the following example, we have identified the module's IP address as 192.168.1.125. By default, the ProLink module tends to employ port 4257, but if desired, you can specify an alternative port using the "--port" flag.
 
-# Terminal Interface (port flag is optional and defaults to 4257)
+<h3>Terminal Interface (port flag is optional and defaults to 4257)</h3>
 
 python 3 app/ui_app.py --ip 192.168.1.125 --port 9988
 
-# MQTT (Current only supported using a Docker container)
+<h3>MQTT (Current only supported using a Docker container)</h3>
 
 The following environment variables are supported when deploying the MQTT app via Docker.
 
