@@ -22,6 +22,7 @@ from .const import DOMAIN, _LOGGER, PLATFORMS, CONF_SYNC_TIME, DEFAULT_SYNC_TIME
 sys.path.append(os.path.abspath(os.path.join(os.path.abspath(__file__), "..", "..")))
 import app.jacuzziRS485 as jacuzziRS485
 
+
 ## NO IDEA WHAT THIS IS DOING
 async def async_setup(hass: core.HomeAssistant, config: dict):
     """Configure the Balboa Spa Client component using flow only."""
@@ -36,12 +37,13 @@ async def async_setup(hass: core.HomeAssistant, config: dict):
             )
     return True
 
+
 async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Set up platform from a ConfigEntry. In this function
-      we are storing the data for the config entry in hass under 
-      our DOMAIN key. This will allow us to store multiple config 
+      we are storing the data for the config entry in hass under
+      our DOMAIN key. This will allow us to store multiple config
       entries in the event the user wants to setup the integration
     multiple times."""
 
@@ -68,12 +70,13 @@ async def async_setup_entry(
         )
     return True
 
+
 async def update_listener(hass, entry):
     """Handle options update."""
     """Not sure what this is doing, looks like it's setting the spa time to match home assistant and then sleeps for a day before repeating?"""
     if entry.options.get(CONF_SYNC_TIME, DEFAULT_SYNC_TIME):
         _LOGGER.info("Setting up daily time sync.")
-        spa = hass.data[DOMAIN][entry.entry_id]['spa']
+        spa = hass.data[DOMAIN][entry.entry_id]["spa"]
 
         async def sync_time():
             while entry.options.get(CONF_SYNC_TIME, DEFAULT_SYNC_TIME):
@@ -84,6 +87,7 @@ async def update_listener(hass, entry):
                 await asyncio.sleep(86400)
 
         hass.loop.create_task(sync_time())
+
 
 class JacuzziEntity(Entity):
     """Abstract class for all Jacuzzi HASS platforms.
@@ -97,7 +101,7 @@ class JacuzziEntity(Entity):
     def __init__(self, hass, entry, type, num=None):
         """Initialize the spa entity."""
         self.hass = hass
-        self._client = hass.data[DOMAIN][entry.entry_id]['spa']
+        self._client = hass.data[DOMAIN][entry.entry_id]["spa"]
         self._device_name = entry.data[CONF_NAME]
         self._type = type
         self._num = num

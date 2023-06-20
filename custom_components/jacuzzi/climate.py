@@ -26,10 +26,7 @@ from homeassistant.const import (
 )
 
 from . import JacuzziEntity
-from .const import (
-    _LOGGER,
-    CLIMATE_SUPPORTED_MODES
-)
+from .const import _LOGGER, CLIMATE_SUPPORTED_MODES
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -62,11 +59,11 @@ class JacuzziClimate(JacuzziEntity, ClimateEntity):
     def hvac_mode(self) -> str:
         """Return the current HVAC mode."""
         mode = self._client.get_heatmode()
-        #if mode == self._client.HEATMODE_READY:
+        # if mode == self._client.HEATMODE_READY:
         return HVAC_MODE_HEAT
-        #elif mode == self._client.HEATMODE_RNR:
+        # elif mode == self._client.HEATMODE_RNR:
         #    return HVAC_MODE_AUTO
-        #else:
+        # else:
         #    return HVAC_MODE_OFF
 
     @property

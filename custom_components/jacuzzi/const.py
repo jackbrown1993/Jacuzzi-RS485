@@ -1,8 +1,6 @@
 import logging
 
-from homeassistant.components.climate.const import (
-    HVAC_MODE_HEAT
-)
+from homeassistant.components.climate.const import HVAC_MODE_HEAT
 
 _LOGGER = logging.getLogger(__name__)
 
