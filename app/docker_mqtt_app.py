@@ -42,12 +42,12 @@ else:
 if "MQTT_PORT" not in os.environ:
     mqtt_port = 1883
 else:
-    mqtt_port = os.environ.get("MQTT_PORT")
+    mqtt_port = int(os.environ.get("MQTT_PORT"))
 
 if "JACUZZI_PORT" not in os.environ:
     jacuzzi_port = 4257
 else:
-    jacuzzi_port = os.environ.get("JACUZZI_PORT")
+    jacuzzi_port = int(os.environ.get("JACUZZI_PORT"))
 
 
 def on_connect(mqttc, obj, flags, rc):
