@@ -193,7 +193,7 @@ class JacuzziClimate(JacuzziEntity, ClimateEntity):
         if self.hass.config.units.temperature_unit == TEMP_CELSIUS:
             return self._client.TSCALE_C
         return self._client.TSCALE_F
-    
+
     async def async_update(self) -> None:
         """Update all Node data from Hive."""
         print("updating climate")
