@@ -3,6 +3,7 @@ import sys
 import time
 import asyncio
 from typing import Any, Dict
+from datetime import datetime, timedelta
 
 from homeassistant import core, config_entries
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
@@ -11,6 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -22,28 +24,15 @@ from .const import DOMAIN, _LOGGER, PLATFORMS, CONF_SYNC_TIME, DEFAULT_SYNC_TIME
 sys.path.append(os.path.abspath(os.path.join(os.path.abspath(__file__), "..", "..")))
 import app.jacuzziRS485 as jacuzziRS485
 
-
-## NO IDEA WHAT THIS IS DOING
-async def async_setup(hass: core.HomeAssistant, config: dict):
-    """Configure the Balboa Spa Client component using flow only."""
-    hass.data[DOMAIN] = {}
-
-    if DOMAIN in config:
-        for entry in config[DOMAIN]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
-                )
-            )
-    return True
-
+KEEP_ALIVE_INTERVAL = timedelta(minutes=1)
+SYNC_TIME_INTERVAL = timedelta(hours=1)
 
 async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Set up platform from a ConfigEntry. In this function
-      we are storing the data for the config entry in hass under
-      our DOMAIN key. This will allow us to store multiple config
+      we are storing the data for the config entry in hass under 
+      our DOMAIN key. This will allow us to store multiple config 
       entries in the event the user wants to setup the integration
     multiple times."""
 
@@ -54,40 +43,56 @@ async def async_setup_entry(
 
     _LOGGER.info("Attempting to connect to %s", host)
     spa = jacuzziRS485.JacuzziRS485(host)
-    hass.data[DOMAIN][entry.entry_id] = {"spa": spa, "unsub": unsub}
 
-    connected = await spa.connect()
-    if not connected:
+    if not await spa.connect():
         _LOGGER.error("Failed to connect to spa at %s", host)
-        raise ConfigEntryNotReady
+        raise ConfigEntryNotReady("Unable to connect")
 
-    hass.data.setdefault(DOMAIN, {})
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = spa
+    
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Start setting up various sensors etc
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    await async_setup_time_sync(hass, entry)
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     return True
 
+async def async_unload_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    _LOGGER.debug("Disconnecting from spa")
+    #spa: SpaClient = hass.data[DOMAIN][entry.entry_id]
 
-async def update_listener(hass, entry):
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    await spa.disconnect()
+
+    return unload_ok
+
+
+async def update_listener(hass: core.HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
-    """Not sure what this is doing, looks like it's setting the spa time to match home assistant and then sleeps for a day before repeating?"""
-    if entry.options.get(CONF_SYNC_TIME, DEFAULT_SYNC_TIME):
-        _LOGGER.info("Setting up daily time sync.")
-        spa = hass.data[DOMAIN][entry.entry_id]["spa"]
+    await hass.config_entries.async_reload(entry.entry_id)
 
-        async def sync_time():
-            while entry.options.get(CONF_SYNC_TIME, DEFAULT_SYNC_TIME):
-                _LOGGER.info("Syncing spa time with Home Assistant.")
-                await spa.set_time(
-                    time.strptime(str(dt_util.now()), "%Y-%m-%d %H:%M:%S.%f%z")
-                )
-                await asyncio.sleep(86400)
 
-        hass.loop.create_task(sync_time())
+async def async_setup_time_sync(hass: core.HomeAssistant, entry: ConfigEntry) -> None:
+    """Set up the time sync."""
+    if not entry.options.get(CONF_SYNC_TIME, DEFAULT_SYNC_TIME):
+        return
 
+    _LOGGER.debug("Setting up daily time sync")
+    spa = hass.data[DOMAIN][entry.entry_id]
+
+    async def sync_time(now: datetime) -> None:
+        now = dt_util.as_local(now)
+        if (now.hour, now.minute) != (spa.time_hour, spa.time_minute):
+            _LOGGER.debug("Syncing time with Home Assistant")
+            await spa.set_time(now.hour, now.minute)
+
+    await sync_time(dt_util.utcnow())
+    entry.async_on_unload(
+        async_track_time_interval(hass, sync_time, SYNC_TIME_INTERVAL)
+    )
 
 class JacuzziEntity(Entity):
     """Abstract class for all Jacuzzi HASS platforms.
@@ -101,7 +106,7 @@ class JacuzziEntity(Entity):
     def __init__(self, hass, entry, type, num=None):
         """Initialize the spa entity."""
         self.hass = hass
-        self._client = hass.data[DOMAIN][entry.entry_id]["spa"]
+        self._client = hass.data[DOMAIN][entry.entry_id]['spa']
         self._device_name = entry.data[CONF_NAME]
         self._type = type
         self._num = num
@@ -124,7 +129,7 @@ class JacuzziEntity(Entity):
     @property
     def should_poll(self) -> bool:
         """Return false as entities should not be polled."""
-        return False
+        return True
 
     @property
     def unique_id(self):
@@ -149,7 +154,7 @@ class JacuzziEntity(Entity):
         return {
             "identifiers": {(DOMAIN, self._client.get_macaddr())},
             "name": self._device_name,
-            "manufacturer": "Jacuzzi Hot Tubs",
+            "manufacturer": "Jacuzzi Hot Tub",
             "model": self._client.get_model_name(),
             "sw_version": self._client.get_ssid(),
             "connections": {(CONNECTION_NETWORK_MAC, self._client.get_macaddr())},
