@@ -27,12 +27,13 @@ import app.jacuzziRS485 as jacuzziRS485
 KEEP_ALIVE_INTERVAL = timedelta(minutes=1)
 SYNC_TIME_INTERVAL = timedelta(hours=1)
 
+
 async def async_setup_entry(
     hass: core.HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Set up platform from a ConfigEntry. In this function
-      we are storing the data for the config entry in hass under 
-      our DOMAIN key. This will allow us to store multiple config 
+      we are storing the data for the config entry in hass under
+      our DOMAIN key. This will allow us to store multiple config
       entries in the event the user wants to setup the integration
     multiple times."""
 
@@ -49,7 +50,7 @@ async def async_setup_entry(
         raise ConfigEntryNotReady("Unable to connect")
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = spa
-    
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     await async_setup_time_sync(hass, entry)
@@ -57,10 +58,11 @@ async def async_setup_entry(
 
     return True
 
+
 async def async_unload_entry(hass: core.HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     _LOGGER.debug("Disconnecting from spa")
-    #spa: SpaClient = hass.data[DOMAIN][entry.entry_id]
+    # spa: SpaClient = hass.data[DOMAIN][entry.entry_id]
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
@@ -94,6 +96,7 @@ async def async_setup_time_sync(hass: core.HomeAssistant, entry: ConfigEntry) ->
         async_track_time_interval(hass, sync_time, SYNC_TIME_INTERVAL)
     )
 
+
 class JacuzziEntity(Entity):
     """Abstract class for all Jacuzzi HASS platforms.
 
@@ -106,7 +109,7 @@ class JacuzziEntity(Entity):
     def __init__(self, hass, entry, type, num=None):
         """Initialize the spa entity."""
         self.hass = hass
-        self._client = hass.data[DOMAIN][entry.entry_id]['spa']
+        self._client = hass.data[DOMAIN][entry.entry_id]["spa"]
         self._device_name = entry.data[CONF_NAME]
         self._type = type
         self._num = num
