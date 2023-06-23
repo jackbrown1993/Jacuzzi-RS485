@@ -43,6 +43,7 @@ try:
         EnumDialog,
         ListDialog,
         TextDialog,
+        FloatDialog,
     )
 except ImportError:
     print("Could not import something needed from cursesui.py!")
@@ -391,7 +392,7 @@ def setup_ui_display(spa_ui):
         spa_ui.add_coroutine(lambda: spa.send_temp_change(newtemp))
 
     # Now add the dialog to the Textfield
-    tsetdialog = EditDialog(
+    tsetdialog = FloatDialog(
         spa_ui.display, "Enter the new setpoint\n" "temperature:", _change_settemp
     )
     tsetfield.set_dialog(tsetdialog)
