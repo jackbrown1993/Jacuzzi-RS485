@@ -1408,22 +1408,23 @@ class EditDialog(NewWindow):
 
     def _setup_dialog_keys(self):
         """Configures a KeyResponse instance to handle
-        user keyhits for this dialog Window.  Override
+        user keyhits for this dialog Window.  This default
+        method will handle integer values only. Override
         this method if you want to handle user keyhits
         differently.
         """
-        # The edit KeyResponse needs to be different
+        # The edit KeyResponse may need to be different
         # for different edit types (e.g. int, float, enum, text)
         key_list = [
             curses.KEY_BACKSPACE,
-            # curses.KEY_DC,
+            # curses.KEY_DC, # DELETE key
             ord("-"),
         ]
         edit_keys = KeyResponse("Edit", key_list)
         edit_keys.set_filter(curses.ascii.isdigit)
         self.add_key(edit_keys)
 
-        def _kr_edit_text(keyhit):
+        def _kr_edit_int(keyhit):
             # Write digits and minus signs into the Textfield
             curtext = self.editfield.get_text()
             if curses.ascii.isdigit(keyhit) or keyhit == ord("-"):
@@ -1432,7 +1433,7 @@ class EditDialog(NewWindow):
                 curtext = curtext[:-1]
             self.editfield.write(curtext)
 
-        edit_keys.bind(_kr_edit_text)
+        edit_keys.bind(_kr_edit_int)
 
         # The ENTER key now should end editing the
         # Textfield.
@@ -1483,17 +1484,6 @@ class EditDialog(NewWindow):
             return result
         except ValueError:
             self.stsfield.write("Not an integer!")
-            return None
-
-    def convert_to_float(self):
-        """Tries to convert the editfield text
-        into a floating point value.
-        """
-        try:
-            result = float(self.editfield.get_text())
-            return result
-        except ValueError:
-            self.stsfield.write("Not a float value!")
             return None
 
     def begin(self):
@@ -1557,6 +1547,74 @@ class EditDialog(NewWindow):
 
         # Remove this dialog Window
         self.parent.remove_child(self)
+
+
+class FloatDialog(EditDialog):
+    """Encapsulates the behavior of temporary, popup dialog Window
+    used to modify the float value displayed in a Textfield.
+
+    Given its parent Window, a prompt string, and a callback function
+    that will save the new string to the appropriate variable, this
+    class creates, maintains, and closes the dialog Window when
+    the user is done.
+    """
+
+    def __init__(self, parent, prompt, save_cb=None):
+        super().__init__(parent, prompt, save_cb)
+
+        self.converter = self.convert_to_float
+
+    def _setup_dialog_keys(self):
+        """Override's the parent method to edit floating point
+        values.
+        """
+        # The edit KeyResponse may need to be different
+        # for different edit types (e.g. int, float, enum, text)
+        key_list = [
+            curses.KEY_BACKSPACE,
+            # curses.KEY_DC, # DELETE key
+            ord("-"),
+            ord("."),
+        ]
+        edit_keys = KeyResponse("Edit", key_list)
+        edit_keys.set_filter(curses.ascii.isdigit)
+        self.add_key(edit_keys)
+
+        def _kr_edit_float(keyhit):
+            # Write digits, decimal points and minus signs into the Textfield
+            curtext = self.editfield.get_text()
+            if curses.ascii.isdigit(keyhit) or keyhit == ord("-") or keyhit == ord("."):
+                curtext += chr(keyhit)
+            elif keyhit == curses.KEY_BACKSPACE:
+                curtext = curtext[:-1]
+            self.editfield.write(curtext)
+
+        edit_keys.bind(_kr_edit_float)
+
+        # The ENTER key now should end editing the
+        # Textfield.
+        self.parent.get_key("enter").bind(self._kr_end_field_edit)
+
+        # The TAB key should do nothing
+        def _kr_do_nothing(_):
+            pass
+
+        self.parent.get_key("tab").bind(_kr_do_nothing)
+
+        # The ESC should quit without changing
+        # anything.
+        self.parent.get_key("esc").bind(self._kr_quit_field_edit)
+
+    def convert_to_float(self):
+        """Tries to convert the editfield text
+        into a floating point value.
+        """
+        try:
+            result = float(self.editfield.get_text())
+            return result
+        except ValueError:
+            self.stsfield.write("Not a float value!")
+            return None
 
 
 class TextDialog(EditDialog):

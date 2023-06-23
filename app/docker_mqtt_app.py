@@ -1,7 +1,9 @@
-import jacuzziRS485
-
+import logging
+import os
 import asyncio
 import paho.mqtt.client as mqtt
+
+import jacuzziRS485
 import os
 import sys
 import logging
@@ -51,10 +53,13 @@ else:
 
 
 def on_connect(mqttc, obj, flags, rc):
+    """This is triggered whenever we connect to MQTT"""
     log.info("Connected to MQTT.")
 
 
 def on_message(mqttc, obj, msg):
+    """This is triggered whenever we recieve a message on MQTT"""
+    global spa
     log.info(
         "MQTT message received on topic: "
         + msg.topic
@@ -62,15 +67,14 @@ def on_message(mqttc, obj, msg):
         + msg.payload.decode()
     )
     if msg.topic == "homie/hot_tub/jacuzzi/set_temperature/set":
-        # Figure this out
-        new_temp = int(msg.payload.decode())
+        new_temp = float(msg.payload.decode())
         asyncio.run(spa.send_temp_change(new_temp))
-        log.info("as")
     else:
         log.debug("Unhandled MQTT message on topic {}.".format(msg.topic))
 
 
 async def read_spa_data(spa, lastupd):
+    """This is triggered whenever spa data has changed"""
     await asyncio.sleep(1)
     if spa.lastupd != lastupd:
         lastupd = spa.lastupd
