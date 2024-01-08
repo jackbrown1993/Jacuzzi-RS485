@@ -477,7 +477,9 @@ class JacuzziRS485(BalboaSpaWifi):
         """Overrides parent method only to change log messaging."""
         # Wait for the channel to be set
         while not self.connected:
-            self.log.info("Waiting for the Jacuzzi to be connected before sending message...")
+            self.log.info(
+                "Waiting for the Jacuzzi to be connected before sending message..."
+            )
             time.sleep(2)
 
         # Wait for the channel to be set
