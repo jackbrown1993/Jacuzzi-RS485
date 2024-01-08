@@ -1,0 +1,14 @@
+version: '3.8'
+services:
+
+  jacuzzi-rs485:
+    image: ghcr.io/jackbrown1993/jacuzzi-rs485:latest
+    container_name: jacuzzi
+    restart: unless-stopped
+    environment:
+      - MQTT_IP=
+      - MQTT_PORT=
+      - MQTT_USER=
+      - MQTT_PASSWORD=
+      - JACUZZI_IP=
+      - JACUZZI_PORT=
