@@ -79,7 +79,9 @@ async def read_spa_data(spa, lastupd):
     if spa.lastupd != lastupd:
         lastupd = spa.lastupd
         log.info(
-            "Jacuzzi temperature is set to {}, actual temperature is {}".format(spa.get_settemp(), spa.curtemp)
+            "Jacuzzi temperature is set to {}, actual temperature is {}".format(
+                spa.get_settemp(), spa.curtemp
+            )
         )
 
         mqtt_client.publish(

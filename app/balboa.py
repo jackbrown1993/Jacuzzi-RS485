@@ -215,7 +215,9 @@ class BalboaSpaWifi:
             )
         except (asyncio.TimeoutError, ConnectionRefusedError):
             self.log.error(
-                "Cannot connect to Jacuzzi at {0}:{1}, sleeping for 5 seconds before trying again.".format(self.host, self.port)
+                "Cannot connect to Jacuzzi at {0}:{1}, sleeping for 5 seconds before trying again.".format(
+                    self.host, self.port
+                )
             )
             await asyncio.sleep(5)
             return False
