@@ -6,7 +6,7 @@
 
 <h2>Project Purpose</h2>
 
-To provide an interface for Jacuzzi's with or without the ProLink module. An RS485 Serial to WiFi adaptor can instead be used, connected to the RS485 port on the main board. The adaptor I used was around £25 on Amazon.co.uk (https://www.amazon.co.uk/gp/product/B097C8PT6F).
+To provide an interface for Jacuzzi's with or without the ProLink module. An RS485 Serial to WiFi adaptor can instead be used, connected to the RS485 port on the main board. The adaptor I used was around £25 on Amazon.co.uk (https://www.amazon.co.uk/gp/product/B097C8PT6F). With settings as 115200,8,1,NONE
 
 Currently the project allows control via MQTT or a terminal interface.
 
