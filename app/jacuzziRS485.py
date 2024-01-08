@@ -475,15 +475,17 @@ class JacuzziRS485(BalboaSpaWifi):
 
     async def send_message(self, *bytes):
         """Overrides parent method only to change log messaging."""
-        # If not connected, we can't send a message
-        if not self.connected:
-            self.log.error("Attempted to send a message when not connected.")
-            return
+        # Wait for the channel to be set
+        while not self.connected:
+            self.log.info(
+                "Waiting for the Jacuzzi to be connected before sending message..."
+            )
+            time.sleep(2)
 
-        # If we don't have a channel number yet, we can't form a message
-        if self.channel is None:
-            self.log.error("Attempted to send a message without a channel set.")
-            return
+        # Wait for the channel to be set
+        while self.channel is None:
+            self.log.info("Waiting for the channel to be set before sending message...")
+            time.sleep(2)
 
         message_length = len(bytes) + 2
         data = bytearray(message_length + 2)

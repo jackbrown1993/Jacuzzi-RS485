@@ -54,7 +54,7 @@ else:
 
 def on_connect(mqttc, obj, flags, rc):
     """This is triggered whenever we connect to MQTT"""
-    log.info("Connected to MQTT.")
+    log.info("Connected to MQTT broker.")
 
 
 def on_message(mqttc, obj, msg):
