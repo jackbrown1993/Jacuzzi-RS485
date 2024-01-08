@@ -181,3 +181,7 @@ dmypy.json
 .vscode/
 
 logfile.txt
+
+# Home Assistant configuration
+config/*
+!config/configuration.yaml

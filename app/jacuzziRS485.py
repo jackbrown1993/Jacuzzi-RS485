@@ -37,7 +37,8 @@ from datetime import datetime
 #
 # Here we use it intentionally to cleanly reference or override balboa
 # module objects when they need to be different for Jacuzzi systems.
-from balboa import *
+# We use .balboa so path is relative, without we get errors in HASS integration
+from .balboa import *
 
 from enum import Enum
 
