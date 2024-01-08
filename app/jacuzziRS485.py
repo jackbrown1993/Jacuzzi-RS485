@@ -969,7 +969,7 @@ class JacuzziRS485(BalboaSpaWifi):
 
                     # Wait a bit before checking again. The spa seems to need
                     # more time to recover from a module_ident_req() command.
-                    # await asyncio.sleep(10)
+                    await asyncio.sleep(10)
                     continue
 
             # Wait a bit before checking again.
