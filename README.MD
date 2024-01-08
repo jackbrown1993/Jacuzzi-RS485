@@ -47,9 +47,11 @@ Run docker image using published image ```docker run -d -e MQTT_IP= -e MQTT_PORT
 Run docker image built locally:
 
 Fist build the image: ```docker build -t jacuzzi-rs485 .```
+
 Then run the image: ```docker run -e MQTT_IP= -e MQTT_PORT= -e MQTT_USER= -e MQTT_PASSWORD= -e JACUZZI_IP= -e JACUZZI_PORT= jacuzzi-rs485```
 
 docker-compose example using published image: docker-compose.yml
+
 docker-compose example with image built locally: docker-compose.dev.yml
 
 <h3>Inspirations and Credits</h3>
