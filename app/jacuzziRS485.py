@@ -478,12 +478,12 @@ class JacuzziRS485(BalboaSpaWifi):
         # Wait for the channel to be set
         while not self.connected:
             self.log.info("Waiting for the Jacuzzi to be connected before sending message...")
-            time.sleep(2)  # You can adjust the sleep duration based on your needs
+            time.sleep(2)
 
         # Wait for the channel to be set
         while self.channel is None:
             self.log.info("Waiting for the channel to be set before sending message...")
-            time.sleep(2)  # You can adjust the sleep duration based on your needs
+            time.sleep(2)
 
         message_length = len(bytes) + 2
         data = bytearray(message_length + 2)
