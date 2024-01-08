@@ -79,7 +79,7 @@ async def read_spa_data(spa, lastupd):
     if spa.lastupd != lastupd:
         lastupd = spa.lastupd
         log.info(
-            "Set Temp is {} and Water Temp is {}".format(spa.get_settemp(), spa.curtemp)
+            "Jacuzzi temperature is set to {}, actual temperature is {}".format(spa.get_settemp(), spa.curtemp)
         )
 
         mqtt_client.publish(
@@ -161,7 +161,6 @@ async def start_mqtt():
 
 
 async def start_app():
-    """Test a miniature engine of talking to the spa."""
     global spa
     # Connect to MQTT
     await start_mqtt()
