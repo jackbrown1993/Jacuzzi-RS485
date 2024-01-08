@@ -20,7 +20,7 @@ python3 app/ui_app.py --ip 192.168.1.125 --port 9988
 
 <h3>MQTT (Current only supported using a Docker container)</h3>
 
-The following environment variables are supported when deploying the MQTT app via Docker.
+Rename the file example.env to .env and populate the following variables.
 
 `MQTT_IP` - IP address of your MQTT server.
 
@@ -44,29 +44,13 @@ There is published docker image at ghcr.io/jackbrown1993/jacuzzi-rs485:latest wh
 
 Run docker image using published image ```docker run -d -e MQTT_IP= -e MQTT_PORT= -e MQTT_USER= -e MQTT_PASSWORD= -e JACUZZI_IP= -e JACUZZI_PORT= ghcr.io/jackbrown1993/jacuzzi-rs485:latest```
 
-Run docker image using local code:
+Run docker image built locally:
 
 Fist build the image: ```docker build -t jacuzzi-rs485 .```
 Then run the image: ```docker run -e MQTT_IP= -e MQTT_PORT= -e MQTT_USER= -e MQTT_PASSWORD= -e JACUZZI_IP= -e JACUZZI_PORT= jacuzzi-rs485```
 
-docker-compose example using published image:
-
-```
-version: '3.8'
-services:
-
-  jacuzzi-rs485:
-    image: ghcr.io/jackbrown1993/jacuzzi-rs485:latest
-    container_name: jacuzzi
-    restart: unless-stopped
-    environment:
-      - MQTT_IP=
-      - MQTT_PORT=
-      - MQTT_USER=
-      - MQTT_PASSWORD=
-      - JACUZZI_IP=
-      - JACUZZI_PORT=
-```
+docker-compose example using published image: docker-compose.yml
+docker-compose example with image built locally: docker-compose.dev.yml
 
 <h3>Inspirations and Credits</h3>
 

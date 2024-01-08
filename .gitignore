@@ -181,3 +181,4 @@ dmypy.json
 .vscode/
 
 logfile.txt
+.env
