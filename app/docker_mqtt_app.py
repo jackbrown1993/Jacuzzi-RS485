@@ -55,6 +55,8 @@ else:
 def on_connect(mqttc, obj, flags, rc):
     """This is triggered whenever we connect to MQTT"""
     log.info("Connected to MQTT broker.")
+    # Subscribe to MQTT
+    mqtt_client.subscribe("homie/hot_tub/jacuzzi/set_temperature/set")
 
 
 def on_message(mqttc, obj, msg):
@@ -157,9 +159,6 @@ async def start_mqtt():
         qos=0,
         retain=False,
     )
-
-    # Subscribe to MQTT
-    mqtt_client.subscribe("homie/hot_tub/jacuzzi/set_temperature/set")
 
 
 async def start_app():
