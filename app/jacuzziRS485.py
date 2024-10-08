@@ -17,6 +17,7 @@ dhmsjs (https://github.com/dhmsjs)
 along with several others here unnamed, who have helped reverse engineer
 balboa hot tub control systems and their many rebranded derivatives.
 """
+
 import asyncio
 import time
 import queue
@@ -426,9 +427,9 @@ class JacuzziRS485(BalboaSpaWifi):
         data = bytearray(6)
         data[0] = self.channel
         data[1] = 0xBF  # "PF" byte (always either 0xAF or 0xBF)
-        data[
-            2
-        ] = 0x1B  # BMTR_FILTER_INFO_RESP = 0x23, BMTS_FILTER_REQ = 0x22 for balboa
+        data[2] = (
+            0x1B  # BMTR_FILTER_INFO_RESP = 0x23, BMTS_FILTER_REQ = 0x22 for balboa
+        )
         data[3] = starthour
         data[4] = durationhrs
         data[5] = frequency
@@ -455,9 +456,9 @@ class JacuzziRS485(BalboaSpaWifi):
         data = bytearray(6)
         data[0] = self.channel
         data[1] = 0xBF  # "PF" byte (always either 0xAF or 0xBF)
-        data[
-            2
-        ] = 0x1C  # BMTR_FILTER_INFO_RESP = 0x23, BMTS_FILTER_REQ = 0x22 for balboa
+        data[2] = (
+            0x1C  # BMTR_FILTER_INFO_RESP = 0x23, BMTS_FILTER_REQ = 0x22 for balboa
+        )
         data[3] = mode
         data[4] = 0
         data[5] = 0
