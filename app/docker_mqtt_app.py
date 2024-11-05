@@ -37,11 +37,13 @@ else:
 mqtt_port = int(os.environ.get("MQTT_PORT", 1883))
 jacuzzi_port = int(os.environ.get("JACUZZI_PORT", 4257))
 
+
 # MQTT Client setup
 def on_connect(mqttc, obj, flags, rc):
     """Triggered when connected to MQTT"""
     log.info("Connected to MQTT broker.")
     mqtt_client.subscribe("homie/hot_tub/jacuzzi/set_temperature/set")
+
 
 async def on_message(mqttc, obj, msg):
     """Triggered upon receiving an MQTT message"""
@@ -53,6 +55,7 @@ async def on_message(mqttc, obj, msg):
     else:
         log.debug(f"Unhandled MQTT topic: {msg.topic}")
 
+
 async def read_spa_data(spa, lastupd):
     """Reads and publishes spa data changes to MQTT"""
     await asyncio.sleep(3)
@@ -61,7 +64,7 @@ async def read_spa_data(spa, lastupd):
         log.info(
             f"Set temperature: {spa.get_settemp()}, current temperature: {spa.curtemp}"
         )
-        
+
         mqtt_client.publish(
             "homie/hot_tub/jacuzzi/set_temperature",
             payload=spa.get_settemp(),
@@ -78,13 +81,14 @@ async def read_spa_data(spa, lastupd):
 
     return lastupd
 
+
 def start_mqtt():
     """Sets up MQTT topics and publishes initial state"""
     mqtt_client.publish("homie/hot_tub/$homie", payload="3.0", qos=0, retain=False)
     mqtt_client.publish("homie/hot_tub/$name", payload="Jacuzzi", qos=0, retain=False)
     mqtt_client.publish("homie/hot_tub/$state", payload="ready", qos=0, retain=False)
     mqtt_client.publish("homie/hot_tub/$nodes", payload="jacuzzi", qos=0, retain=False)
-    
+
     # Set temperature-related topics
     mqtt_client.publish(
         "homie/hot_tub/jacuzzi/set_temperature/$name",
@@ -131,9 +135,10 @@ def start_mqtt():
         retain=False,
     )
 
+
 async def main():
     global spa  # Define spa here or import from jacuzziRS485 if required
-    
+
     # Initialize MQTT client
     global mqtt_client
     mqtt_client = mqtt.Client("jacuzzi_rs485")
@@ -141,9 +146,9 @@ async def main():
     mqtt_client.on_connect = on_connect
     mqtt_client.on_message = on_message
     mqtt_client.connect(mqtt_ip, mqtt_port)
-    
+
     # Start MQTT in a separate thread and set up initial topics
-    mqtt_client.loop_start()  
+    mqtt_client.loop_start()
     start_mqtt()
 
     # Initialize spa and last update
@@ -157,6 +162,7 @@ async def main():
             await asyncio.sleep(5)  # Throttle loop delay
     finally:
         mqtt_client.loop_stop()  # Stop MQTT loop cleanly on exit
+
 
 # Run the main async function
 asyncio.run(main())
