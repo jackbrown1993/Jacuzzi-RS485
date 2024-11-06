@@ -1,6 +1,5 @@
 import logging
 import os
-import sys
 import asyncio
 import paho.mqtt.client as mqtt
 import jacuzziRS485
@@ -9,60 +8,74 @@ import jacuzziRS485
 logging.basicConfig(level=logging.INFO, format="%(asctime)s:%(levelname)s:%(message)s")
 log = logging.getLogger("__name__")
 
-# Environment variable checks
 if "MQTT_IP" not in os.environ:
-    log.error("MQTT IP not provided. Please provide the MQTT server address.")
+    log.error(
+        "MQTT IP not provided, please provide IP address or hostname of your MQTT server."
+    )
     sys.exit(1)
 else:
     mqtt_ip = os.environ.get("MQTT_IP")
 
 if "MQTT_USER" not in os.environ:
-    log.error("MQTT user not provided. Please provide the username for MQTT server.")
+    log.error("MQTT user not provided, please provide username of your MQTT server.")
     sys.exit(1)
 else:
     mqtt_user = os.environ.get("MQTT_USER")
 
 if "MQTT_PASSWORD" not in os.environ:
-    log.error("MQTT password not provided. Please provide the MQTT server password.")
+    log.error(
+        "MQTT password not provided, please provide password of your MQTT server."
+    )
     sys.exit(1)
 else:
     mqtt_password = os.environ.get("MQTT_PASSWORD")
 
 if "JACUZZI_IP" not in os.environ:
-    log.error("Jacuzzi IP not provided. Please provide the Jacuzzi module address.")
+    log.error(
+        "Jacuzzi IP not provided, please provide IP address or hostname of your Prolink or RS485 Module."
+    )
     sys.exit(1)
 else:
     jacuzzi_ip = os.environ.get("JACUZZI_IP")
 
-mqtt_port = int(os.environ.get("MQTT_PORT", 1883))
-jacuzzi_port = int(os.environ.get("JACUZZI_PORT", 4257))
+if "MQTT_PORT" not in os.environ:
+    mqtt_port = 1883
+else:
+    mqtt_port = int(os.environ.get("MQTT_PORT"))
+
+if "JACUZZI_PORT" not in os.environ:
+    jacuzzi_port = 4257
+else:
+    jacuzzi_port = int(os.environ.get("JACUZZI_PORT"))
 
 
-# MQTT Client setup
 def on_connect(mqttc, obj, flags, rc):
-    """Triggered when connected to MQTT"""
+    """This is triggered whenever we connect to MQTT"""
     log.info("Connected to MQTT broker.")
+    # Subscribe to MQTT
     mqtt_client.subscribe("homie/hot_tub/jacuzzi/set_temperature/set")
 
 
-async def on_message(mqttc, obj, msg):
-    """Triggered upon receiving an MQTT message"""
+def on_message(mqttc, obj, msg):
+    """This is triggered whenever we receive a message on MQTT"""
     global spa
-    log.info(f"Received MQTT message on {msg.topic}: {msg.payload.decode()}")
+    log.info(
+        f"MQTT message received on topic: {msg.topic} with value: {msg.payload.decode()}"
+    )
     if msg.topic == "homie/hot_tub/jacuzzi/set_temperature/set":
         new_temp = float(msg.payload.decode())
-        await spa.send_temp_change(new_temp)  # Awaiting the async function directly
+        asyncio.run(spa.send_temp_change(new_temp))
     else:
-        log.debug(f"Unhandled MQTT topic: {msg.topic}")
+        log.debug(f"Unhandled MQTT message on topic {msg.topic}.")
 
 
 async def read_spa_data(spa, lastupd):
-    """Reads and publishes spa data changes to MQTT"""
-    await asyncio.sleep(3)
+    """This is triggered whenever spa data has changed"""
+    await asyncio.sleep(1)
     if spa.lastupd != lastupd:
         lastupd = spa.lastupd
         log.info(
-            f"Set temperature: {spa.get_settemp()}, current temperature: {spa.curtemp}"
+            f"Jacuzzi temperature is set to {spa.get_settemp()}, actual temperature is {spa.curtemp}"
         )
 
         mqtt_client.publish(
@@ -82,14 +95,22 @@ async def read_spa_data(spa, lastupd):
     return lastupd
 
 
-def start_mqtt():
-    """Sets up MQTT topics and publishes initial state"""
+async def start_mqtt():
+    global mqtt_client
+    mqtt_client = mqtt.Client("jacuzzi_rs485")
+    mqtt_client.username_pw_set(username=mqtt_user, password=mqtt_password)
+    mqtt_client.on_connect = on_connect
+    mqtt_client.on_message = on_message
+    mqtt_client.connect(mqtt_ip, mqtt_port)
+    mqtt_client.loop_start()
+
+    # Initial MQTT publishes
     mqtt_client.publish("homie/hot_tub/$homie", payload="3.0", qos=0, retain=False)
     mqtt_client.publish("homie/hot_tub/$name", payload="Jacuzzi", qos=0, retain=False)
     mqtt_client.publish("homie/hot_tub/$state", payload="ready", qos=0, retain=False)
     mqtt_client.publish("homie/hot_tub/$nodes", payload="jacuzzi", qos=0, retain=False)
 
-    # Set temperature-related topics
+    # Setting up temperature-related MQTT topics
     mqtt_client.publish(
         "homie/hot_tub/jacuzzi/set_temperature/$name",
         payload="Set Temperature",
@@ -112,7 +133,7 @@ def start_mqtt():
         retain=False,
     )
 
-    # Current temperature-related topics
+    # Setting up current temperature-related MQTT topics
     mqtt_client.publish(
         "homie/hot_tub/jacuzzi/temperature/$name",
         payload="Temperature",
@@ -136,33 +157,23 @@ def start_mqtt():
     )
 
 
-async def main():
-    global spa  # Define spa here or import from jacuzziRS485 if required
+async def start_app():
+    global spa
+    # Connect to MQTT
+    await start_mqtt()
 
-    # Initialize MQTT client
-    global mqtt_client
-    mqtt_client = mqtt.Client("jacuzzi_rs485")
-    mqtt_client.username_pw_set(username=mqtt_user, password=mqtt_password)
-    mqtt_client.on_connect = on_connect
-    mqtt_client.on_message = on_message
-    mqtt_client.connect(mqtt_ip, mqtt_port)
+    # Connect to Jacuzzi
+    spa = jacuzziRS485.JacuzziRS485(jacuzzi_ip, jacuzzi_port)
 
-    # Start MQTT in a separate thread and set up initial topics
-    mqtt_client.loop_start()
-    start_mqtt()
+    # Start background tasks
+    asyncio.ensure_future(spa.check_connection_status())
+    asyncio.ensure_future(spa.listen())
 
-    # Initialize spa and last update
-    spa = jacuzziRS485.Spa(jacuzzi_ip, jacuzzi_port)  # Adjust as needed
-    last_update = None
+    lastupd = 0
 
-    try:
-        # Main loop to periodically read and publish spa data
-        while True:
-            last_update = await read_spa_data(spa, last_update)
-            await asyncio.sleep(5)  # Throttle loop delay
-    finally:
-        mqtt_client.loop_stop()  # Stop MQTT loop cleanly on exit
+    while True:
+        lastupd = await read_spa_data(spa, lastupd)
 
 
-# Run the main async function
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(start_app())
