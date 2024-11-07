@@ -202,12 +202,12 @@ async def start_mqtt():
         entity_id="jacuzzi_pump_1_control",
         name="Pump 1",
         component="switch",
-        state_topic="jacuzzi/pump_1/state",  # State topic to monitor pump status
-        command_topic="jacuzzi/pump_1/set",  # Command topic to send on/off commands to the pump
+        state_topic="jacuzzi/pump_1/state",  
+        command_topic="jacuzzi/pump_1/set",  
         extra_config={
-            "payload_on": "1",  # Value to turn the pump on
-            "payload_off": "0",  # Value to turn the pump off
-            "icon": "mdi:water-pump"  # Optional icon for the switch control
+            "payload_on": "1",  
+            "payload_off": "0",  
+            "icon": "mdi:water-pump"  
         }
     )
 
@@ -216,12 +216,12 @@ async def start_mqtt():
         entity_id="jacuzzi_pump_2_control",
         name="Pump 2",
         component="switch",
-        state_topic="jacuzzi/pump_2/state",  # State topic to monitor pump status
-        command_topic="jacuzzi/pump_2/set",  # Command topic to send on/off commands to the pump
+        state_topic="jacuzzi/pump_2/state",  
+        command_topic="jacuzzi/pump_2/set",  
         extra_config={
-            "payload_on": "1",  # Value to turn the pump on
-            "payload_off": "0",  # Value to turn the pump off
-            "icon": "mdi:water-pump"  # Optional icon for the switch control
+            "payload_on": "1",  
+            "payload_off": "0",  
+            "icon": "mdi:water-pump"  
         }
     )
 
@@ -232,8 +232,8 @@ async def start_mqtt():
         component="sensor",
         state_topic="jacuzzi/connection/last_update",
         extra_config={
-            "device_class": "timestamp",  # Use 'timestamp' for the device class
-            "icon": "mdi:clock"  # Optional icon for the sensor
+            "device_class": "timestamp",
+            "icon": "mdi:clock"
         }
     )
 
@@ -242,12 +242,12 @@ async def start_mqtt():
         entity_id="jacuzzi_connection_status",
         name="Connection Status",
         component="binary_sensor",
-        state_topic="jacuzzi/connection/status",  # Topic to receive connection status
+        state_topic="jacuzzi/connection/status",
         extra_config={
-            "device_class": "connectivity",  # Connectivity class for binary sensor
-            "payload_on": "1",  # Indicates connected status
-            "payload_off": "0",  # Indicates disconnected status
-            "icon": "mdi:network"  # Optional icon for connection status
+            "device_class": "connectivity",
+            "payload_on": "1",
+            "payload_off": "0",
+            "icon": "mdi:network"
         }
     )
 
@@ -324,10 +324,10 @@ async def start_mqtt():
         component="binary_sensor",
         state_topic="jacuzzi/uv_lamp/state",
         extra_config={
-            "device_class": "power",  # 'power' is commonly used for on/off devices like UV lamps
-            "payload_on": "On",  # Value to indicate the UV lamp is on
-            "payload_off": "Off",  # Value to indicate the UV lamp is off
-            "icon": "mdi:lightbulb-cfl"  # Optional icon for the UV lamp
+            "device_class": "power",
+            "payload_on": "On",
+            "payload_off": "Off",
+            "icon": "mdi:lightbulb-cfl"
         }
     )
 
