@@ -74,8 +74,11 @@ def on_message(mqttc, obj, msg):
     else:
         log.debug(f"Unhandled MQTT message on topic {msg.topic}.")
 
+
 # Function to publish Home Assistant discovery configuration
-def publish_discovery_config(entity_id, name, component, state_topic, command_topic=None, extra_config={}):
+def publish_discovery_config(
+    entity_id, name, component, state_topic, command_topic=None, extra_config={}
+):
     discovery_topic = f"homeassistant/{component}/{entity_id}/config"
     payload = {
         "name": name,
@@ -86,8 +89,8 @@ def publish_discovery_config(entity_id, name, component, state_topic, command_to
             "name": "Jacuzzi",
             "manufacturer": "https://github.com/jackbrown1993",
             "model": "Jacuzzi J335 (2019)",
-            "sw_version": "1.0"
-        }
+            "sw_version": "1.0",
+        },
     }
     if command_topic:
         payload["command_topic"] = command_topic
@@ -151,7 +154,7 @@ async def read_spa_data(spa, lastupd):
             qos=0,
             retain=False,
         )
-        
+
         # Pump 1
         mqtt_client.publish(
             "jacuzzi/pump_1/state",
@@ -180,8 +183,7 @@ async def start_mqtt():
     mqtt_client.connect(mqtt_ip, mqtt_port)
     mqtt_client.loop_start()
 
-
-   # Register control for temperature (number component for setting temperature)
+    # Register control for temperature (number component for setting temperature)
     publish_discovery_config(
         entity_id="jacuzzi_temperature",
         name="Target Temperature",
@@ -193,8 +195,8 @@ async def start_mqtt():
             "max": 40,
             "step": 0.5,
             "unit_of_measurement": "°C",
-            "device_class": "temperature"
-        }
+            "device_class": "temperature",
+        },
     )
 
     # Register control for pump 1
@@ -202,13 +204,9 @@ async def start_mqtt():
         entity_id="jacuzzi_pump_1_control",
         name="Pump 1",
         component="switch",
-        state_topic="jacuzzi/pump_1/state",  
-        command_topic="jacuzzi/pump_1/set",  
-        extra_config={
-            "payload_on": "1",  
-            "payload_off": "0",  
-            "icon": "mdi:water-pump"  
-        }
+        state_topic="jacuzzi/pump_1/state",
+        command_topic="jacuzzi/pump_1/set",
+        extra_config={"payload_on": "1", "payload_off": "0", "icon": "mdi:water-pump"},
     )
 
     # Register control for pump 2
@@ -216,13 +214,9 @@ async def start_mqtt():
         entity_id="jacuzzi_pump_2_control",
         name="Pump 2",
         component="switch",
-        state_topic="jacuzzi/pump_2/state",  
-        command_topic="jacuzzi/pump_2/set",  
-        extra_config={
-            "payload_on": "1",  
-            "payload_off": "0",  
-            "icon": "mdi:water-pump"  
-        }
+        state_topic="jacuzzi/pump_2/state",
+        command_topic="jacuzzi/pump_2/set",
+        extra_config={"payload_on": "1", "payload_off": "0", "icon": "mdi:water-pump"},
     )
 
     # Register timestamp sensor for last update
@@ -231,10 +225,7 @@ async def start_mqtt():
         name="Last Update",
         component="sensor",
         state_topic="jacuzzi/connection/last_update",
-        extra_config={
-            "device_class": "timestamp",
-            "icon": "mdi:clock"
-        }
+        extra_config={"device_class": "timestamp", "icon": "mdi:clock"},
     )
 
     # Register binary sensor for connection status
@@ -247,8 +238,8 @@ async def start_mqtt():
             "device_class": "connectivity",
             "payload_on": "1",
             "payload_off": "0",
-            "icon": "mdi:network"
-        }
+            "icon": "mdi:network",
+        },
     )
 
     # Register sensor for current temperature
@@ -257,10 +248,7 @@ async def start_mqtt():
         name="Actual Temperature",
         component="sensor",
         state_topic="jacuzzi/actual_temperature/state",
-        extra_config={
-            "unit_of_measurement": "°C",
-            "device_class": "temperature"
-        }
+        extra_config={"unit_of_measurement": "°C", "device_class": "temperature"},
     )
 
     # Register sensor for target temperature
@@ -269,10 +257,7 @@ async def start_mqtt():
         name="Target Temperature",
         component="sensor",
         state_topic="jacuzzi/target_temperature/state",
-        extra_config={
-            "unit_of_measurement": "°C",
-            "device_class": "temperature"
-        }
+        extra_config={"unit_of_measurement": "°C", "device_class": "temperature"},
     )
 
     # Register sensor for circulation pump
@@ -285,8 +270,8 @@ async def start_mqtt():
             "device_class": "power",
             "payload_on": "On",
             "payload_off": "Off",
-            "icon": "mdi:water-pump"
-        }
+            "icon": "mdi:water-pump",
+        },
     )
 
     # Register sensor for pump 1
@@ -299,8 +284,8 @@ async def start_mqtt():
             "device_class": "power",
             "payload_on": "1",
             "payload_off": "0",
-            "icon": "mdi:water-pump"
-        }
+            "icon": "mdi:water-pump",
+        },
     )
 
     # Register sensor for pump 2
@@ -313,8 +298,8 @@ async def start_mqtt():
             "device_class": "power",
             "payload_on": "2",
             "payload_off": "0",
-            "icon": "mdi:water-pump"
-        }
+            "icon": "mdi:water-pump",
+        },
     )
 
     # Register sensor for UV
@@ -327,8 +312,8 @@ async def start_mqtt():
             "device_class": "power",
             "payload_on": "On",
             "payload_off": "Off",
-            "icon": "mdi:lightbulb-cfl"
-        }
+            "icon": "mdi:lightbulb-cfl",
+        },
     )
 
 
