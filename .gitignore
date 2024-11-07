@@ -1,4 +1,3 @@
-.DS_Store
 # -*- mode: gitignore; -*-
 *~
 \#*\#
@@ -183,3 +182,4 @@ dmypy.json
 
 logfile.txt
 .env
+.DS_Store
