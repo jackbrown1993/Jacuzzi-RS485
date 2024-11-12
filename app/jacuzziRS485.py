@@ -92,8 +92,19 @@ CHECKS_BEFORE_RETRY = (
 )
 
 # Override pybalboa text strings for Jacuzzi-specific differences:
-
 text_tscale = ["Fahrenheit", "Celsius"]  # Just to fix the misspelling
+
+# Define a dictionary mapping specific button identifiers to log messages
+button_log_messages = {
+    (0x17, 0x01): "Increase set temperature button was pressed",
+    (0x17, 0x02): "Decrease set temperature button was pressed",
+    (0x17, 0x04): "Toggle pump 1 button was pressed",
+    (0x17, 0x05): "Toggle pump 2 button was pressed",
+    (0x17, 0x11): "Toggle lights button was pressed",
+    (0x17, 0x12): "Change light colour button was pressed",
+    (0x17, 0x1E): "Menu button was pressed",
+    (0x17, 0x0F): "UV button was pressed",
+}
 
 
 class JacuzziRS485(BalboaSpaWifi):
@@ -1100,12 +1111,22 @@ class JacuzziRS485(BalboaSpaWifi):
                                 if not chan in self.activeChannels:
                                     await self.set_channel(chan)
                                     break
-                    if mtype == CC_REQ:
-                        if (data[5]) != 0:
-                            self.log.info(
-                                "Got Button Press x".format(channel, mid, mtype)
-                                + "".join(map("{:02X} ".format, bytes(data)))
+                    if mtype == CC_REQ and (data[5]) != 0:
+                        button_id = (
+                            data[4],
+                            data[5],
+                        )  # I think these bytes identify each button uniquely
+                        if button_id in button_log_messages:
+                            log_message = button_log_messages[button_id]
+                        else:
+                            log_message = "Unknown Button Press"
+
+                        # Log the message with the data in hexadecimal format
+                        self.log.info(
+                            "{} ({})".format(
+                                log_message, " ".join("{:02X}".format(b) for b in data)
                             )
+                        )
                 else:
                     self.log.error(
                         "Unhandled msg type 0x{0:02X} ({0}) in process_message()".format(
