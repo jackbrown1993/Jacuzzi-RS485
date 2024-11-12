@@ -975,8 +975,9 @@ class JacuzziRS485(BalboaSpaWifi):
                 # send the spa a message to see if it will respond.
 
                 if self.channel is not None and time.time() > self.lastupd + timeout:
+                    self.log.info("No update from spa in {} seconds. Setting connection status to Disconnected", timeout)
                     self.connection_state = ConnectionStates.Disconnected
-                    self.log.info("Requesting module ID.")
+                    self.log.info("Requesting module ID to see if we can get response from spa.")
                     await self.send_mod_ident_req()
 
                     self.lastupd = time.time()
@@ -1000,7 +1001,7 @@ class JacuzziRS485(BalboaSpaWifi):
 
         while True:
             if not self.connected:
-                # sleep and hope the checker fixes us
+                # Sleep before checking if we are connected again
                 await asyncio.sleep(5)
                 continue
 
@@ -1153,10 +1154,15 @@ class JacuzziRS485(BalboaSpaWifi):
 
     def get_connection_state_text(self):
         return "{0} (Channel: {1})".format(self.connection_state.name, self.channel)
+    
+    def get_spatime(self):
+        return "{0:02d}:{1:02d}".format(
+            self.time_hour, self.time_minute
+        )
 
     def get_spatime_text(self):
-        return "Spa Time: {0:02d}:{1:02d} {2}".format(
-            self.time_hour, self.time_minute, self.get_timescale(True)
+        return "Spa Time: {0} {1}".format(
+            self.get_spatime(), self.get_timescale(True)
         )
 
     def get_day(self):
@@ -1167,10 +1173,15 @@ class JacuzziRS485(BalboaSpaWifi):
 
     def get_year(self):
         return self.currentYear
+    
+    def get_spadate(self):
+        return "{0}/{1}/{2}".format(
+            self.get_month(), self.get_day(), self.get_year()
+        )
 
     def get_spadate_text(self):
-        return "Spa Date: {0}/{1}/{2}".format(
-            self.get_month(), self.get_day(), self.get_year()
+        return "Spa Date: {0}".format(
+            self.get_spadate()
         )
 
     def get_curtemp_text(self):
