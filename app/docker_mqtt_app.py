@@ -57,6 +57,7 @@ def on_connect(mqttc, obj, flags, rc):
     # Subscribe to all MQTT jacuzzi topics
     mqtt_client.subscribe("jacuzzi/#")
 
+
 def on_disconnect(mqttc, obj, rc):
     """This is triggered whenever we disconnect fromm MQTT"""
     log.info("Disconnected MQTT broker.")
