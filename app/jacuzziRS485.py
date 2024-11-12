@@ -106,6 +106,7 @@ button_log_messages = {
     (0x17, 0x0F): "UV button was pressed",
 }
 
+
 class JacuzziRS485(BalboaSpaWifi):
     """Extends BalboaSpaWifi to work with Jacuzzi spas instead."""
 
@@ -1111,7 +1112,10 @@ class JacuzziRS485(BalboaSpaWifi):
                                     await self.set_channel(chan)
                                     break
                     if mtype == CC_REQ and (data[5]) != 0:
-                        button_id = (data[4], data[5])  # I think these bytes identify each button uniquely
+                        button_id = (
+                            data[4],
+                            data[5],
+                        )  # I think these bytes identify each button uniquely
                         if button_id in button_log_messages:
                             log_message = button_log_messages[button_id]
                         else:
@@ -1119,7 +1123,9 @@ class JacuzziRS485(BalboaSpaWifi):
 
                         # Log the message with the data in hexadecimal format
                         self.log.info(
-                            "{} ({})".format(log_message, " ".join("{:02X}".format(b) for b in data))
+                            "{} ({})".format(
+                                log_message, " ".join("{:02X}".format(b) for b in data)
+                            )
                         )
                 else:
                     self.log.error(
