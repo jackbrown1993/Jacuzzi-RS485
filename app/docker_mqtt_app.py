@@ -58,6 +58,11 @@ def on_connect(mqttc, obj, flags, rc):
     mqtt_client.subscribe("jacuzzi/#")
 
 
+def on_disconnect(mqttc, obj, rc):
+    """This is triggered whenever we disconnect fromm MQTT"""
+    log.info("Disconnected MQTT broker.")
+
+
 def on_message(mqttc, obj, msg):
     """This is triggered whenever we receive a message on MQTT"""
     global spa
@@ -104,7 +109,10 @@ async def read_spa_data(spa, lastupd):
     if spa.lastupd != lastupd:
         lastupd = spa.lastupd
         log.info(
-            f"Jacuzzi temperature is set to {spa.get_settemp()}, actual temperature is {spa.curtemp}"
+            f"Spa date: {spa.get_spadate()}\n"
+            f"Spa time: {spa.get_spatime()}\n"
+            f"Water temp: {spa.curtemp}\n"
+            f"Set Temp: {spa.get_settemp()}"
         )
 
         # Last update
@@ -115,7 +123,7 @@ async def read_spa_data(spa, lastupd):
             retain=True,
         )
 
-        # Set Temp
+        # Connection Status
         mqtt_client.publish(
             "jacuzzi/connection/status",
             payload="1" if spa.connection_state.name == "Connected" else "0",
@@ -179,6 +187,7 @@ async def start_mqtt():
     mqtt_client = mqtt.Client("jacuzzi_rs485")
     mqtt_client.username_pw_set(username=mqtt_user, password=mqtt_password)
     mqtt_client.on_connect = on_connect
+    mqtt_client.on_disconnect = on_disconnect
     mqtt_client.on_message = on_message
     mqtt_client.connect(mqtt_ip, mqtt_port)
     mqtt_client.loop_start()
