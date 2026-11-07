@@ -1,4 +1,4 @@
-""" Provides a text-mode windowing user interface for jacuzziRS485.py. """
+"""Provides a text-mode windowing user interface for jacuzziRS485.py."""
 
 import sys
 import argparse

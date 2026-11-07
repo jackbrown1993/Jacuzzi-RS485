@@ -9,7 +9,7 @@ import jacuzziRS485
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s:%(levelname)s:%(message)s")
-log = logging.getLogger("__name__")
+log = logging.getLogger(__name__)
 
 if "MQTT_IP" not in os.environ:
     log.error(
@@ -52,11 +52,17 @@ else:
     jacuzzi_port = int(os.environ.get("JACUZZI_PORT"))
 
 
+AVAILABILITY_TOPIC = "jacuzzi/connection/availability"
+
+
 def on_connect(mqttc, obj, flags, rc):
     """This is triggered whenever we connect to MQTT"""
     log.info("Connected to MQTT broker.")
-    # Subscribe to all MQTT jacuzzi topics
-    mqtt_client.subscribe("jacuzzi/#")
+    # Subscribe only to command topics
+    mqtt_client.subscribe("jacuzzi/+/set")
+    # Discovery and availability must be re-sent on every (re)connect
+    mqtt_client.publish(AVAILABILITY_TOPIC, payload="online", qos=1, retain=True)
+    publish_all_discovery()
 
 
 def on_disconnect(mqttc, obj, rc):
@@ -66,30 +72,48 @@ def on_disconnect(mqttc, obj, rc):
 
 def on_message(mqttc, obj, msg):
     """This is triggered whenever we receive a message on MQTT"""
-    global spa
-    log.debug(
-        f"MQTT message received on topic: {msg.topic} with value: {msg.payload.decode()}"
-    )
-    if msg.topic == "jacuzzi/target_temperature/set":
-        new_temp = float(msg.payload.decode())
-        asyncio.run(spa.send_temp_change(new_temp))
-    elif msg.topic == "jacuzzi/pump_1/set":
-        asyncio.run(spa.change_pump(1, int(msg.payload.decode())))
-    elif msg.topic == "jacuzzi/pump_2/set":
-        asyncio.run(spa.change_pump(2, int(msg.payload.decode())))
-    else:
-        log.debug(f"Unhandled MQTT message on topic {msg.topic}.")
+    payload = msg.payload.decode(errors="replace").strip()
+    log.debug(f"MQTT message received on topic: {msg.topic} with value: {payload}")
+    try:
+        if msg.topic == "jacuzzi/target_temperature/set":
+            new_temp = float(payload)
+            run_on_main_loop(spa.send_temp_change(new_temp))
+        elif msg.topic in ("jacuzzi/pump_1/set", "jacuzzi/pump_2/set"):
+            pump = 1 if msg.topic == "jacuzzi/pump_1/set" else 2
+            state = int(payload)
+            if state < 0 or state > spa.pump_array[pump]:
+                log.error(f"Invalid state {state} for pump {pump}, ignoring.")
+                return
+            run_on_main_loop(spa.change_pump(pump, state))
+        else:
+            log.debug(f"Unhandled MQTT message on topic {msg.topic}.")
+    except ValueError:
+        log.error(f"Invalid payload '{payload}' on topic {msg.topic}, ignoring.")
+    except Exception:  # pylint: disable=broad-except
+        log.exception(f"Failed to handle MQTT message on topic {msg.topic}")
+
+
+def run_on_main_loop(coro):
+    """Run a coroutine on the main event loop (called from the paho thread)."""
+    future = asyncio.run_coroutine_threadsafe(coro, main_loop)
+    future.add_done_callback(_log_command_result)
+
+
+def _log_command_result(future):
+    if future.exception() is not None:
+        log.error(f"MQTT command failed: {future.exception()!r}")
 
 
 # Function to publish Home Assistant discovery configuration
 def publish_discovery_config(
-    entity_id, name, component, state_topic, command_topic=None, extra_config={}
+    entity_id, name, component, state_topic, command_topic=None, extra_config=None
 ):
     discovery_topic = f"homeassistant/{component}/{entity_id}/config"
     payload = {
         "name": name,
         "state_topic": state_topic,
         "unique_id": entity_id,
+        "availability_topic": AVAILABILITY_TOPIC,
         "device": {
             "identifiers": ["jacuzzi_device"],
             "name": "Jacuzzi",
@@ -100,8 +124,10 @@ def publish_discovery_config(
     }
     if command_topic:
         payload["command_topic"] = command_topic
-    payload.update(extra_config)
-    mqtt_client.publish(discovery_topic, payload=json.dumps(payload))
+    payload.update(extra_config or {})
+    mqtt_client.publish(
+        discovery_topic, payload=json.dumps(payload), qos=1, retain=True
+    )
 
 
 async def read_spa_data(spa, lastupd):
@@ -119,7 +145,7 @@ async def read_spa_data(spa, lastupd):
         # Last update
         mqtt_client.publish(
             "jacuzzi/connection/last_update",
-            payload=datetime.now().isoformat(),
+            payload=datetime.now().astimezone().isoformat(),
             qos=0,
             retain=True,
         )
@@ -190,9 +216,13 @@ async def start_mqtt():
     mqtt_client.on_connect = on_connect
     mqtt_client.on_disconnect = on_disconnect
     mqtt_client.on_message = on_message
+    mqtt_client.will_set(AVAILABILITY_TOPIC, payload="offline", qos=1, retain=True)
     mqtt_client.connect(mqtt_ip, mqtt_port)
     mqtt_client.loop_start()
 
+
+def publish_all_discovery():
+    """Publish Home Assistant discovery config for all entities."""
     # Register control for temperature (number component for setting temperature)
     publish_discovery_config(
         entity_id="jacuzzi_temperature",
@@ -216,7 +246,14 @@ async def start_mqtt():
         component="switch",
         state_topic="jacuzzi/pump_1/state",
         command_topic="jacuzzi/pump_1/set",
-        extra_config={"payload_on": "1", "payload_off": "0", "icon": "mdi:water-pump"},
+        extra_config={
+            "payload_on": "1",
+            "payload_off": "0",
+            "state_on": "1",
+            "state_off": "0",
+            "value_template": "{{ 1 if value | int(0) > 0 else 0 }}",
+            "icon": "mdi:water-pump",
+        },
     )
 
     # Register control for pump 2
@@ -226,7 +263,14 @@ async def start_mqtt():
         component="switch",
         state_topic="jacuzzi/pump_2/state",
         command_topic="jacuzzi/pump_2/set",
-        extra_config={"payload_on": "1", "payload_off": "0", "icon": "mdi:water-pump"},
+        extra_config={
+            "payload_on": "1",
+            "payload_off": "0",
+            "state_on": "1",
+            "state_off": "0",
+            "value_template": "{{ 1 if value | int(0) > 0 else 0 }}",
+            "icon": "mdi:water-pump",
+        },
     )
 
     # Register timestamp sensor for last update
@@ -294,6 +338,7 @@ async def start_mqtt():
             "device_class": "power",
             "payload_on": "1",
             "payload_off": "0",
+            "value_template": "{{ 1 if value | int(0) > 0 else 0 }}",
             "icon": "mdi:water-pump",
         },
     )
@@ -306,8 +351,9 @@ async def start_mqtt():
         state_topic="jacuzzi/pump_2/state",
         extra_config={
             "device_class": "power",
-            "payload_on": "2",
+            "payload_on": "1",
             "payload_off": "0",
+            "value_template": "{{ 1 if value | int(0) > 0 else 0 }}",
             "icon": "mdi:water-pump",
         },
     )
@@ -328,21 +374,30 @@ async def start_mqtt():
 
 
 async def start_app():
-    global spa
-    # Connect to MQTT
-    await start_mqtt()
+    global spa, main_loop
+    main_loop = asyncio.get_running_loop()
 
     # Connect to Jacuzzi
     spa = jacuzziRS485.JacuzziRS485(jacuzzi_ip, jacuzzi_port)
 
-    # Start background tasks
-    asyncio.ensure_future(spa.check_connection_status())
-    asyncio.ensure_future(spa.listen())
+    # Connect to MQTT
+    await start_mqtt()
+
+    # Start background tasks. Keep references so a crash is noticed.
+    tasks = [
+        asyncio.ensure_future(spa.check_connection_status()),
+        asyncio.ensure_future(spa.listen()),
+    ]
 
     lastupd = 0
 
     while True:
         lastupd = await read_spa_data(spa, lastupd)
+        for task in tasks:
+            if task.done():
+                log.error(f"Background task stopped unexpectedly: {task!r}")
+                # Exit so the container supervisor restarts us cleanly.
+                sys.exit(1)
 
 
 if __name__ == "__main__":

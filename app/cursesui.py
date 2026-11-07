@@ -1,4 +1,4 @@
-""" cursesui.py provides you with a simple text-mode windowing user
+"""cursesui.py provides you with a simple text-mode windowing user
 interface that encapsulates the curses.py library while supporting
 both asychronous processes and standard logging.
 """
