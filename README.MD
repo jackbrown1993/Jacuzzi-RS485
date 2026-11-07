@@ -34,9 +34,13 @@ Rename the file example.env to .env and populate the following variables.
 
 `JACUZZI_PORT` - Port of your ProLink or RS485 to WiFi module. (Optional - Defaults to 4257)
 
-An MQTT Bridge is provided to allow easy integration with other systems. You will need a separate MQTT server running (Mosquitto is a relatively easy and robust one). The MQTT topics follow the Homie convention, making them self-describing.
+An MQTT Bridge is provided to allow easy integration with other systems. You will need a separate MQTT server running (Mosquitto is a relatively easy and robust one). The app publishes Home Assistant MQTT discovery messages (retained), so entities appear automatically in Home Assistant when MQTT discovery is enabled.
 
-Publishing a float value to ```homie/hot_tub/jacuzzi/set_temperature/set``` will change the set temp value of Jacuzzi.
+Topics (state topics are `jacuzzi/<name>/state`, commands are `jacuzzi/<name>/set`):
+
+* `jacuzzi/target_temperature/set` - publish a float (e.g. `37.5`) to change the set temperature.
+* `jacuzzi/pump_1/set` and `jacuzzi/pump_2/set` - publish `0` (off) or `1` (on; pump 1 also accepts `2` for high speed).
+* `jacuzzi/connection/availability` - `online`/`offline` (last will), `jacuzzi/connection/status` - `1` when the spa is sending data.
 
 <h4>Docker</h4>
 
@@ -46,7 +50,7 @@ Run docker image using published image ```docker run -d -e MQTT_IP= -e MQTT_PORT
 
 Run docker image built locally:
 
-Fist build the image: ```docker build -t jacuzzi-rs485 .```
+First build the image: ```docker build -t jacuzzi-rs485 .```
 
 Then run the image: ```docker run -e MQTT_IP= -e MQTT_PORT= -e MQTT_USER= -e MQTT_PASSWORD= -e JACUZZI_IP= -e JACUZZI_PORT= jacuzzi-rs485```
 

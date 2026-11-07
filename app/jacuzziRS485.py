@@ -492,12 +492,12 @@ class JacuzziRS485(BalboaSpaWifi):
             self.log.info(
                 "Waiting for the Jacuzzi to be connected before sending message..."
             )
-            time.sleep(2)
+            await asyncio.sleep(2)
 
         # Wait for the channel to be set
         while self.channel is None:
             self.log.info("Waiting for the channel to be set before sending message...")
-            time.sleep(2)
+            await asyncio.sleep(2)
 
         message_length = len(bytes) + 2
         data = bytearray(message_length + 2)
@@ -962,6 +962,10 @@ class JacuzziRS485(BalboaSpaWifi):
                         self.host, self.port
                     )
                 )
+                # Drop commands queued against the old connection so they
+                # aren't replayed late after a reconnect.
+                with self.queue.mutex:
+                    self.queue.queue.clear()
                 await self.connect()
                 self.connection_state = ConnectionStates.Connecting
 
@@ -976,7 +980,7 @@ class JacuzziRS485(BalboaSpaWifi):
 
                 if self.channel is not None and time.time() > self.lastupd + timeout:
                     self.log.info(
-                        "No update from spa in {} seconds. Setting connection status to Disconnected",
+                        "No update from spa in %s seconds. Setting connection status to Disconnected",
                         timeout,
                     )
                     self.connection_state = ConnectionStates.Disconnected
@@ -1015,6 +1019,10 @@ class JacuzziRS485(BalboaSpaWifi):
             if data is None:
                 self.connection_state = ConnectionStates.Disconnected
                 await asyncio.sleep(1)
+                continue
+
+            if len(data) < 6:
+                self.log.debug("Ignoring short message: {}".format(data.hex()))
                 continue
 
             channel = data[2]
@@ -1066,7 +1074,7 @@ class JacuzziRS485(BalboaSpaWifi):
                 data[6] = M_STARTEND
                 self.writer.write(data)
                 await self.writer.drain()
-            elif mtype == EXISTING_CLIENT_REQ:
+            elif mtype == EXISTING_CLIENT_REQ and self.channel is not None:
                 message_length = 8
                 data = bytearray(9)
                 data[0] = M_STARTEND

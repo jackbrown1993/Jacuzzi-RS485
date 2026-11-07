@@ -7,6 +7,9 @@ from socket import error as SocketError
 
 BALBOA_DEFAULT_PORT = 4257
 
+# Seconds of total silence on the socket before we treat it as dead.
+READ_TIMEOUT = 60
+
 M_STARTEND = 0x7E
 
 C_PUMP1 = 0x04
@@ -206,6 +209,17 @@ class BalboaSpaWifi:
             if bit:
                 crc ^= 0x07
         return crc ^ 0x02
+
+    async def _drop_connection(self):
+        """Mark the connection as dead and close the old socket."""
+        self.connected = False
+        writer = getattr(self, "writer", None)
+        if writer is not None:
+            try:
+                writer.close()
+            except Exception:  # pylint: disable=broad-except
+                pass
+        await self.int_new_data_cb()
 
     async def connect(self):
         """Connect to the spa."""
@@ -726,7 +740,11 @@ class BalboaSpaWifi:
             return None
 
         try:
-            header = await self.reader.readexactly(2)
+            # The spa sends status roughly every second, so a long silence
+            # means a dead (possibly half-open) connection.
+            header = await asyncio.wait_for(
+                self.reader.readexactly(2), timeout=READ_TIMEOUT
+            )
         except SocketError as err:
             if err.errno == errno.ECONNRESET:
                 self.log.error("Connection reset by peer")
@@ -740,7 +758,13 @@ class BalboaSpaWifi:
             await self.int_new_data_cb()
             return None
         except Exception as e:
-            self.log.error("Spa read failed: {0}".format(str(e)))
+            # EOF (IncompleteReadError), timeouts and anything else mean the
+            # connection is unusable. Mark it disconnected so the connection
+            # checker reconnects, rather than reading a dead socket forever.
+            self.log.error(
+                "Spa read failed ({0}): {1}".format(type(e).__name__, str(e))
+            )
+            await self._drop_connection()
             return None
 
         if header[0] == M_STARTEND:
@@ -761,7 +785,10 @@ class BalboaSpaWifi:
         try:
             data = await self.reader.readexactly(rlen)
         except Exception as e:
-            self.log.errpr("Spa read failed: {0}".format(str(e)))
+            self.log.error(
+                "Spa read failed ({0}): {1}".format(type(e).__name__, str(e))
+            )
+            await self._drop_connection()
             return None
 
         full_data = header + data
