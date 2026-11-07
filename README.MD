@@ -44,7 +44,7 @@ Topics (state topics are `jacuzzi/<name>/state`, commands are `jacuzzi/<name>/se
 
 <h4>Docker</h4>
 
-There is published docker image at ghcr.io/jackbrown1993/jacuzzi-rs485:latest which is based on the main branch.
+There is a published multi-arch (amd64 and arm64) docker image at ghcr.io/jackbrown1993/jacuzzi-rs485. `:latest` is the newest tagged release; you can also pin a version such as `:1.1.0`, `:1.1` or `:1`.
 
 Run docker image using published image ```docker run -d -e MQTT_IP= -e MQTT_PORT= -e MQTT_USER= -e MQTT_PASSWORD= -e JACUZZI_IP= -e JACUZZI_PORT= ghcr.io/jackbrown1993/jacuzzi-rs485:latest```
 
