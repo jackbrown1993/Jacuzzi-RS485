@@ -65,7 +65,6 @@ def on_connect(mqttc, obj, flags, rc):
     publish_all_discovery()
 
 
-
 def on_disconnect(mqttc, obj, rc):
     """This is triggered whenever we disconnect fromm MQTT"""
     log.info("Disconnected MQTT broker.")
@@ -126,7 +125,9 @@ def publish_discovery_config(
     if command_topic:
         payload["command_topic"] = command_topic
     payload.update(extra_config or {})
-    mqtt_client.publish(discovery_topic, payload=json.dumps(payload), qos=1, retain=True)
+    mqtt_client.publish(
+        discovery_topic, payload=json.dumps(payload), qos=1, retain=True
+    )
 
 
 async def read_spa_data(spa, lastupd):

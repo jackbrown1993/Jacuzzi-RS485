@@ -1,12 +1,12 @@
-""" This module extends balboa.py to work instead with Jacuzzi
-spas. 
+"""This module extends balboa.py to work instead with Jacuzzi
+spas.
 
 It uses an old version of pybalboa (https://github.com/garbled1/pybalboa)
 
 I chose to extend pybalboa so that I could leverage the already-proven
 WiFi and protocol parsing behavior in pybalboa. This dependency turns
 out to be pretty light; it would not take major effort to decouple
-jacuzziRS485.py from pybalboa. Still, I am deeply indebted to 
+jacuzziRS485.py from pybalboa. Still, I am deeply indebted to
 
 garbled1 (https://github.com/garbled1/pybalboa)
 natekspencer (https://github.com/natekspencer)
