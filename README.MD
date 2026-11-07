@@ -40,7 +40,7 @@ Publishing a float value to ```homie/hot_tub/jacuzzi/set_temperature/set``` will
 
 <h4>Docker</h4>
 
-There is published docker image at ghcr.io/jackbrown1993/jacuzzi-rs485:latest which is based on the master branch.
+There is published docker image at ghcr.io/jackbrown1993/jacuzzi-rs485:latest which is based on the main branch.
 
 Run docker image using published image ```docker run -d -e MQTT_IP= -e MQTT_PORT= -e MQTT_USER= -e MQTT_PASSWORD= -e JACUZZI_IP= -e JACUZZI_PORT= ghcr.io/jackbrown1993/jacuzzi-rs485:latest```
 
