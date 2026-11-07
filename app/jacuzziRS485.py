@@ -576,6 +576,15 @@ class JacuzziRS485(BalboaSpaWifi):
         # Byte 11 = errorCode (0x00 = no error)
         self.errorCode = data[11]
 
+        # Modified for Prolink; was data[14] for Balboa (= 0x02)
+        # The temperature scale must be set *before* curtemp and settemp
+        # are converted below, otherwise they use the previous packet's scale.
+        # (Same fix as dhmsjs/pyjacuzzi, thanks marcbou.)
+        if data[18] & 0x01:
+            self.tempscale = self.TSCALE_C
+        else:
+            self.tempscale = self.TSCALE_F
+
         # Modified for Jacuzzi; was data[7] for Balboa
         curtemp = float(data[12])
 
@@ -683,12 +692,6 @@ class JacuzziRS485(BalboaSpaWifi):
             self.timescale = self.TIMESCALE_12H
         else:
             self.timescale = self.TIMESCALE_24H
-
-        # Modified for Prolink; was data[14] for Balboa (= 0x02)
-        if data[18] & 0x01:
-            self.tempscale = self.TSCALE_C
-        else:
-            self.tempscale = self.TSCALE_F
 
         # Byte 19 = don't care? (= 0x00)
         self.statusByte19 = data[19]
