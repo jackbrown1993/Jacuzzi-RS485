@@ -317,7 +317,14 @@ def encode_temperature(temp: float, temp_scale: int) -> int:
 
 
 def build_set_temp(channel: int, temp: float, temp_scale: int) -> bytes:
-    """Frame that sets the target temperature."""
+    """Frame that sets the target temperature.
+
+    ``channel`` goes in the DST byte. The existing app always uses 0x0A here
+    (the ProLink module's address) even when it holds a different channel, and
+    that works: in issue #54 the spa accepted a set-temp addressed to 0x0A sent
+    on clear-to-send for assigned channel 0x10 and changed its set point. So
+    for this message the DST byte does not appear to be checked.
+    """
     return build_frame(
         channel,
         PF_ADDRESSED,
