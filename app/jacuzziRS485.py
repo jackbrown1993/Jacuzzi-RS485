@@ -39,6 +39,7 @@ from datetime import datetime
 # Here we use it intentionally to cleanly reference or override balboa
 # module objects when they need to be different for Jacuzzi systems.
 from balboa import *
+import protocol
 
 from enum import Enum
 
@@ -515,270 +516,115 @@ class JacuzziRS485(BalboaSpaWifi):
         self.log.info("Channel Assigned: {}".format(self.channel))
 
     async def parse_status_update(self, data):
-        """Override balboa's parsing of a status update from the spa
-        to handle Jacuzzi differences.
+        """Update our state from a status update message from the spa.
 
-        Many of the field values are similar between Balboa and Jacuzzi,
-        but their position in the message packet is often different.
+        The decoding itself lives in protocol.parse_status (a pure function
+        with tests and the byte-by-byte notes); this method only copies the
+        result onto the attributes the rest of the app reads.
 
-        The spa sends these messages out at a very high rate of speed.
-
-        Unlike the overridden version in balboa.py, this routine does not
-        check to see if config has been loaded already. Thus it does not
-        need the async prefix.  Similarly it does not check to see if the
-        message data has changed.
+        The spa sends these messages out at a very high rate of speed, so
+        unchanged messages are skipped. The hour/minute counter makes our
+        internal state update at least once per minute, which is ok.
         """
+        if self.prior_status is not None and data.hex() == self.prior_status:
+            return
+        self.prior_status = data.hex()
 
-        # This will cause our internal states to update once per minute due
-        # to the hour/minute counter.  This is ok.
-
-        have_new_data = False
-
-        if self.prior_status is not None and data.hex() != self.prior_status:
-            have_new_data = True
-            self.prior_status = data.hex()
-        elif self.prior_status is None:
-            self.prior_status = data.hex()
-        else:
+        try:
+            status = protocol.parse_status(data)
+        except protocol.ProtocolError as err:
+            self.log.error("Ignoring bad status update: {0}".format(err))
             return
 
-        # Modified for Jacuzzi; was data[8] and data[9] for Balboa
-        self.time_hour = data[5]
-        self.time_minute = data[6]
+        self.time_hour = status.hour
+        self.time_minute = status.minute
+        self.dayOfWeek = status.day_of_week
+        self.dayOfMonth = status.day
+        self.currentMonth = status.month
+        self.currentYear = status.year
 
-        # Byte 7 Bits 7,6,5 = currentWeek (actually day of week; 1 = Monday)
-        # Byte 7 Bits 4,3,2,1,0 = daysInMonth (actually day of month)
-        self.dayOfWeek = (data[7] & 0xE0) >> 5
-        self.dayOfMonth = data[7] & 0x1F
+        self.filter2Mode = status.filter2_mode
+        self.heatModeState = status.heat_mode_state
+        self.spaState = status.spa_state
+        self.heatmode = status.heat_mode_state
+        self.heatstate = status.heat_mode_state
+        self.errorCode = status.error_code
 
-        # Byte 8 = currentMonth
-        # Byte 9 = currentYear (since 2000)
-        self.currentMonth = data[8]
-        self.currentYear = data[9] + 2000
-
-        # Byte 10 Bits 7,6 = Filter2Mode (0b00 = off)
-        # Byte 10 Bits 5,4 = HeatModeState (0b01 = on-low?)
-        # Byte 10 Bits 3,2,1,0 = SpaState
-        # (values of 1,2,8,9 or 10 get forced to -1) (0b0010 = 2)
-        self.filter2Mode = (data[10] & 0xC0) >> 6
-        self.heatModeState = (data[10] & 0x30) >> 4
-        self.spaState = data[10] & 0x0F
-
-        # TODO: why are heatmode and heatstate the same bits?
-        # flag 2 is heatmode
-        # Modified for Jacuzzi; Balboa had no bit shift
-        self.heatmode = (data[10] >> 4) & 0x03
-
-        # flag 4 heating state, temp range
-        # Modified for Jacuzzi; Balboa was data[15]
-        self.heatstate = (data[10] & 0x30) >> 4
-
-        # Byte 11 = errorCode (0x00 = no error)
-        self.errorCode = data[11]
-
-        # Modified for Prolink; was data[14] for Balboa (= 0x02)
-        # The temperature scale must be set *before* curtemp and settemp
-        # are converted below, otherwise they use the previous packet's scale.
-        # (Same fix as dhmsjs/pyjacuzzi, thanks marcbou.)
-        if data[18] & 0x01:
-            self.tempscale = self.TSCALE_C
-        else:
-            self.tempscale = self.TSCALE_F
-
-        # Modified for Jacuzzi; was data[7] for Balboa
-        curtemp = float(data[12])
-
-        # Byte 13 = don't care? (0xFA)
-        self.statusByte13 = data[13]
-
-        # Modified for Jacuzzi; was data[25] for Balboa
-        settemp = float(data[14])
-
-        self.curtemp = (
-            curtemp / (2 if self.tempscale == self.TSCALE_C else 1)
-            if curtemp != 255
-            else None
+        self.tempscale = (
+            self.TSCALE_C if status.temp_scale == protocol.TSCALE_C else self.TSCALE_F
         )
-        self.settemp = settemp / (2 if self.tempscale == self.TSCALE_C else 1)
+        self.curtemp = status.current_temp
+        self.settemp = status.set_temp
 
-        # Byte 15 Bits 7,6 = Pump3State
-        # Byte 15 Bits 5,4 = Pump2State (bit posn off by 1??)
-        # Byte 15 Bits 3,2 = Pump1State
-        # Byte 15 Bits 1,0 read but not used
-        self.pump3State = (data[15] & 0xC0) >> 6
-        self.pump2State = (data[15] & 0x30) >> 4
-        self.pump1State = (data[15] & 0x0C) >> 2
-        self.pump0State = data[15] & 0x03
+        (
+            self.statusByte13,
+            self.statusByte22,
+            self.statusByte23,
+        ) = status.raw_bytes
 
-        # Modified for Jacuzzi; does not have a temprange feature
-        # self.temprange = (data[15] & 0x04) >> 2
-
-        for i in range(0, 6):
-            if not self.pump_array[i]:
-                continue
-            # 1-4 are in one byte, 5/6 are in another
-            if i < 4:
-                # Modified for Jacuzzi; Balboa was data[16]
-                self.pump_status[i] = (data[15] >> i * 2) & 0x03
-            # Modified for Jacuzzi -- does not have pumps 5 or 6
-            # else:
-            #   self.pump_status[i] = (data[17] >> ((i - 4)*2)) & 0x03
+        (
+            self.pump0State,
+            self.pump1State,
+            self.pump2State,
+            self.pump3State,
+        ) = status.pump_states
+        for i in range(0, 4):
+            if self.pump_array[i]:
+                self.pump_status[i] = status.pump_states[i]
 
         if self.circ_pump:
-            # Modified for Jacuzzi; not clear which pump is circ pump -- pump 0 maybe?
-            # Answer: there is no circ pump on J-235. Pump 1 (Jets 1) runs at low speed
-            # to circulate during filter cycles. Pump 0 does not exist so bits 0 & 1 of
-            # data[15] will always be zero. HOWEVER, J-300 and J-400 series spas do
-            # have a circulation pump so this is probably still needed.
-            #
-            # Balboa was data[18] == 0x02
-            if data[15] & 0x03:
-                self.circ_pump_status = 1
-            else:
-                self.circ_pump_status = 0
+            # J-235 has no circulation pump (pump 1 runs low to circulate),
+            # but J-300/J-400 do, so this is still needed.
+            self.circ_pump_status = 1 if status.pump_states[0] else 0
 
-        # From Jacuzzi app code:
-        # Byte 16 Bits 6,5 = IsSecondaryON
-        # Byte 16 Bits 5,4 = IsPrimaryON (Bit posn off by 1??)
-        # Byte 16 Bits 4,3 = IsBlowerON (Bit posn off by 1??_
-        # Byte 16 Bits 2,1 = IsUVON
-        #
-        # But these bit positions seem to make more sense:
-        # Byte 16 Bits 7,6 = IsSecondaryON
-        # Byte 16 Bits 5,4 = IsPrimaryON (Bit posn off by 1??)
-        # Byte 16 Bits 3,2 = IsBlowerON (Bit posn off by 1??)
-        # Byte 16 Bits 1,0 = IsUVON
-        # TODO: what are the real bit positions?
-        #
-        # All of these except isSecondaryOn will come on during
-        # a filter cycle and also whenever pump 1 is turned on
-        # manually.
-        self.isSecondaryOn = (data[16] & 0xC0) >> 6
-        self.isPrimaryOn = (data[16] & 0x30) >> 4
-        self.isBlowerOn = (data[16] & 0x0C) >> 2
-        self.isUVOn = data[16] & 0x03
+        self.isSecondaryOn = status.secondary_on
+        self.isPrimaryOn = status.primary_on
+        self.isBlowerOn = status.blower_on
+        self.isUVOn = status.uv_on
+        self.filter_mode = status.primary_on
 
-        # flag 3 is filter mode
-        # Modified for Prolink IsPrimaryOn (bit 5,4 of byte 16)
-        # Balboa was: self.filter_mode = (data[14] & 0x0c) >> 2
-        #
-        # It is possible that IsBlowerOn in Prolink is mislabeled
-        # and actually is equivalent to filter_mode in Balboa.
-        # If so then this should actually be:
-        # self.filter_mode = (data[16] & 0x0C) >> 2
-        self.filter_mode = (data[16] & 0x30) >> 4
-
-        # It does not appear that any Jacuzzi hot tub has a blower
-        # (at least at this time). This status is always on whenever
-        # pump 1 is on.
+        # No Jacuzzi hot tub appears to have a blower; this is always on
+        # whenever pump 1 is on.
         if self.blower:
-            # Modified for Prolink; was data[18]. Same bits as isBlowerOn
-            self.blower_status = (data[16] & 0x0C) >> 2
+            self.blower_status = status.blower_on
 
-        # Byte 17 = don't care?
-        # In Prolink byte17 seems to indicate that pump 1 is running
-        # -- i.e. whenever pump 1 is on, byte 17 is 0x01. At all other
-        # times it is 0x00. It is delayed by about 1 second with
-        # respect to changes in pump 1. It does transition oddly at the
-        # end of a filter cycle though; turning off and back on
-        # briefly. Perhaps this is a flow sensor signal?
-        # UPDATE: Yes I believe it is the flow switch signal
-        self.statusByte17 = data[17]
+        # Believed to be the flow switch signal
+        self.statusByte17 = status.flow_switch
 
-        # Modified for Prolink; was data[14] ; logic reversed??
-        # TODO: resolve the logic reversal question
-        # (12 hr only if both bits 2 & 1 are 0) (= 0x02)
-        if data[18] & 0x06 == 0:
-            self.timescale = self.TIMESCALE_12H
-        else:
-            self.timescale = self.TIMESCALE_24H
+        self.timescale = (
+            self.TIMESCALE_12H if status.twelve_hour else self.TIMESCALE_24H
+        )
 
-        # Byte 19 = don't care? (= 0x00)
-        self.statusByte19 = data[19]
-
+        self.statusByte19 = status.light_bits
         for i in range(0, 2):
             if not self.light_array[i]:
                 continue
-            # Prolink light bits unclear; data[19] is unused??
-            # Yes it appears data[19] does not hold light status.
-            # Instead the light status is contained in message
-            # type 0x23.
-            self.light_status[i] = ((data[19] >> i * 2) & 0x03) >> 1
+            # Light status is not really in this byte; it comes in message
+            # type 0x23 (see parse_light_status_update).
+            self.light_status[i] = ((status.light_bits >> i * 2) & 0x03) >> 1
 
-        # Byte 20 Bits 5,4 = settingLock
-        # Byte 20 Bits 3,2 = accessLock
-        # Byte 20 Bits 1,0 = maintenanceLock (Bit posn error off by 1??)
-        self.settingLock = (data[20] & 0x30) >> 4
-        self.accessLock = (data[20] & 0x0C) >> 2
-        self.serviceLock = data[20] & 0x03
+        self.settingLock = status.setting_lock
+        self.accessLock = status.access_lock
+        self.serviceLock = status.service_lock
 
-        # Prolink does not support mister? data[20] has lock bits
-        # if self.mister:
-        #    self.mister_status = data[20] & 0x01
-        #
-        # Yes it appears Jacuzzi does not have a mister feature on
-        # any of its spas.
+        # 2nd water temperature sensor (in the plumbing, not the tub)
+        self.statusByte21 = status.second_temp_raw
 
-        # Modified for Prolink; does not have Aux channels?
-        # It does not appear that any Jacuzzi hot tub has Aux 1 or 2
-        # for i in range(0, 2):
-        #     if not self.aux_array[i]:
-        #         continue
-        #     if i == 0:
-        #         self.aux_status[i] = data[20] & 0x08
-        #     else:
-        #         self.aux_status[i] = data[20] & 0x10
-
-        # Byte 21 = don't care? -- actually 2nd sensor of current water temp
-        # Byte 22 = don't care?
-        # Byte 23 = don't care?
-        self.statusByte21 = data[21]
-        self.statusByte22 = data[22]
-        self.statusByte23 = data[23]
-
-        # Byte 24 = CLEARRAYLSB
-        # Byte 25 = CLEARRAYMSB
-        # NOTE: MSB is actually LSB and LSB is MSB!
-        self.clearrayTime = (data[24] * 256) + data[25]
-
-        # Byte 26 = WATERLSB
-        # Byte 27 = WATERMSB
-        # NOTE: MSB is actually LSB and LSB is MSB!
-        self.waterTime = (data[26] * 256) + data[27]
-
-        if data[1] >= 30:  # packet length including checksum byte
-            # Byte 28 = OUTERFILTERLSB
-            # Byte 29 = OUTERFILTERMSB
-            # NOTE: MSB is actually LSB and LSB is MSB!
-            self.outerFilterTime = (data[28] * 256) + data[29]
-
-        if data[1] >= 32:  # packet length including checksum byte
-            # Byte 30 = INNERFILTERLSB
-            # Byte 31 = INNERFILTERMSB
-            # NOTE: MSB is actually LSB and LSB is MSB!
-            self.innerFilterTime = (data[30] * 256) + data[31]
-
-        if data[1] >= 33:  # packet length including checksum byte
-            # Byte 32 Bits 7,6,5,4 = WiFiState
-            #  0 = SpaWifiState.Unknown
-            #  1 = SpaWifiState.SoftAPmodeUnavailable
-            #  2 = SpaWifiState.SoftAPmodeAvailable
-            #  3 = SpaWifiState.InfrastructureMode
-            #  4 = SpaWifiState.InfrastructureModeConnectedToNeworkNotCloud
-            #  5 = SpaWifiState.InfrastructureModeConnectedToNeworkCloud
-            #  14 = SpaWifiState.LINKINGTONETWORK
-            #  15 = SpaWifiState.NOTCOMMUNICATINGTOSPA
-            self.spaWifiState = (data[32] & 0xF0) >> 4
-
-        if data[1] >= 37:  # packet length including checksum byte
-            # Byte 33 = don't care
-            # Byte 34 = don't care
-            # Byte 35 = don't care
-            # Byte 36 = don't care
-            self.statusByte33 = data[33]
-            self.statusByte34 = data[34]
-            self.statusByte35 = data[35]
-            self.statusByte36 = data[36]
+        self.clearrayTime = status.clearray_time
+        self.waterTime = status.water_time
+        if status.outer_filter_time is not None:
+            self.outerFilterTime = status.outer_filter_time
+        if status.inner_filter_time is not None:
+            self.innerFilterTime = status.inner_filter_time
+        if status.wifi_state is not None:
+            self.spaWifiState = status.wifi_state
+        if status.unknown_tail is not None:
+            (
+                self.statusByte33,
+                self.statusByte34,
+                self.statusByte35,
+                self.statusByte36,
+            ) = status.unknown_tail
 
         # time.time() increments once per second
         self.lastupd = time.time()
