@@ -295,7 +295,7 @@ class Textfield:
         if dialog is not None:
             self.set_selectable(True)
         else:
-            set_selectable(False)
+            self.set_selectable(False)
 
     def get_dialog(self):
         """Returns the currently installed
