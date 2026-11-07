@@ -1,14 +1,19 @@
 <h1 align="center">Jacuzzi Smart Control</h1>
 
-<p align="center">
-<a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
-</p>
-
 <h2>Project Purpose</h2>
 
 To provide an interface for Jacuzzi's with or without the ProLink module. An RS485 Serial to WiFi adaptor can instead be used, connected to the RS485 port on the main board. The adaptor I used was around £25 on Amazon.co.uk (https://www.amazon.co.uk/gp/product/B097C8PT6F). With settings as 115200,8,1,NONE
 
 Currently the project allows control via MQTT or a terminal interface.
+
+<h2>Project Status</h2>
+
+| Part | Status |
+| --- | --- |
+| Python app (`app/`): MQTT + Home Assistant discovery via Docker, and a terminal UI | **Maintenance.** Bug fixes only. This is what the published Docker image runs. |
+| ESPHome version (`esphome/`) | **In development, not usable yet.** An ESP32 wired straight to the tub's RS485 bus, talking natively to Home Assistant, with no WiFi/TCP bridge, Docker or MQTT broker. See [esphome/README.md](esphome/README.md). |
+
+The Python app will keep working while the ESPHome version is built. When the ESPHome version has been proven on a real tub, the Python app will be deprecated with notice, and its last release kept on a `legacy` branch.
 
 <h2>Getting Started</h2>
 
