@@ -69,3 +69,14 @@ docker-compose example with image built locally: docker-compose.dev.yml
 * https://github.com/peterg79/bwalink for testing and documenting on the RS485 to WiFi process.
 
 * https://github.com/dhmsjs/pyjacuzzi for making lots of progress on getting this to work with Jacuzzi and his effort on code readability and commenting.
+
+<h3>Development</h3>
+
+The wire protocol (framing, checksum, status decoding, channel negotiation) lives in `app/protocol.py` and has no I/O, so it can be tested without a spa. The tests in `tests/` replay frames captured from real spas (see `tests/frames.py` for where each came from) and double as the specification for the protocol. Run them with:
+
+```
+pip install pytest
+python -m pytest tests
+```
+
+If you capture frames from your own spa, adding them to `tests/frames.py` (with a note of the model) is the most useful contribution.
